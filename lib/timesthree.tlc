@@ -1,0 +1,18 @@
+%% Copyright 1990-2015 The MathWorks, Inc.
+
+%implements "timesthree" "C"
+
+
+%% Function: Outputs ===========================================================
+%%
+%function Outputs(block, system) Output
+  /* Multiply input by three */
+  %assign rollVars = ["U", "Y"]
+  %roll idx = RollRegions, lcv = RollThreshold, block, "Roller", rollVars
+    %<LibBlockOutputSignal(0, "", lcv, idx)> = \
+    %<LibBlockInputSignal(0, "", lcv, idx)> * 3.0;
+  %endroll
+
+%endfunction
+
+%% [EOF] timesthree.tlc
