@@ -1,7 +1,7 @@
 # MathWorks OPC Text Package
 Model {
   Version  10.6
-  Description "Simulink model saved in R2022b"
+  Description "Simulink2 model saved in R2022b"
 }
 __MWOPC_PACKAGE_BEGIN__ R2022b
 __MWOPC_PART_BEGIN__ /[Content_Types].xml
