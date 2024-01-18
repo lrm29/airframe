@@ -19,16 +19,8 @@ classdef Pin < CandidateAD.Element
             pinObj.Direction = direction;
         end
 
-        function flow = connect(sourcePin, destinationPin, guard, externalID)
-            if isa(sourcePin.Parent, 'CandidateAD.Model')
-                parent = sourcePin.Parent;
-            else
-                parent = sourcePin.Parent.Parent;
-            end
-
-            flow = CandidateAD.Flow(guard, sourcePin.ExternalID, destinationPin.ExternalID, Name='Conn', ExternalID=externalID, Parent=parent);
-
-            parent.Flows = [parent.Flows flow];
+        function  flow = connect(source, destination, guard, externalID)
+            flow = ADBuilder.internal.connect(source, destination, guard, externalID);
         end
 
         function doPublish(this, target)

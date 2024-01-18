@@ -28,54 +28,24 @@ classdef Flow < CandidateAD.Element & matlab.mixin.Heterogeneous
         end
 
         function doPublish(this, target)
-            adCommands = systemcomposer.activitydiagram.internal.ActivityCommands;
-
-            if isequal(this.SourcePin.TokenType, systemcomposer.activitydiagram.model.TokenType.CONTROL)
-                % Workaround for API not accepting slashes in component
-                % names.
-                origSystemName = target.ZCElement.Name;
-                origSourceName = this.SourcePin.Parent.ZCElement.Name;
-                origDestName   = this.DestinationPin.Parent.ZCElement.Name;
-
-                cleanName = @(origName) strrep(origName, '/', 'FWD_SLASH'); 
-                cleanSystemName = cleanName(origSystemName);
-                cleanSourceName = cleanName(origSourceName);
-                cleanDestName   = cleanName(origDestName);
-                
-                setZCName(target, cleanSystemName);
-                setZCName(this.SourcePin.Parent, cleanSourceName);
-                setZCName(this.DestinationPin.Parent, cleanDestName);
-
-                this.ZCElement = adCommands.addFlow(ADBuilder.internal.getQualifiedName(target), ...
-                                   this.SourcePin.Parent.ZCElement.Name, ...
-                                   this.DestinationPin.Parent.ZCElement.Name);
-                
-                setZCName(target, origSystemName);
-                setZCName(this.SourcePin.Parent, origSourceName);
-                setZCName(this.DestinationPin.Parent, origDestName);                
-            else
-                if isequal(this.SourcePin.Parent.ZCElement, this.Parent.ZCElement)
-                    % Architecture port
-                    sourcePath = this.SourcePin.ZCElement.Name;
-                else
-                    sourcePath = [this.SourcePin.Parent.ZCElement.Name '/' this.SourcePin.ZCElement.Name];
-                end
-
-                if isequal(this.DestinationPin.Parent.ZCElement, this.Parent.ZCElement)
-                    % Architecture port
-                    destinationPath = this.DestinationPin.ZCElement.Name;
-                else
-                    destinationPath = [this.DestinationPin.Parent.ZCElement.Name '/' this.DestinationPin.ZCElement.Name];
-                end
-
-                this.ZCElement = adCommands.addFlow(ADBuilder.internal.getQualifiedName(target), ...
-                                   sourcePath, ...
-                                   destinationPath);
+            % Check if the pins were created explicitely. If not, they will
+            % be created by the flow function. 
+            source = this.SourcePin;
+            if isa(source, 'CandidateAD.Pin') && isempty(source.ZCElement)
+                source = source.Parent;
             end
 
-            if ~isempty(this.Guard)
-                setGuard(this.ZCElement, this.Guard);
+            destination = this.DestinationPin;
+            if isa(destination, 'CandidateAD.Pin') && isempty(destination.ZCElement)
+                destination = destination.Parent;
             end
+
+            % Create the flow between the pins or nodes.
+            this.ZCElement = ADBuilder.internal.addFlow( ...
+                               source, ...
+                               destination, ...
+                               Target=target, ...
+                               Guard=this.Guard);
         end
     end
 end

@@ -66,6 +66,10 @@ classdef Node < CandidateAD.Element & matlab.mixin.Heterogeneous
             this.Parameters = [this.Parameters parameter];
         end
 
+        function flow = connect(source, destination, guard, externalID)
+            flow = ADBuilder.internal.connect(source, destination, guard, externalID);
+        end
+
         function doPublish(this, target)    
             if isempty(this.ZCElement) || ~isvalid(this.ZCElement)
                 this.ZCElement = ADBuilder.internal.addAction(target, this.Name);

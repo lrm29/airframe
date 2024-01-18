@@ -45,19 +45,24 @@ function candidateAD = buildCandidateAD(adStruct, candidateAD)
                 % This is actually an input or output pin for the activity.
                 parameter = lookup(adStruct.XMI_Database, nodeStruct.parameterAttribute);
                 if isfield(parameter, 'directionAttribute')
-                    switch char(parameter.directionAttribute)
-                        case 'in'
-                            direction = systemcomposer.activitydiagram.model.PortDirection.INPUT;
-                        case 'out'
-                            direction = systemcomposer.activitydiagram.model.PortDirection.OUTPUT;
-                        otherwise
-                            error('ADBuilder:buildCandidateAD:UnhandledParameterDirection', 'Unhandled parameter direction ''%s'' detected.\n\n%s\n\n', parameter.directionAttribute, formattedDisplayText(parameter));
+                    if ismissing(parameter.directionAttribute)
+                        % Assume input by default.
+                        direction = 'in';
+                    else
+                        switch char(parameter.directionAttribute)
+                            case 'in'
+                                direction = systemcomposer.activitydiagram.model.PortDirection.INPUT;
+                            case 'out'
+                                direction = systemcomposer.activitydiagram.model.PortDirection.OUTPUT;
+                            otherwise
+                                error('ADBuilder:buildCandidateAD:UnhandledParameterDirection', 'Unhandled parameter direction ''%s'' detected.\n\n%s\n\n', parameter.directionAttribute, formattedDisplayText(parameter));
+                        end
                     end
                 else
                     direction = systemcomposer.activitydiagram.model.PortDirection.INPUT;
                 end
 
-                pin = addParameter(candidateAD, nodeStruct.nameAttribute, ...
+                pin = addParameter(candidateAD, nodeName, ...
                              systemcomposer.activitydiagram.model.TokenType.OBJECT, ...
                              direction, nodeStruct.xmi_idAttribute); %#ok<NASGU>
 
@@ -152,7 +157,7 @@ function candidateAD = buildCandidateAD(adStruct, candidateAD)
         end
     end
 
-    if ~isfield(adStruct, 'edge')
+    if ~isfield(adStruct, 'edge') || all(ismissing(adStruct.edge))
         % No connections.
         return;
     end
