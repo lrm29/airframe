@@ -1,7 +1,7 @@
 function flow = addZCActivityFlow(source, destination, NameValueArgs)
     arguments
-        source                    systemcomposer.internal.Trait
-        destination               systemcomposer.internal.Trait
+        source                    systemcomposer.activitydiagram.model.ObjectNode
+        destination               systemcomposer.activitydiagram.model.ObjectNode
         NameValueArgs.Guard = ''
     end
 
@@ -15,10 +15,16 @@ function flow = addZCActivityFlow(source, destination, NameValueArgs)
     % Get expression and make connection
     sourceExpression = systemcomposer.internal.getPortExprFromHandle(sourcePortHandle);
     destinationExpression = systemcomposer.internal.getPortExprFromHandle(destinationPortHandle);
-    
-    editor = systemcomposer.activitydiagram.internal.getEditor();
-    editor.createMCommand('activitydiagram:AddFlow', 'Add Flow to Activity', ...
-        @addLine, {parentPath, sourceExpression, destinationExpression});
+
+    topModel = bdroot(parentPath);
+
+    try
+        add_line(parentPath, sourceExpression, destinationExpression, 'AUTOROUTING', 'on');
+        systemcomposer.internal.arch.internal.processBatchedPluginEvents(topModel);
+    catch ME
+        fprintf('Parent Path: %s\nSource Expression: %s\nDestination Expression: %s\n\n', parentPath, sourceExpression, destinationExpression);
+        rethrow(ME);
+    end
     
     % Get flow to return
     compPort = systemcomposer.utils.getArchitecturePeer(sourcePortHandle);
@@ -27,19 +33,6 @@ function flow = addZCActivityFlow(source, destination, NameValueArgs)
 
     if ~isempty(NameValueArgs.Guard)
         setGuard(flow, NameValueArgs.Guard);
-    end
-end
-
-% Internal helper to call via callback
-function addLine(parentPath, sourceExpression, destinationExpression)
-    topModel = bdroot(parentPath);
-
-    try
-        add_line(parentPath, sourceExpression, destinationExpression, 'AUTOROUTING', 'on');
-        systemcomposer.internal.arch.internal.processBatchedPluginEvents(topModel);
-    catch ME
-        fprintf('Parent Path: %s\nSource Expression: %s\nDestination Expression: %s\n\n', parentPath, sourceExpression, destinationExpression);
-        getReport(ME);
     end
 end
 

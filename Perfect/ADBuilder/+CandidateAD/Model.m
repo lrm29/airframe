@@ -44,7 +44,9 @@ classdef Model < CandidateAD.Node
             modelName = ADBuilder.internal.nextName(fileNames, modelName);
 
             adCommands = systemcomposer.activitydiagram.internal.ActivityCommands;
+
             this.ZCElement = adCommands.newActivity(modelName);
+
             cleanup = onCleanup(@()open_system(modelName));
         end
 
