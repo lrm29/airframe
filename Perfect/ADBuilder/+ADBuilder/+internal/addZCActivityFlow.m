@@ -50,8 +50,9 @@ function [portHandle, parentPath] = getPortHandle(activityObject, isInput)
     switch class(implObject)
         case 'systemcomposer.architecture.model.design.Component'
             parentPath = implObject.p_Parent.getQualifiedName;
+            safeName = strrep(activityObject.Name, '/', '//');
             archPortHandle = systemcomposer.activitydiagram.internal.commands.addPort(...
-                [parentPath '/' activityObject.Name], isInput, 'Control');
+                [parentPath '/' safeName], isInput, 'Control');
             archPort = systemcomposer.utils.getArchitecturePeer(archPortHandle);
             compPort = archPort.getParentComponentPort;
             portHandle = systemcomposer.utils.getSimulinkPeer(compPort);
@@ -59,8 +60,9 @@ function [portHandle, parentPath] = getPortHandle(activityObject, isInput)
             return;
         case 'systemcomposer.architecture.model.design.Architecture'
             parentPath = implObject.getQualifiedName;
+            safeName = strrep(activityObject.Name, '/', '//');
             portHandle = systemcomposer.activitydiagram.internal.commands.addPort(...
-                [parentPath '/' activityObject.Name], isInput, 'Control'); 
+                [parentPath '/' safeName], isInput, 'Control'); 
 
             return;
         case 'systemcomposer.architecture.model.design.ArchitecturePort'
