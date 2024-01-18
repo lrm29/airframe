@@ -114,7 +114,7 @@ function candidateAD = buildCandidateAD(adStruct, candidateAD)
         end
 
         % Add object pins
-        for fieldName = {'object', 'result', 'target', 'argument', 'outputValue'}
+        for fieldName = {'object', 'result', 'target', 'argument', 'inputValue', 'outputValue'}
             if isfield(nodeStruct, char(fieldName))
                 ADBuilder.internal.createPins(node, nodeStruct.(char(fieldName)));
             end

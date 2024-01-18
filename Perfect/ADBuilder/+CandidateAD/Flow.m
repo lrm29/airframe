@@ -27,7 +27,7 @@ classdef Flow < CandidateAD.Element & matlab.mixin.Heterogeneous
             destinationPin = flowObj.Model.lookup(flowObj.DestinationPinID);
         end
 
-        function doPublish(this, target)
+        function doPublish(this, ~)
             % Check if the pins were created explicitely. If not, they will
             % be created by the flow function. 
             source = this.SourcePin;
@@ -44,7 +44,6 @@ classdef Flow < CandidateAD.Element & matlab.mixin.Heterogeneous
             this.ZCElement = ADBuilder.internal.addFlow( ...
                                source, ...
                                destination, ...
-                               Target=target, ...
                                Guard=this.Guard);
         end
     end

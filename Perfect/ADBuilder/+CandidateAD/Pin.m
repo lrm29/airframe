@@ -10,8 +10,15 @@ classdef Pin < CandidateAD.Element
                 type
                 direction 
                 parent CandidateAD.Node
-                name = ADBuilder.internal.nextNameProperty(parent.Pins, 'Pin');
+                name
                 externalID = [char(parent.ExternalID) '_' name];
+            end
+
+            % Ensure that the pin is given a unique name.
+            if isempty(name)
+                name = ADBuilder.internal.nextNameProperty(parent.Pins, 'Pin');
+            else
+                name = ADBuilder.internal.nextNameProperty(parent.Pins, name);
             end
 
             pinObj@CandidateAD.Element(Name=name, ExternalID=externalID, Parent=parent);

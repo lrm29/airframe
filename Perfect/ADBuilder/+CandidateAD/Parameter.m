@@ -5,15 +5,18 @@ classdef Parameter < CandidateAD.Pin
                 type
                 direction 
                 parent CandidateAD.Node
-                name = ADBuilder.internal.nextNameProperty(parent.Pins, 'Pin');
+                name
                 externalID = [char(parent.ExternalID) '_' name];
             end
-    
-            pinObj@CandidateAD.Pin(type, direction, parent, name, externalID);
 
-            if isempty(pinObj.Name)
-                pinObj.Name = ADBuilder.internal.nextNameProperty(pinObj.Parent.Parameters, 'Parameter');
+            % Ensure that the pin is given a unique name.
+            if isempty(name)
+                name = ADBuilder.internal.nextNameProperty(parent.Parameters, 'Parameter');
+            else
+                name = ADBuilder.internal.nextNameProperty(parent.Parameters, name);
             end
+
+            pinObj@CandidateAD.Pin(type, direction, parent, name, externalID);
         end
 
         function doPublish(this, target)
