@@ -29,8 +29,6 @@ classdef Element < systemcomposer.xmi.CandidateElement & matlab.mixin.SetGetExac
             elementObj.Parent = NameValueArgs.Parent;
 
             setModel(elementObj);
-
-            elementObj.Model.register(elementObj);
         end
 
         function elementType = get.ElementType(this)

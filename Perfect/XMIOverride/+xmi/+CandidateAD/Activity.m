@@ -44,7 +44,12 @@ classdef Activity < xmi.CandidateAD.Node
 
                 % Publish pins
                 arrayfun(@(pin)  publish(pin,  this), this.Pins);
+                try
                 arrayfun(@(parameter)  publish(parameter,  this), this.Reference.Parameters);
+                catch ME
+                    getReport(ME)
+                    rethrow(ME)
+                end
                 
                 if ~xmi.CandidateAD.internal.isRecursive(this)
                     arrayfun(@(node) publish(node, this), this.Reference.Nodes);

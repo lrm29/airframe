@@ -19,7 +19,7 @@ classdef Builder < handle
         ProjectSLDD
         ProjectSLDDName
         
-        AllModelNames = []
+        AllModelNames string = strings(1,0)
         AllModelPaths = []
         AllInterfaceNames = []
         AllEnumNames = []
@@ -209,9 +209,10 @@ classdef Builder < handle
             end
             
             mn = this.makeValidName(mName);
-            
+
             this.AllModelNames = matlab.lang.makeUniqueStrings(...
-                [this.AllModelNames ,mn], [false(1, length(this.AllModelNames)) true], namelengthmax);
+                [this.AllModelNames, mn], [false(1, length(this.AllModelNames)) true], namelengthmax);
+
             mn = this.AllModelNames(end);
         end
         

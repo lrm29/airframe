@@ -173,7 +173,7 @@ classdef UMLVisitor < m3i.Visitor
                 end
             end
             
-            thisArch = systemcomposer.xmi.CandidateArchitecture(...
+            thisArch = xmi.CandidateArchitecture(...
                 aName, cID, ppID, genIDs);
             this.addStereotypes(element, thisArch);
             
@@ -483,6 +483,11 @@ classdef UMLVisitor < m3i.Visitor
                 arrayfun(applyFcn, children, UniformOutput=false);
             end
         end
+
+        function ret = visitViewpoint(this, element)
+            % Treat a viewpoint as a package for now.
+            ret = this.visitumlmmPackage(element);
+        end
     end
     
     methods (Access = public)
@@ -562,6 +567,8 @@ classdef UMLVisitor < m3i.Visitor
                 this.visitRequirement(element);
             elseif cStypeStr == "SysML.Block"
                 this.visitBlock(element);
+            elseif cStypeStr == "SysML.Viewpoint"
+                this.visitViewpoint(element);
             else
                 addNotImported(this, element, "Class", ...
                                "Not a Block, InterfaceBlock, or Requirement");
@@ -581,11 +588,16 @@ classdef UMLVisitor < m3i.Visitor
             end
             
             if pStrName == "SysML.FullPort"
+                portReferenceID = "";
+                if ~isempty(element.type)
+                    portReferenceID = this.getExtID(element.type);
+                end
+
                 % Create child component for Full Port
                 cID = this.getExtID(element);
                 thisArch.addChildComponent(...
                     string(element.name), ...
-                    cID, this.getExtID(element.type));
+                    cID, portReferenceID);
             else
                 isConj = false;
                 if pStrName == "SysML.FlowPort"

@@ -19,8 +19,6 @@ function [candidateAD, notImported] = buildCandidateAD(adStruct, candidateAD)
         return;
     end
 
-    mdlIdx = xmi.CandidateAD.getModelIndex;
-
     for nodeIdx = 1:adStruct.node.size
         nodeStruct = adStruct.node.at(nodeIdx);
 
@@ -125,37 +123,16 @@ function [candidateAD, notImported] = buildCandidateAD(adStruct, candidateAD)
             if structuredActivity
                 node.ActionBehavior = systemcomposer.activitydiagram.model.BehaviorLanguage.ACTIVITY;
                 % build the child architecture in place (model ref in activities not supported yet).
-                xmi.CandidateAD.buildCandidateAD(nodeStruct, node);
+                [~, notImp] = xmi.CandidateAD.buildCandidateAD(nodeStruct, node);
+                notImported = [notImported notImp]; %#ok<AGROW>
             elseif isa(subProp, 'umlmm.Activity')
                 node.ActionBehavior = systemcomposer.activitydiagram.model.BehaviorLanguage.ACTIVITY;
                 node.ReferenceID = xmi.utils.getExtID(subProp);
-                
-                % Build the reference activity if it has not yet been
-                % built.
-                refNode = [];
-
-                mdlDB = mdlIdx.getElement(subProp.name);
-                if ~isempty(mdlDB)
-                    refNode = mdlDB.getElement(node.ReferenceID);
-                end
-
-                if isempty(refNode)
-                    % only build reference activity once then save the
-                    % reference by ID in the current model lookup database.
-                    refNode = xmi.CandidateAD.buildCandidateAD(subProp);
-                end
-
-                % If the reference model has not been registered with
-                % the model already then register it.
-                model = candidateAD.Model;
-                if isempty(model.lookup(refNode.ExternalID))
-                    model.register(refNode);
-                end
             end
         end
     end
 
-    if isempty(adStruct.edge)
+    if ~isprop(adStruct, 'edge') || isempty(adStruct.edge)
         % No connections.
         return;
     end

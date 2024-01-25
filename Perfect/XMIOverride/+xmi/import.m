@@ -505,41 +505,44 @@ function impReport = import(xmiFileName, outputDirectory, varargin)
         impReport.ImportedTotals = builder.Stats;
         
         delete(builder);
+    
     end
 
     %% Print for reporting
-    printer = systemcomposer.xmi.Printer(repFileName, verboseImport, tryOnly);
-    
-    printer.startSection('NOT IMPORTED FROM XML');
-    for k = 1:length(umlmmV.NotImported)
-        printer.print(umlmmV.NotImported(k).Type    + sprintf('\t') + ...
-                      umlmmV.NotImported(k).Element + sprintf('\t') + ...
-                      umlmmV.NotImported(k).Reason  + sprintf('\t') + ...        
-                      umlmmV.NotImported(k).Stereotype);
-    end
-    printer.endSection('NOT IMPORTED FROM XML');
-    
-    printer.startSection('MODEL STRUCTURE');
-    if ~isempty(buildRootPkg)
-        buildRootPkg.print(printer);
-    end
-    printer.endSection('MODEL STRUCTURE');
-
-    printer.startSection('REQUIREMENTS');
-    for k = 1:length(candReqs)
-        if isempty(candReqs{k}.ParentRequirement)
-            candReqs{k}.print(printer);
+    if ~strcmp(repFileName, "")
+        printer = systemcomposer.xmi.Printer(repFileName, verboseImport, tryOnly);
+        
+        printer.startSection('NOT IMPORTED FROM XML');
+        for k = 1:length(umlmmV.NotImported)
+            printer.print(umlmmV.NotImported(k).Type    + sprintf('\t') + ...
+                          umlmmV.NotImported(k).Element + sprintf('\t') + ...
+                          umlmmV.NotImported(k).Reason  + sprintf('\t') + ...        
+                          umlmmV.NotImported(k).Stereotype);
         end
-    end
-    printer.endSection('REQUIREMENTS');
+        printer.endSection('NOT IMPORTED FROM XML');
+        
+        printer.startSection('MODEL STRUCTURE');
+        if ~isempty(buildRootPkg)
+            buildRootPkg.print(printer);
+        end
+        printer.endSection('MODEL STRUCTURE');
     
-    printer.startSection('LINKS');
-    for k = 1:length(candReqLinks)
-        candReqLinks{k}.print(printer);
+        printer.startSection('REQUIREMENTS');
+        for k = 1:length(candReqs)
+            if isempty(candReqs{k}.ParentRequirement)
+                candReqs{k}.print(printer);
+            end
+        end
+        printer.endSection('REQUIREMENTS');
+        
+        printer.startSection('LINKS');
+        for k = 1:length(candReqLinks)
+            candReqLinks{k}.print(printer);
+        end
+        printer.endSection('LINKS');
+        
+        delete(printer);
     end
-    printer.endSection('LINKS');
-    
-    delete(printer);
 end
 
 %% EOF

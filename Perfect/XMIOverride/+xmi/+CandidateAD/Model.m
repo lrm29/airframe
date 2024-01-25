@@ -11,32 +11,8 @@ classdef Model < xmi.CandidateAD.Node
             modelObj@xmi.CandidateAD.Node(varargin{:});
         end
 
-        function element = lookup(this, elementID)
-            checkModelDatabaseExists(this);
-
-            element = this.ModelDatabase.getElement(elementID);
-        end
-
-        function register(this, element)
-            checkModelDatabaseExists(this);
-
-            this.ModelDatabase.addElement(element.ExternalID, element);
-        end
-
-        function checkModelDatabaseExists(this)
-            if isempty(this.ModelDatabase)
-                mdlIdx = xmi.CandidateAD.getModelIndex;
-                cleanDB = xmi.CandidateAD.Index;
-
-                mdlDB = mdlIdx.getElement(this.Name);
-                if isempty(mdlDB)
-                    mdlIdx.addElement(this.Name, cleanDB);    
-                else
-                    mdlIdx.updateElement(this.Name, cleanDB);    
-                end
-
-                this.ModelDatabase = cleanDB;
-            end
+        function element = lookup(~, elementID)
+            element = systemcomposer.xmi.CandidateElement.idMap("lookup", elementID);
         end
 
         function doPublish(this, varargin)
@@ -62,7 +38,9 @@ classdef Model < xmi.CandidateAD.Node
         function linkPackage(this)            
             compPkg = systemcomposer.xmi.CandidateElement.idMap(...
                 "lookup", this.ParentPackageExtElementID);
+
             compPkg.addActivity(this);
+
             this.ParentPackage = compPkg;
         end
 
