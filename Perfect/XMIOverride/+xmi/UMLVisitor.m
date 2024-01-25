@@ -144,8 +144,8 @@ classdef UMLVisitor < m3i.Visitor
             this.NotImported = [this.NotImported notImp];
         end
         
-        function visitBlock(this, element)
-        % SysML:Block -- Create candidate architecture
+        function visitBlock(this, element)            
+            % SysML:Block -- Create candidate architecture
             ppID = "";
             owner = element.owner;
             while ppID == ""
@@ -178,9 +178,7 @@ classdef UMLVisitor < m3i.Visitor
             this.addStereotypes(element, thisArch);
             
             % Process ports
-            for p=1:element.ownedPort.size
-                this.apply1(element.ownedPort.at(p),thisArch);
-            end
+            visitChildren(this, element.ownedPort, thisArch);   
             
             % Process child components
             for p=1:element.ownedAttribute.size
@@ -229,14 +227,13 @@ classdef UMLVisitor < m3i.Visitor
             end
             
             % Process child connectors
-            for p=1:element.ownedConnector.size
-                this.apply1(element.ownedConnector.at(p),thisArch);
-            end            
+            visitChildren(this, element.ownedConnector, thisArch);    
             
             % Process nested classes
-            for i=1:element.nestedClassifier.size
-                this.apply(element.nestedClassifier.at(i));
-            end
+            visitChildren(this, element.nestedClassifier);
+
+            % Process nested behaviors
+            visitChildren(this, element.ownedBehavior);
         end
         
         function visitRequirement(this, element)
@@ -461,6 +458,31 @@ classdef UMLVisitor < m3i.Visitor
             %debugPrintInterface(this, element);
             recVisitInterfaceSuperClass(this, element, intf, strings(0));
         end
+
+        function visitChildren(this, children, varargin)
+            % Visit package elements
+            switch (nargin - 2)
+                case 0
+                    applyFcn = @(elem) this.apply(elem);
+                case 1
+                    applyFcn = @(elem) this.apply1(elem, varargin{1});
+                case 2
+                    applyFcn = @(elem) this.apply2(elem, varargin{1}, varargin{2});
+                case 3
+                    applyFcn = @(elem) this.apply3(elem, varargin{1}, varargin{2}, varargin{3});
+                otherwise
+                    error('unsupported argument count, %i', nargin);
+            end
+            
+            children = xmi.utils.toArray(children);
+            children = xmi.utils.unique(children);
+            
+            if iscell(children)
+                arrayfun(@(elem) applyFcn(elem{1}), children, UniformOutput=false);
+            else
+                arrayfun(applyFcn, children, UniformOutput=false);
+            end
+        end
     end
     
     methods (Access = public)
@@ -485,15 +507,11 @@ classdef UMLVisitor < m3i.Visitor
             if ~isempty(package.owner)
                 oID = this.getExtID(package.owner);
             end
-            systemcomposer.xmi.CandidatePackage(...
+            xmi.CandidatePackage(...
                 string(package.name), pID, oID);
             
             % Visit package elements
-            for i=1:package.ownedMember.size
-                mem = package.ownedMember.at(i);
-                this.apply(mem);
-            end
-
+            visitChildren(this, package.ownedMember)
         end
 
         function ret = visitumlmmSignal(this, element)
@@ -645,6 +663,42 @@ classdef UMLVisitor < m3i.Visitor
                                "Not connecting flow ports");        
             end
             ret = [];
+        end
+
+        function ret = visitumlmmActivity(this, element)
+            ret = [];
+            %fprintf('visited actitity: %s\n', element.name);
+
+            % uml:Activity -- Create candidate activity diagram
+            ppID = "";
+            owner = element.owner;
+            while ppID == ""
+                if isa(owner, 'umlmm.Package')
+                    ppID = this.getExtID(owner);
+                end
+                owner = owner.owner;
+            end
+            assert(ppID ~= "");
+
+            [CandidateAD, notImported] = xmi.CandidateAD.buildCandidateAD(element);
+            CandidateAD.ParentPackageExtElementID = ppID;
+            this.NotImported = [this.NotImported notImported];
+
+            visitChildren(this, element.ownedBehavior);
+        end
+
+        function ret = visitumlmmInteraction(this, element)
+            ret = [];
+            %fprintf('\nvisited interaction: %s\n%s\n\n', element.name, formattedDisplayText(element));
+
+            visitChildren(this, element.ownedBehavior);
+        end
+
+        function ret = visitumlmmUseCase(this, element)
+            ret = [];
+            %fprintf('visited use case: %s\n', element.name)
+
+            visitChildren(this, element.ownedBehavior);
         end
     end    
 

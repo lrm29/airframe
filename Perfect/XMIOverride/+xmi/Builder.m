@@ -76,12 +76,14 @@ classdef Builder < handle
             this.RootProject.addFile(ddFile);
         
             this.Stats.NumProjectFolders = 0;
-            this.Stats.NumArchitectureModels = 0;
 
+            this.Stats.NumArchitectureModels = 0;
             this.Stats.NumArchitecturePorts = 0;
             this.Stats.NumComponents = 0;
             this.Stats.NumConnectors = 0;
             this.Stats.NumInterfaces = 0;  
+
+            this.Stats.NumActivityDiagrams = 0;
 
             this.Stats.NumRequirements = 0;
             this.Stats.NumReqLinks = 0;
@@ -265,6 +267,28 @@ classdef Builder < handle
             candArch.ZCHandle.ExternalUID = candArch.ExtElementID;
 
             this.Stats.NumArchitectureModels = this.Stats.NumArchitectureModels + 1;
+        end
+
+        function archMdl = createActivityDiagram(this, candAct)
+            archMdlName = this.getModelName(candAct.Name);
+            candAct.BuildName = archMdlName;
+            publish(candAct);
+            actArch  = xmi.CandidateAD.internal.getArchitecturePeer(candAct.ZCElement);
+            archMdl  = actArch.Model;
+            slHandle = archMdl.SimulinkHandle;
+            
+            candProj = candAct.ParentPackage;
+            archMdlPath = this.ProjectPath + ...
+                candProj.ZCProjectFolder + filesep + archMdlName + ".slx";
+            this.AllModelPaths = [this.AllModelPaths archMdlPath];
+
+            save_system(slHandle, archMdlPath);
+
+            this.RootProject.addFile(archMdlPath);
+
+            this.ArchModelExtIDMap(candAct.ExtElementID) = slHandle;
+        
+            this.Stats.NumActivityDiagrams = this.Stats.NumActivityDiagrams + 1;
         end
         
         function archMdl = createArchitectureModel(this, candArch)

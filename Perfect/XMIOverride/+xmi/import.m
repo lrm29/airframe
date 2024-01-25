@@ -377,8 +377,10 @@ function impReport = import(xmiFileName, outputDirectory, varargin)
     % Fetch lists of elements
     candArchs = systemcomposer.xmi.CandidateElement.idMap(...
         "getElems", "systemcomposer.xmi.CandidateArchitecture");
+    candActivities = systemcomposer.xmi.CandidateElement.idMap(...
+        "getElems", "xmi.CandidateAD.Model");
     candPkgs = systemcomposer.xmi.CandidateElement.idMap(...
-        "getElems", "systemcomposer.xmi.CandidatePackage");
+        "getElems", "xmi.CandidatePackage");
     candIntfs = systemcomposer.xmi.CandidateElement.idMap(...
         "getElems", "systemcomposer.xmi.CandidateInterface");
     candReqs = systemcomposer.xmi.CandidateElement.idMap(...
@@ -402,6 +404,12 @@ function impReport = import(xmiFileName, outputDirectory, varargin)
             assert(isempty(rootPkg));
             rootPkg = thisPkg;
         end
+    end
+
+    % Link Activities to Packages
+    for k = 1:length(candActivities)
+        thisActivity = candActivities{k};
+        thisActivity.linkPackage();
     end
     
     % Link Components to Architectures and Ports to Interfaces
@@ -444,7 +452,6 @@ function impReport = import(xmiFileName, outputDirectory, varargin)
         thisArch.fixFanInConnectors();
     end
     
-    
     %% Link requirements to each other and model elements
     for k = 1:length(candReqs)
         thisReq = candReqs{k};
@@ -459,7 +466,6 @@ function impReport = import(xmiFileName, outputDirectory, varargin)
     candReqLinks = systemcomposer.xmi.CandidateElement.idMap(...
         "getElems", "systemcomposer.xmi.CandidateReqLink");
     
-    
     %% Prune pkg tree
     buildRootPkg = rootPkg.visitAndPrunePackageBuildTree(...
         inlineSingleUseArchsAcrossPackages, ...
@@ -470,7 +476,6 @@ function impReport = import(xmiFileName, outputDirectory, varargin)
     if isempty(buildRootPkg)
         warning('No suitable model found in XMI');
     end
-    
     
     %% Build model
     repFileName = "";
