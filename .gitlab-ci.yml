@@ -43,8 +43,8 @@ SimulinkPipelineExecution:
   trigger:
         
     include: 
-      artifact: derived\pipeline\simulink_pipeline.yml
-      job: SimulinkPipelineGeneration
+      - artifact: derived\pipeline\simulink_pipeline.yml
+        job: SimulinkPipelineGeneration
         
     strategy: depend
 
