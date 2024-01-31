@@ -32,16 +32,10 @@ classdef ImportXMI < padv.Task
             taskResult = padv.TaskResult;
             taskResult.Status = padv.TaskStatus.Pass;
             project = currentProject;
-            %% add tools to path
-            close(project);
-            oldPath = addpath(genpath( ...
-                strjoin([project.RootFolder,"Perfect"],filesep)));
-            openProject(project.RootFolder);
-            processAdvisorWindow();
-            project = currentProject;
+
             %% TODO: fix this
             % need to check with development this isn't right
-            % re-running query to get what I need 
+            % re-running query to get what I need
             query = XMIImporterCI.query.findXMI();
             realArtifacts = query.run();
             artifactToUse = [];
@@ -70,21 +64,24 @@ classdef ImportXMI < padv.Task
                     [~,xmiName,~] = fileparts( ...
                         artifactToUse.ArtifactAddress.getFileAddress());
                     outputProjectPath = obj.resolvePath(obj.OutputDirectory)+ ...
-                            string(filesep)+xmiName;
+                        string(filesep)+xmiName;
                     if exist(outputProjectPath,"dir")
-                        % if this directory exists it must be removed 
+                        % if this directory exists it must be removed
                         rmdir(outputProjectPath,"s");
                     end
                 end
             end
             %% Ideal is for it to be just this
             try
+                %% add tools to path
+                close(project);
+                oldPath = addpath(genpath( ...
+                    strjoin([project.RootFolder,"Perfect"],filesep)));
                 fprintf('***Importing file ''%s''...\n', ...
                     artifactToUse.ArtifactAddress.getFileAddress);
                 xmi.import( ...
                     artifactToUse.ArtifactAddress.getFileAddress, ...
-                    obj.resolvePath(obj.OutputDirectory), ...
-                    Verbose=true);
+                    obj.resolvePath(obj.OutputDirectory));
                 fprintf('***Import complete for ''%s''.\n', ...
                     artifactToUse.ArtifactAddress.getFileAddress);
             catch ME
