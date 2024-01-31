@@ -5,59 +5,8 @@ variables:
   MATLAB_LOG_FILE: "MATLAB_Log_Output.txt"
 
 stages:
-  - SingleStage
-  - ByTask 
-  - ByModel
   - SimulinkPipelineGeneration
   - SimulinkPipelineExecution
-
-SingleStage:
-  stage: SingleStage
-
-  tags:
-      - long-jobs
-
-  script:
-        - echo "ARCHITECTURE=padv.pipeline.Architecture.SingleStage" >> arch.env
-  
-  artifacts:
-       reports:
-         dotenv: arch.env
-
-  rules:
-        - if: $MODE == "1"
-
-MultiStage:
-  stage: ByTask
-
-  tags:
-        - long-jobs
-
-  script:
-        - echo "ARCHITECTURE=padv.pipeline.Architecture.SerialStagesGroupPerTask" >> arch.env
-  
-  artifacts:
-       reports:
-         dotenv: arch.env
-
-  rules:
-        - if: $MODE == "2"
-
-Parallel:
-  stage: ByModel
-
-  tags:
-        - long-jobs
-
-  script:
-        - echo "ARCHITECTURE=padv.pipeline.Architecture.IndependentModelPipelines_BETA" >> arch.env
-  
-  artifacts:
-       reports:
-         dotenv: arch.env
-         
-  rules:
-        - if: $MODE == "3"
 
 # Do not change the name of the jobs in this pipeline
 SimulinkPipelineGeneration:
@@ -94,7 +43,7 @@ SimulinkPipelineExecution:
   trigger:
         
     include: 
-      artifact: continuous_integration/simulink_pipeline.yml
+      artifact: derived\pipeline\simulink_pipeline.yml
       job: SimulinkPipelineGeneration
         
     strategy: depend
