@@ -34,7 +34,8 @@ classdef findXMI < padv.Query
             xmlFileIndx = strcmp(ext,".xml");
             artifactFiles = project.Files(xmlFileIndx);
             for file = artifactFiles
-                artifacts = [artifacts,padv.Artifact("other_file",file.Path)];
+                artifacts = [artifacts,padv.Artifact("other_file", ...
+                    padv.util.ArtifactAddress(fullfile(file.Path)))];
             end
         end
     end
