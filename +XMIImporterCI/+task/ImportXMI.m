@@ -19,11 +19,17 @@ classdef ImportXMI < padv.Task
                 % where the task outputs artifacts
                 options.OutputDirectory = fullfile(...
                     '$DEFAULTOUTPUTDIR$','XMIImport');
+                % this depends on files in the Perfect directory so need to
+                % trigger if those change
+                options.InputDependencyQuery = ...
+                    padv.builtin.query.FindArtifacts(ArtifactType="m_file",...
+                    IncludePath="Perfect");
             end
             % call the constructor of the superclass
             obj@padv.Task(options.Name, ...
                 IterationQuery=options.IterationQuery, ...
-                InputQueries=options.InputQueries);
+                InputQueries=options.InputQueries, ...
+                InputDependencyQuery=options.InputDependencyQuery);
             obj.OutputDirectory = options.OutputDirectory;
         end
 
@@ -84,6 +90,11 @@ classdef ImportXMI < padv.Task
                     obj.resolvePath(obj.OutputDirectory)); %#ok<NASGU>
                 fprintf('***Import complete for ''%s''.\n', ...
                     artifactToUse.ArtifactAddress.getFileAddress);
+                %% setup output path
+                if exist(outputProjectPath+"_report.txt","file")
+                    % taskResult.OutputPaths = ...
+                    %     outputProjectPath+"_report.txt";
+                end
             catch ME
                 taskResult.Details = ME;
                 taskResult.Status = padv.TaskStatus.Fail;
