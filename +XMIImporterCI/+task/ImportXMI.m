@@ -79,6 +79,9 @@ classdef ImportXMI < padv.Task
             end
             %% Ideal is for it to be just this
             try
+                % need to store the resolved path, resolving gets weird
+                % once the project is closed on linux
+                outputDirectory = obj.resolvePath(obj.OutputDirectory);
                 %% add tools to path
                 close(project);
                 oldPath = addpath(genpath( ...
@@ -87,7 +90,7 @@ classdef ImportXMI < padv.Task
                     artifactToUse.ArtifactAddress.getFileAddress);
                 report = xmi.import( ...
                     artifactToUse.ArtifactAddress.getFileAddress, ...
-                    obj.resolvePath(obj.OutputDirectory)); %#ok<NASGU>
+                    outputDirectory); %#ok<NASGU>
                 fprintf('***Import complete for ''%s''.\n', ...
                     artifactToUse.ArtifactAddress.getFileAddress);
                 %% setup output path
