@@ -59,6 +59,11 @@ classdef ImportXMI < padv.Task
                 taskResult.Status = padv.TaskStatus.Error;
                 return;
             else
+                %% need to find where the output will be 
+                [~,xmiName,~] = fileparts( ...
+                    artifactToUse.ArtifactAddress.getFileAddress());
+                outputProjectPath = obj.resolvePath(obj.OutputDirectory)+ ...
+                    string(filesep)+xmiName;
                 % we have the file, need to make sure the result directory
                 % exists
                 if ~exist(obj.resolvePath(obj.OutputDirectory),"dir")
@@ -67,10 +72,6 @@ classdef ImportXMI < padv.Task
                     % this means that the output directory existed
                     % now we have to make sure that the imported project
                     % isn't already there
-                    [~,xmiName,~] = fileparts( ...
-                        artifactToUse.ArtifactAddress.getFileAddress());
-                    outputProjectPath = obj.resolvePath(obj.OutputDirectory)+ ...
-                        string(filesep)+xmiName;
                     if exist(outputProjectPath,"dir")
                         % if this directory exists it must be removed
                         rmdir(outputProjectPath,"s");
