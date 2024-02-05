@@ -34,7 +34,7 @@ SimulinkPipelineGeneration:
         # This file is generated automatically by 
         # padv.pipeline.generatePipeline. Update this field if the 
         # name or location of the generated pipeline file is changed
-            - continuous_integration
+            - derived\pipeline
 
 SimulinkPipelineExecution:
 
