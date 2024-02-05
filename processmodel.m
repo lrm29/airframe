@@ -1,0 +1,36 @@
+function processmodel(pm)
+    % Defines the project's processmodel
+
+    arguments
+        pm padv.ProcessModel
+    end
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %% Include/Exclude Tasks in processmodel
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %% Define Shared Path Variables
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    % Set default root directory for task results
+    pm.DefaultOutputDirectory = fullfile('$PROJECTROOT$', 'PA_Results');
+    defaultResultPath = fullfile( ...
+        '$DEFAULTOUTPUTDIR$','$ITERATIONARTIFACT$');
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %% Register Tasks
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
+    importTask = pm.addTask(XMIImporterCI.task.ImportXMI());
+   
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %% Set Task relationships
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    % !PROCESSMODEL_EDITOR_MARKER! %
+    % Do not remove. Process Advisor uses the comment above to automatically add tasks. %
+
+end

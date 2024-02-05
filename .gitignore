@@ -31,3 +31,6 @@ codegen/
 
 # Cloud based storage dotfile
 .MATLABDriveTag
+
+# Process Advisor Results
+PA_Results/

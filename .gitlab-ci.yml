@@ -1,0 +1,53 @@
+# Copyright 2023 The MathWorks, Inc.
+
+variables:
+  MODE: "1"
+  MATLAB_LOG_FILE: "MATLAB_Log_Output.txt"
+
+stages:
+  - SimulinkPipelineGeneration
+  - SimulinkPipelineExecution
+
+# Do not change the name of the jobs in this pipeline
+SimulinkPipelineGeneration:
+    
+    stage: SimulinkPipelineGeneration
+
+    tags:
+        - long-jobs
+
+    script:
+    # Open the project and generate the pipeline using
+    # appropriate options in project root
+        - >
+            mw -using BR2024ad matlab
+            -nodesktop
+            -logfile "$MATLAB_LOG_FILE"
+            -batch "
+            cp = openProject(pwd);
+            XMIImporterCI.generateYaml();
+            "
+  
+    artifacts:
+        
+        paths:
+        # This file is generated automatically by 
+        # padv.pipeline.generatePipeline. Update this field if the 
+        # name or location of the generated pipeline file is changed
+            - derived/pipeline
+
+SimulinkPipelineExecution:
+
+  stage: SimulinkPipelineExecution
+
+  trigger:
+        
+    include: 
+      - artifact: derived/pipeline/simulink_pipeline.yml
+        job: SimulinkPipelineGeneration
+        
+    strategy: depend
+
+  # Do not change the name of this variable
+  variables:
+    PADV_ROOT_PIPELINE_ID: $CI_PIPELINE_ID 
