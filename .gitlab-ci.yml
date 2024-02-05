@@ -20,7 +20,7 @@ SimulinkPipelineGeneration:
     # Open the project and generate the pipeline using
     # appropriate options in project root
         - >
-            mw -using Bmain matlab
+            mw -using BR2024ad matlab
             -nodesktop
             -logfile "$MATLAB_LOG_FILE"
             -batch "
