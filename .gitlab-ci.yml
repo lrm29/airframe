@@ -20,12 +20,12 @@ SimulinkPipelineGeneration:
     # Open the project and generate the pipeline using
     # appropriate options in project root
         - >
-            mw -using BR2023ad matlab
+            mw -using BR2024ad matlab
             -nodesktop
             -logfile "$MATLAB_LOG_FILE"
             -batch "
             cp = openProject(pwd);
-            generateyaml($ARCHITECTURE);
+            XMIImporterCI.generateYaml;
             "
   
     artifacts:
