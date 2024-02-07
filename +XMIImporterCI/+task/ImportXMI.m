@@ -87,18 +87,27 @@ classdef ImportXMI < padv.Task
                 close(project);
                 oldPath = addpath(genpath( ...
                     strjoin([project.RootFolder,"Perfect"],filesep)));
+                %% import XMI
                 fprintf('***Importing file ''%s''...\n', ...
                     artifactToUse.ArtifactAddress.getFileAddress);
                 report = xmi.import( ...
                     artifactToUse.ArtifactAddress.getFileAddress, ...
-                    outputDirectory); %#ok<NASGU>
+                    outputDirectory); 
                 fprintf('***Import complete for ''%s''.\n', ...
                     artifactToUse.ArtifactAddress.getFileAddress);
-                %% setup output path
-                if exist(outputProjectPath+"_report.txt","file")
-                    % taskResult.OutputPaths = ...
-                    %     outputProjectPath+"_report.txt";
-                end
+                %% get some outputs setup
+                outputFiles = ...
+                    [outputProjectPath+"_report.txt",...
+                    outputProjectPath+"_report.mat"];
+                save(outputFiles(2),"report");
+                % need to open the new project and archive it to simplify
+                % things
+                importedProject = openProject(outputProjectPath);
+                outputFiles(end+1) = ...
+                    fullfile(importedProject.RootFolder, ...
+                    importedProject.Name+".mlproj");
+                export(importedProject,outputFiles(end));
+                close(importedProject);
             catch ME
                 taskResult.Details = ME;
                 taskResult.Status = padv.TaskStatus.Fail;
@@ -109,6 +118,11 @@ classdef ImportXMI < padv.Task
             %% remove tools from path
             path(oldPath);
             openProject(project.RootFolder);
+            %% setup output path if task passed
+            if taskResult.Status == padv.TaskStatus.Pass
+                taskResult.OutputPaths = ...
+                    outputFiles(arrayfun(@(x) exist(x,"file"),outputFiles) == 2);
+            end
             processAdvisorWindow();
         end
     end
