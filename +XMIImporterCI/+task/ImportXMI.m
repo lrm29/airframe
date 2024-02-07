@@ -100,8 +100,7 @@ classdef ImportXMI < padv.Task
                     [outputProjectPath+"_report.txt",...
                     outputProjectPath+"_report.mat"];
                 save(outputFiles(2),"report");
-                % need to open the new project and archive it to simplify
-                % things
+                % need to open the new project to get files
                 importedProject = openProject(outputProjectPath);
                 outputFiles(end+1) = ...
                     fullfile(importedProject.RootFolder, ...
