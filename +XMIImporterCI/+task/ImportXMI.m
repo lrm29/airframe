@@ -42,18 +42,9 @@ classdef ImportXMI < padv.Task
             %% TODO: fix this
             % need to check with development this isn't right
             % re-running query to get what I need
-            query = XMIImporterCI.query.findXMI();
-            realArtifacts = query.run();
-            artifactToUse = [];
-            reportedPath = inputArtifacts{1}.ArtifactAddress.getFileAddress();
-            reportedPath = strrep(reportedPath,"/",filesep);
-            for artifact = realArtifacts
-                if endsWith(artifact.ArtifactAddress.getFileAddress, reportedPath)
-                    % found the real artifact
-                    artifactToUse = artifact;
-                    break;
-                end
-            end
+            artifactToUse = ...
+                XMIImporterCI.utilities.rerunQuery(obj.IterationQuery, ...
+                inputArtifacts{1});
             if isempty(artifactToUse)
                 % could not find XML file
                 taskResult.Status = padv.TaskStatus.Error;
@@ -124,6 +115,10 @@ classdef ImportXMI < padv.Task
             end
             processAdvisorWindow();
         end
+    end
+
+    methods (Static)
+
     end
 end
 

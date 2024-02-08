@@ -24,11 +24,12 @@ function processmodel(pm)
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
     importTask = pm.addTask(XMIImporterCI.task.ImportXMI());
-   
+    checkTask = pm.addTask(XMIImporterCI.task.CheckXMIDB());   
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %% Set Task relationships
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    checkTask.dependsOn(importTask);
 
     % !PROCESSMODEL_EDITOR_MARKER! %
     % Do not remove. Process Advisor uses the comment above to automatically add tasks. %
