@@ -112,6 +112,8 @@ classdef CheckXMIDB < padv.Task
                         obj.processedUUIDs{end+1} = element.UUID;
                         % don't need to check that one
                         properties = properties(~ismember(properties,"UUID"));
+                        % need to skip some properties as they cause issues
+                        properties = properties(~ismember(properties,"ModelNameInternal"));
                         % next setup cell array for output
                         elements = cell(size(properties));
                         % now go through the fields
