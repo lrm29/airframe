@@ -1,5 +1,5 @@
 options = padv.pipeline.GitLabOptions;
-options.Tags = "on-prem";
+options.Tags = "long-jobs";
 options.RerunFailedTasks = true;
 options.RerunErroredTasks = true;
 options.MatlabLaunchCmd = "mw -using BR2024ad matlab";
