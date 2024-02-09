@@ -34,7 +34,9 @@ function [candidateAD, notImported] = buildCandidateAD(adStruct, candidateAD)
 
         nodeID = xmi.utils.getExtID(nodeStruct);
         nodeType = class(nodeStruct);
-
+if strcmp(nodeID, '_18_5_2_3880181_1510846741410_839312_65580')
+    disp('DEBUG STOP')
+end
         switch nodeType
             case 'umlmm.InitialNode'
                 node = candidateAD.addNode(nodeName, 'Initial', nodeID);
@@ -47,14 +49,36 @@ function [candidateAD, notImported] = buildCandidateAD(adStruct, candidateAD)
             case 'umlmm.ActivityParameterNode'
                 % This is actually an input or output pin for the activity.
                 parameter = nodeStruct.parameter;
-                if ~isempty(parameter.direction)
+                if isempty(parameter)
+                    direction = systemcomposer.activitydiagram.model.PortDirection.INPUT;
+
+                    warning('xmi:CandidateAD:buildCandidateAD:UnspecifiedParameter', 'Parameter node ''%s'' in activity diagram ''%s'' has an unspecified parameter attribute. Please review the imported diagram for correctness.', nodeName, adStruct.name);
+
+                    if nodeStruct.incoming.size > 0 && isequal(nodeStruct.outgoing.size, 0)
+                        direction = systemcomposer.activitydiagram.model.PortDirection.OUTPUT;
+                    elseif (nodeStruct.incoming.size > 0) && (nodeStruct.outgoing.size > 0)
+                        % Bidirectional so add two pins
+                        pin = addParameter(candidateAD, [nodeName '_in'], ...
+                             systemcomposer.activitydiagram.model.TokenType.OBJECT, ...
+                             systemcomposer.activitydiagram.model.PortDirection.INPUT, ...
+                             [nodeID '_in']); %#ok<NASGU>
+                        pin = addParameter(candidateAD, [nodeName '_out'], ...
+                             systemcomposer.activitydiagram.model.TokenType.OBJECT, ...
+                             systemcomposer.activitydiagram.model.PortDirection.OUTPUT, ...
+                             [nodeID '_out']); %#ok<NASGU>
+                        continue;
+                    end
+                elseif ~isempty(parameter.direction)
                     switch parameter.direction.toString
                         case 'in'
                             direction = systemcomposer.activitydiagram.model.PortDirection.INPUT;
                         case 'out'
                             direction = systemcomposer.activitydiagram.model.PortDirection.OUTPUT;
+                        case 'return'
+                            warning('xmi:CandidateAD:buildCandidateAD:ReturnParameter', 'Parameter node ''%s'' in activity diagram ''%s'' has a direction of return and has been converted to an output. Please review the imported diagram for correctness.', nodeName, adStruct.name);
+                            direction = systemcomposer.activitydiagram.model.PortDirection.OUTPUT;
                         otherwise
-                            error('xmi:CandidateAD:buildCandidateAD:UnhandledParameterDirection', 'Unhandled parameter direction ''%s'' detected.\n\n%s\n\n', parameter.direction, formattedDisplayText(parameter));
+                            error('xmi:CandidateAD:buildCandidateAD:UnhandledParameterDirection', 'Unhandled parameter direction ''%s'' detected.\n\n%s\n\n', parameter.direction.toString, formattedDisplayText(parameter));
                     end
                 else
                     direction = systemcomposer.activitydiagram.model.PortDirection.INPUT;

@@ -480,7 +480,7 @@ classdef CandidateArchitecture < systemcomposer.xmi.CandidateElement
             cComps = this.ChildComponents;
             for k = 1:length(cComps)
                 thisComp = cComps(k);
-                if ~strcmp(thisCompRefArch, "")
+                if ~strcmp(thisComp.ReferenceArchExtElementID, "")
                     thisCompRefArch = ...
                         systemcomposer.xmi.CandidateElement.idMap(...
                         "lookup", thisComp.ReferenceArchExtElementID);

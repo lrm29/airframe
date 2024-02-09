@@ -10,7 +10,8 @@ classdef UMLVisitor < m3i.Visitor
 %         UMLPort stereotyped by SysML ProxyPort -> Architecture port
 %         UMLPort's type (UMLClass) whose properties are stereotyped by SysML FlowProperty -> Interface with elements
 %         UMLConnector between ProxyPorts -> Connector
-%         UMLPort stereotyped by SysML FullPort -> Component inside Architecture 
+%         UMLPort stereotyped by SysML FullPort -> Component inside
+%         Architecture (unless typed by an interface)
 %         (Nested classes treated as another class)
 % -------------------------------------------    
 
@@ -586,19 +587,24 @@ classdef UMLVisitor < m3i.Visitor
                 addNotImported(this, element, "Port", "Not a proxy port or full port");
                 return;
             end
-            
-            if pStrName == "SysML.FullPort"
-                portReferenceID = "";
-                if ~isempty(element.type)
-                    portReferenceID = this.getExtID(element.type);
-                end
 
+            % Process port type
+            pType = element.type;
+            pTypeStype = "";
+            pTypeID = "";
+            if ~isempty(pType)
+                pTypeStype = this.getSysMLStereotype(pType);
+                pTypeID = this.getExtID(pType);                
+            end
+            
+            if (pStrName == "SysML.FullPort") && (pTypeStype ~= "SysML.InterfaceBlock")
                 % Create child component for Full Port
                 cID = this.getExtID(element);
                 thisArch.addChildComponent(...
                     string(element.name), ...
-                    cID, portReferenceID);
+                    cID, pTypeID);
             else
+                % Full Port typed by interface, Proxy Port, Flow Port
                 isConj = false;
                 if pStrName == "SysML.FlowPort"
                     [~,sType] = this.getSysMLStereotype(element);
@@ -611,20 +617,13 @@ classdef UMLVisitor < m3i.Visitor
                     isConj = element.isConjugated;                    
                 end
 
-                % Process port type
-                pType = element.type;
-                pTypeID = "";
-                if ~isempty(pType)
-                    pTypeStype = this.getSysMLStereotype(pType);
-                    
-                    if pTypeStype == "SysML.InterfaceBlock"
-                        pTypeID = this.getExtID(pType);                
-                    end
+                if (pTypeStype ~= "SysML.InterfaceBlock")
+                    % Incompatible port interface type.
+                    pTypeID = "";
                 end
-            
+
                 thisArch.addPort(string(element.name), isConj, ...
                                  this.getExtID(element), pTypeID, [], false);
-                
             end
         end
         
