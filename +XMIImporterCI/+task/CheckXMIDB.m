@@ -43,6 +43,7 @@ classdef CheckXMIDB < padv.Task
             xmidb = xmi.CandidateAD.internal.XMIDatabase(readstruct( ...
                 xmiArtifact.ArtifactAddress.getFileAddress()));
             % find and load the report data
+            archiveFilePath = string.empty();
             for artifact = inputArtifacts{2}
                 if endsWith(artifact.ArtifactAddress.getFileAddress,".mat")
                     load(artifact.ArtifactAddress.getFileAddress)
@@ -56,6 +57,14 @@ classdef CheckXMIDB < padv.Task
             if ~exist("report","var")
                 taskResult.Status = padv.TaskStatus.Error;
                 return;
+            end
+            % check that we found an archive in the output
+            if isempty(archiveFilePath)
+                % if not this means nothing was imported
+                taskResult.Status = padv.TaskStatus.Pass;
+                taskResult.ResultValues.Warn = 1;
+                return;
+                % pass with warning as nothing was imported
             end
             % now that everything else is ready
             % open the generated project and start loading stuff

@@ -14,7 +14,8 @@ classdef XMIDatabase < handle
 
         function addStructToDB(xmiDBObj, umlStruct, lookupPath)
             if isfield(umlStruct, 'xmi_idAttribute')
-                if ~isKey(xmiDBObj.LookupTable, umlStruct.xmi_idAttribute)
+                if ~isKey(xmiDBObj.LookupTable, umlStruct.xmi_idAttribute) && ...
+                        ~ismissing(umlStruct.xmi_idAttribute)
                     xmiDBObj.LookupTable(umlStruct.xmi_idAttribute) = char(lookupPath);
                 else
                     % Recursion detected.
