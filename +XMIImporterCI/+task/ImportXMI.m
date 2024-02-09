@@ -92,12 +92,17 @@ classdef ImportXMI < padv.Task
                     outputProjectPath+"_report.mat"];
                 save(outputFiles(2),"report");
                 % need to open the new project to get files
-                importedProject = openProject(outputProjectPath);
-                outputFiles(end+1) = ...
-                    fullfile(importedProject.RootFolder, ...
-                    importedProject.Name+".mlproj");
-                export(importedProject,outputFiles(end));
-                close(importedProject);
+                if exist(outputProjectPath,"dir")
+                    % if the import imported nothing then no project is
+                    % made. That means no directory for the project
+                    % need to check to avoid errors
+                    importedProject = openProject(outputProjectPath);
+                    outputFiles(end+1) = ...
+                        fullfile(importedProject.RootFolder, ...
+                        importedProject.Name+".mlproj");
+                    export(importedProject,outputFiles(end));
+                    close(importedProject);
+                end
             catch ME
                 taskResult.Details = ME;
                 taskResult.Status = padv.TaskStatus.Fail;
