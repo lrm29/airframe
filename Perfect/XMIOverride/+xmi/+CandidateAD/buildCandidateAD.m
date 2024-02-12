@@ -34,9 +34,7 @@ function [candidateAD, notImported] = buildCandidateAD(adStruct, candidateAD)
 
         nodeID = xmi.utils.getExtID(nodeStruct);
         nodeType = class(nodeStruct);
-if strcmp(nodeID, '_18_5_2_3880181_1510846741410_839312_65580')
-    disp('DEBUG STOP')
-end
+
         switch nodeType
             case 'umlmm.InitialNode'
                 node = candidateAD.addNode(nodeName, 'Initial', nodeID);
@@ -88,6 +86,10 @@ end
                              systemcomposer.activitydiagram.model.TokenType.OBJECT, ...
                              direction, nodeID); %#ok<NASGU>
 
+                if ~isempty(parameter)
+                    pin.ReferenceID = xmi.utils.getExtID(parameter);
+                end
+
                 continue;
             otherwise % uml:Activity or uml:CallBehaviorAction
                 subProp =  [];
@@ -138,7 +140,7 @@ end
         % Add object pins
         for fieldName = {'object', 'result', 'target', 'argument', 'inputValue', 'outputValue'}
             if isprop(nodeStruct, char(fieldName))
-                xmi.CandidateAD.internal.createPins(node, nodeStruct.(char(fieldName)));
+                xmi.CandidateAD.internal.createPins(node, nodeStruct.(char(fieldName)), CallBehaviorAction=(behavior & ~structuredActivity));
             end
         end
 

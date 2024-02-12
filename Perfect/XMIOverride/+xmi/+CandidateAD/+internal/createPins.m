@@ -1,11 +1,17 @@
-function createPins(node, pinStruct)
+function createPins(node, pinStruct, options)
+    arguments
+        node
+        pinStruct
+        options.CallBehaviorAction = false
+    end
+
     if isempty(pinStruct)
         return;
     end
 
     if isa(pinStruct, 'umlmm.SequenceOfElement')
         for pinIdx = 1:pinStruct.size
-            xmi.CandidateAD.internal.createPins(node, pinStruct.at(pinIdx));
+            xmi.CandidateAD.internal.createPins(node, pinStruct.at(pinIdx), CallBehaviorAction=options.CallBehaviorAction);
         end
     else
         pinName = '';
@@ -25,9 +31,13 @@ function createPins(node, pinStruct)
         end
 
         % Add source object pins
-        addPin(node, pinName, ...
-               systemcomposer.activitydiagram.model.TokenType.OBJECT, ...
-               portDirection, ...
-               pinID);
+        pin = addPin(node, pinName, ...
+                     systemcomposer.activitydiagram.model.TokenType.OBJECT, ...
+                     portDirection, ...
+                     pinID);
+
+        if options.CallBehaviorAction
+            pin.ReferenceID = xmi.utils.getSyncElementID(pinStruct.modelM3I.uri, pinID);
+        end
     end
 end

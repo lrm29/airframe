@@ -72,11 +72,7 @@ classdef Element < systemcomposer.xmi.CandidateElement & matlab.mixin.SetGetExac
         end
 
         function setZCName(this, newName)
-            archElement = xmi.CandidateAD.internal.getArchitecturePeer(this.ZCElement);
-            % Avoid dirtying the model if not necessary
-            if ~strcmp(archElement.Name, newName)
-                archElement.Name = newName;
-            end
+            xmi.CandidateAD.internal.setName(this.ZCElement, newName);
         end
     end
     methods (Sealed)
