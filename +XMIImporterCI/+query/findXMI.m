@@ -25,8 +25,8 @@ classdef findXMI < padv.Query
             % will recurse through all projects below
             artifacts = [];
             if ~isempty(project.ProjectReferences)
-                for reference = project.ProjectReferences.Project
-                    artifacts = [artifacts, obj.findXMIfiles(reference)];
+                for reference = project.ProjectReferences
+                    artifacts = [artifacts, obj.findXMIfiles(reference.Project)];
                 end
             end
             % get file extensions for all files in the project
