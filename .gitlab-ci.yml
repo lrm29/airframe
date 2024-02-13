@@ -14,7 +14,7 @@ SimulinkPipelineGeneration:
     stage: SimulinkPipelineGeneration
 
     tags:
-        - on-prem
+        - long-jobs
 
     script:
     # Open the project and generate the pipeline using
