@@ -74,9 +74,6 @@ classdef CheckXMIDB < padv.Task
             % need to open the generated project
             [importedPath,~,~] = fileparts(archiveFilePath);
             importedProject = openProject(importedPath);
-            % seutp cleanup
-            c1 = onCleanup(@()openProject(processProject.RootFolder));
-            c2 = onCleanUp(@()processAdvisorWindow());
             
             % need to find all the architectures (including activity
             % diagrams)
@@ -108,6 +105,8 @@ classdef CheckXMIDB < padv.Task
                             else
                                 taskResult.Status = padv.TaskStatus.Error;
                                 warning(ME.message);
+                                openProject(processProject.RootFolder);
+                                processAdvisorWindow();
                                 return;
                             end
                         end
@@ -124,7 +123,8 @@ classdef CheckXMIDB < padv.Task
             end
 
             %% go back to the process project
-            
+            openProject(processProject.RootFolder);
+            processAdvisorWindow();
         end
 
         function elements = findElemetsWithExternalUID(obj,element)
