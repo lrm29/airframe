@@ -1,3 +1,6 @@
 [submodule "TestArctitectures/skyzersysml2transitionmodel"]
 	path = TestArchitectures/skyzersysml2transitionmodel
 	url = https://insidelabs-git.mathworks.com/joshkahn/skyzersysml2transitionmodel.git
+[submodule "TestArchitectures/CubeSatSysML2TransitionModel"]
+	path = TestArchitectures/CubeSatSysML2TransitionModel
+	url = https://insidelabs-git.mathworks.com/joshkahn/cubesatsysml2transitionmodel.git
