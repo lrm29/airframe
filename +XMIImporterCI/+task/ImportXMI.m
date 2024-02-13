@@ -87,17 +87,30 @@ classdef ImportXMI < padv.Task
                 close(project);
                 oldPath = addpath(genpath( ...
                     strjoin([project.RootFolder,"Perfect"],filesep)));
+                %% import XMI
                 fprintf('***Importing file ''%s''...\n', ...
                     artifactToUse.ArtifactAddress.getFileAddress);
                 report = xmi.import( ...
                     artifactToUse.ArtifactAddress.getFileAddress, ...
-                    outputDirectory); %#ok<NASGU>
+                    outputDirectory); 
                 fprintf('***Import complete for ''%s''.\n', ...
                     artifactToUse.ArtifactAddress.getFileAddress);
-                %% setup output path
-                if exist(outputProjectPath+"_report.txt","file")
-                    % taskResult.OutputPaths = ...
-                    %     outputProjectPath+"_report.txt";
+                %% get some outputs setup
+                outputFiles = ...
+                    [outputProjectPath+"_report.txt",...
+                    outputProjectPath+"_report.mat"];
+                save(outputFiles(2),"report");
+                % need to open the new project to get files
+                if exist(outputProjectPath,"dir")
+                    % if the import imported nothing then no project is
+                    % made. That means no directory for the project
+                    % need to check to avoid errors
+                    importedProject = openProject(outputProjectPath);
+                    outputFiles(end+1) = ...
+                        fullfile(importedProject.RootFolder, ...
+                        importedProject.Name+".mlproj");
+                    export(importedProject,outputFiles(end));
+                    close(importedProject);
                 end
             catch ME
                 taskResult.Details = ME;
@@ -109,6 +122,11 @@ classdef ImportXMI < padv.Task
             %% remove tools from path
             path(oldPath);
             openProject(project.RootFolder);
+            %% setup output path if task passed
+            if taskResult.Status == padv.TaskStatus.Pass
+                taskResult.OutputPaths = ...
+                    outputFiles(arrayfun(@(x) exist(x,"file"),outputFiles) == 2);
+            end
             processAdvisorWindow();
         end
     end
