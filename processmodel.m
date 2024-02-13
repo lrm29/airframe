@@ -23,8 +23,11 @@ function processmodel(pm)
     %% Register Tasks
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
-    importTask = pm.addTask(XMIImporterCI.task.ImportXMI());
-    checkTask = pm.addTask(XMIImporterCI.task.CheckXMIDB());   
+    importTask = pm.addTask(XMIImporterCI.task.ImportXMI( ...
+        IterationQuery=XMIImporterCI.query.findXMI( ...
+        exclusions="Skyzer Contractor System Model")));
+    checkTask = pm.addTask(XMIImporterCI.task.CheckXMIDB());
+   
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %% Set Task relationships

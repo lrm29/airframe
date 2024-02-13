@@ -2,6 +2,7 @@ classdef Pin < xmi.CandidateAD.Element
     properties
         TokenType systemcomposer.activitydiagram.model.TokenType
         Direction systemcomposer.activitydiagram.model.PortDirection
+        ReferenceID char
     end
 
     methods

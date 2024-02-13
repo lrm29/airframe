@@ -24,8 +24,39 @@ classdef Parameter < xmi.CandidateAD.Pin
                 % Create a root-level architecture port.
                 doPublish@xmi.CandidateAD.Pin(this, target);
             else
-                % Model Reference so the parameters should already exist on the architecture and just need to be located.
-                componentPort = target.ZCElement.getPin(this.Name);
+                % Model Reference so the parameters should already exist on
+                % the architecture and just need to be located.
+                pinIdx = find(strcmp(this.ReferenceID,{target.Pins.ReferenceID}));
+
+                componentPort = [];
+
+                if isempty(pinIdx)
+                    % Unable to find a match by XMI ID, try one more time
+                    % by name resolution.
+                    foundPort = target.ZCElement.getPin(this.Name);
+
+                    % The pin and parameter are only a match if the port
+                    % direction is the same.
+                    if ~isempty(foundPort) && (this.Direction == foundPort.Direction)
+                        componentPort = foundPort;
+                    end
+                else
+                    componentPort = target.Pins(pinIdx).ZCElement;
+
+                    % Ensure the pin name on the component matches the
+                    % parameter name. The name might not match if the pin
+                    % name was undefined in the XMI file or did not match
+                    % the parameter name due to malformed XMI.
+                    try
+                        xmi.CandidateAD.internal.setName(componentPort, this.Name);
+                    catch ME
+                        % Ignore duplicate name errors and do not try to
+                        % resolve further.
+                        if ~strcmp(ME.identifier, 'Simulink:blocks:DupBlockName')
+                            rethrow(ME)
+                        end
+                    end
+                end
 
                 if isempty(componentPort)
                     targetArchElement = xmi.CandidateAD.internal.getArchitecturePeer(target.ZCElement);
@@ -35,6 +66,7 @@ classdef Parameter < xmi.CandidateAD.Pin
                         targetArchElement.getQualifiedName, ...
                         targetArchElement.Model.Name, ...
                         target.Model.Name);
+
                     % The pin was never created (probably due to a
                     % malformed XMI file. Recover by creating the pin.
                     doPublish@xmi.CandidateAD.Pin(this, target);
@@ -42,7 +74,7 @@ classdef Parameter < xmi.CandidateAD.Pin
                     componentPort = target.ZCElement.getPin(this.Name);
                 end
 
-                this.ZCElement = componentPort.ParentNode.ChildActivity.getParameter(this.Name);
+                this.ZCElement = componentPort.ParentNode.ChildActivity.getParameter(componentPort.Name);
             end
         end
     end
