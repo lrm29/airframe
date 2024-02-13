@@ -55,7 +55,7 @@ classdef CandidateArchitecture < systemcomposer.xmi.CandidateElement
                 rComps = arch.ReferencingComps;
                 for k = 1:length(rComps)
                     [reached,pArchs1,pComps1] = ...
-                        systemcomposer.xmi.CandidateArchitecture.recMarkHier(...
+                        xmi.CandidateArchitecture.recMarkHier(...
                             rComps(k).ParentArchitecture, endArch, pArchs, pComps);
                     if reached
                         pArchs1 = [pArchs1 arch]; %#ok
@@ -68,7 +68,7 @@ classdef CandidateArchitecture < systemcomposer.xmi.CandidateElement
         
         function [pArchs,pComps] = findArchHierPath(comp, endArch)
 
-            [~, pArchs, pComps] = systemcomposer.xmi.CandidateArchitecture.recMarkHier(...
+            [~, pArchs, pComps] = xmi.CandidateArchitecture.recMarkHier(...
                 comp.ParentArchitecture, endArch, [], []);
         end
         
@@ -464,7 +464,7 @@ classdef CandidateArchitecture < systemcomposer.xmi.CandidateElement
                     genArch = systemcomposer.xmi.CandidateElement.idMap(...
                         "lookup", genIDs(k));
 
-                    if isa(genArch, 'systemcomposer.xmi.CandidateArchitecture')
+                    if isa(genArch, 'xmi.CandidateArchitecture')
                         if ~genArch.GenMerged
                             genArch.mergeGeneralizations();
                         end
@@ -692,7 +692,7 @@ classdef CandidateArchitecture < systemcomposer.xmi.CandidateElement
         end
         
         function adComp = addAdapter(this, conns, dstComp, dstCompArchPort)
-            adArch = systemcomposer.xmi.CandidateArchitecture(...
+            adArch = xmi.CandidateArchitecture(...
                 "Adapter" + this.DerivedArchIdx, ...
                 this.ExtElementID + "AdapterArch" + this.DerivedArchIdx, ...
                 this.ParentPackageExtElementID, []);
