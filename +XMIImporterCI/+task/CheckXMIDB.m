@@ -122,6 +122,12 @@ classdef CheckXMIDB < padv.Task
                 end
             end
 
+            % flatten element data
+            foundInXMI = [foundInXMI{:}];
+            notFoundInXMI = [notFoundInXMI{:}];
+            % count the missing elements
+            taskResult.ResultValues.Warn = taskResult.ResultValues.Warn + ...
+                sum(~ismember(keys,cellfun(@(x)x.ExternalUID,foundInXMI,'UniformOutput',false)));
             %% go back to the process project
             openProject(processProject.RootFolder);
             processAdvisorWindow();
