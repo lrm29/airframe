@@ -22,15 +22,18 @@ function processmodel(pm)
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %% Register Tasks
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    
+    exclusionQuery = XMIImporterCI.query.findXMI( ...
+        exclusions="Skyzer Contractor System Model");
     importTask = pm.addTask(XMIImporterCI.task.ImportXMI( ...
-        IterationQuery=XMIImporterCI.query.findXMI( ...
-        exclusions="Skyzer Contractor System Model")));
+        IterationQuery=exclusionQuery));
+    checkTask = pm.addTask(XMIImporterCI.task.CheckXMIDB( ...
+        IterationQuery=exclusionQuery));
    
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %% Set Task relationships
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    checkTask.dependsOn(importTask);
 
     % !PROCESSMODEL_EDITOR_MARKER! %
     % Do not remove. Process Advisor uses the comment above to automatically add tasks. %
