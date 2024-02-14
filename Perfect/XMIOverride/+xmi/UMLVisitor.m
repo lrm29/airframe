@@ -1,5 +1,5 @@
 classdef UMLVisitor < m3i.Visitor
-%UMLVisitor Helper Visitor class for systemcomposer.xmi.import that scans UML model loaded from XMI file
+%UMLVisitor Helper Visitor class for xmi.import that scans UML model loaded from XMI file
     
 % -------------------------------------------    
 % SysML->ZC Mapping table:
@@ -78,7 +78,7 @@ classdef UMLVisitor < m3i.Visitor
             for k = 1:stypes.size
                 stypeIn = stypes.at(k);
                 st = stypeIn.getMetaStereotype;
-                stExtID = systemcomposer.xmi.UMLVisitor.getExtID(st);
+                stExtID = xmi.UMLVisitor.getExtID(st);
                 leafClass = true;
                 while 1
                     if isempty(st) || strncmp(st.qualifiedName, 'SysML.', length('SysML.'))
@@ -127,7 +127,7 @@ classdef UMLVisitor < m3i.Visitor
                         st = [];
                     end
                 end
-                %currST = systemcomposer.xmi.CandidateElement.idMap(...
+                %currST = xmi.CandidateElement.idMap(...
                 %        "lookup", stExtID);
                 %candElem.addStereotype(currST);
                 %    currST.trackAppliedElement(candElem);
@@ -143,6 +143,12 @@ classdef UMLVisitor < m3i.Visitor
             notImp.Stereotype = scName;
             
             this.NotImported = [this.NotImported notImp];
+        end
+
+        function ret = isBlock(~, sType)
+            ret = (sType =="SysML.Block") || ...
+                  (sType =="SysML.System") || ...
+                  (sType == "SysML.Subsystem");
         end
         
         function visitBlock(this, element)            
@@ -186,7 +192,7 @@ classdef UMLVisitor < m3i.Visitor
                 property = element.ownedAttribute.at(p);
                 if ~isa(property, 'umlmm.Port') && ...
                         ~isempty(property.type) && ...
-                        this.getSysMLStereotype(property.type)=="SysML.Block"
+                        this.isBlock(this.getSysMLStereotype(property.type))
                     cID = this.getExtID(property);
                     thisArch.addChildComponent(...
                         string(property.name), ...
@@ -213,13 +219,24 @@ classdef UMLVisitor < m3i.Visitor
 
                     elValue = '';
                     if ~isempty(property.defaultValue)
-                        defaultValue = property.defaultValue;
-                        if ~isa(defaultValue, 'umlmm.InstanceValue')
-                            elValue = defaultValue.value;
-                        elseif isa(defaultValue.instance, 'umlmm.EnumerationLiteral')
-                            elValue = defaultValue.instance.name;
+                        if isa(property.defaultValue, 'umlmm.OpaqueExpression')
+                            val = property.defaultValue.body;
+                            if val.size > 0
+                                elValue = val.at(1);
+                            end
+                        elseif isa(property.defaultValue, 'umlmm.InstanceValue')
+                            val = property.defaultValue.instance;
+                            if isa(val, 'umlmm.EnumerationLiteral')
+                                elValue = val.name;
+                            end
                         else
-                            error('xmi:UMLVisitor:visitBlock:UnsupporteddefaultValue', 'Unsupported defaultValue type detected.');
+                            vClass = class(property.defaultValue);
+                            if strncmpi(vClass, 'umlmm.Literal', length('umlmm.Literal'))
+                                elValue = property.defaultValue.value;
+                            else
+                                addNotImported(this, property.defaultValue, "UnsupportedDefaultValueType", ...
+                                               "Unsupported default value type.");
+                            end
                         end
                     end
                     
@@ -251,7 +268,7 @@ classdef UMLVisitor < m3i.Visitor
             
             [~,cStype] = this.getSysMLStereotype(element);
             reqID = this.getExtID(element);
-            systemcomposer.xmi.CandidateRequirement(...
+            xmi.CandidateRequirement(...
                 reqID, string(element.name), string(cStype.Id), ...
                 string(cStype.Text), reqOwner);
             
@@ -361,10 +378,10 @@ classdef UMLVisitor < m3i.Visitor
         function [propType, propTypeName] = visitSignal(this, element)
             
             sigID = this.getExtID(element);
-            propType = systemcomposer.xmi.CandidateElement.idMap(...
+            propType = xmi.CandidateElement.idMap(...
                 "lookup", sigID);
             if isempty(propType)
-                propType = systemcomposer.xmi.CandidateInterface(...
+                propType = xmi.CandidateInterface(...
                     string(element.name), sigID, "SIGNAL");
                 recVisitSignalSuperClass(this, element, propType, strings(0));
             end
@@ -373,14 +390,14 @@ classdef UMLVisitor < m3i.Visitor
         
         function newEnum = visitEnumeration(this, element)
             enumID = this.getExtID(element);
-            newEnum = systemcomposer.xmi.CandidateElement.idMap(...
+            newEnum = xmi.CandidateElement.idMap(...
                 "lookup", enumID);
             if isempty(newEnum)
                 enumStrs = [];
                 for ol = 1:element.ownedLiteral.size
                     enumStrs = [enumStrs string(element.ownedLiteral.at(ol).name)]; %#ok
                 end
-                newEnum = systemcomposer.xmi.CandidateEnum(...
+                newEnum = xmi.CandidateEnum(...
                     enumID, string(element.name), ...
                     enumStrs);
             end
@@ -453,7 +470,7 @@ classdef UMLVisitor < m3i.Visitor
         end
         
         function visitInterface(this, element)
-            intf = systemcomposer.xmi.CandidateInterface(...
+            intf = xmi.CandidateInterface(...
                 string(element.name), this.getExtID(element), ...
                 "INTERFACEBLOCK");
             %debugPrintInterface(this, element);
@@ -551,7 +568,7 @@ classdef UMLVisitor < m3i.Visitor
                 end
                 
                 rLinkID = this.getExtID(element);
-                systemcomposer.xmi.CandidateReqLink(...
+                xmi.CandidateReqLink(...
                     rLinkID, className, supplierID, clientID, ...
                     supplierMclass, clientMclass, ...
                     supplierStype, clientStype);
@@ -568,7 +585,7 @@ classdef UMLVisitor < m3i.Visitor
                 this.visitRequirement(element);
             elseif cStypeStr == "SysML.Block"
                 this.visitBlock(element);
-            elseif cStypeStr == "SysML.Viewpoint"
+            elseif this.isBlock(cStypeStr)
                 this.visitViewpoint(element);
             else
                 addNotImported(this, element, "Class", ...
@@ -661,8 +678,8 @@ classdef UMLVisitor < m3i.Visitor
             end
            
             if p1Valid && p2Valid && ...
-                    this.getSysMLStereotype(cEnd1.role.owner)=="SysML.Block" && ...
-                    this.getSysMLStereotype(cEnd2.role.owner)=="SysML.Block"
+                    this.isBlock(this.getSysMLStereotype(cEnd1.role.owner)) && ...
+                    this.isBlock(this.getSysMLStereotype(cEnd2.role.owner))
                 thisArch.addChildConnector(this.getExtID(element), ...
                                            cEnd1PID, this.getExtID(cEnd1.role), ...
                                            this.getExtID(cEnd1.role.owner), ...

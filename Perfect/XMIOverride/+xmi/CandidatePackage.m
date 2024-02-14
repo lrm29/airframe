@@ -1,5 +1,5 @@
-classdef CandidatePackage < systemcomposer.xmi.CandidateElement
-% CANDIDATEPACKAGE Helper class to systemcomposer.xmi.import that holds a candidate list
+classdef CandidatePackage < xmi.CandidateElement
+% CANDIDATEPACKAGE Helper class to xmi.import that holds a candidate list
 %  of Architecture models that are to be packaged together in a project folder.
 %    
    
@@ -26,7 +26,7 @@ classdef CandidatePackage < systemcomposer.xmi.CandidateElement
     
     methods
         function this = CandidatePackage(name, selfID, ownerID)
-            this@systemcomposer.xmi.CandidateElement(selfID);
+            this@xmi.CandidateElement(selfID);
             this.Name = name;
             this.BuildName = name;
             this.OwnerExtElementID = ownerID;
@@ -34,7 +34,7 @@ classdef CandidatePackage < systemcomposer.xmi.CandidateElement
         
         function link(this)
             if this.OwnerExtElementID ~= ""
-                oP = systemcomposer.xmi.CandidateElement.idMap(...
+                oP = xmi.CandidateElement.idMap(...
                     "lookup", this.OwnerExtElementID);
                 this.setParentPackage(oP);
             end

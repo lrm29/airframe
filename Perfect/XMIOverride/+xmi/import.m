@@ -1,7 +1,7 @@
 function impReport = import(xmiFileName, outputDirectory, varargin)
 % IMPORT Creates a project with a set of System Composer models from an XMI file
 %
-%    impReport = systemcomposer.xmi.import(XMIFILENAME, OUTPUTDIR) creates a MATLAB project with a
+%    impReport = xmi.import(XMIFILENAME, OUTPUTDIR) creates a MATLAB project with a
 %    set of Architecture models and associated artifacts. The project's name is the same as the
 %    specified XMI file. The function returns a MATLAB structure summarizing imported element totals
 %    and information on elements that were ignored during the import. The output directory must be
@@ -84,7 +84,7 @@ function impReport = import(xmiFileName, outputDirectory, varargin)
     % Default patch MDZIP SysML Block ID to real URIs
     defPatchMDZipSysMLBlockURIs = false;
     
-    systemcomposer.xmi.CandidateElement.idMap("reset");
+    xmi.CandidateElement.idMap("reset");
     
     %% Parse input args
     ip = inputParser;
@@ -232,7 +232,7 @@ function impReport = import(xmiFileName, outputDirectory, varargin)
         fclose(xmiTmpFid);
     end
     
-    xmiLoc = string(fileparts(which('systemcomposer.xmi.import'))); 
+    xmiLoc = string(fileparts(which('xmi.import'))); 
     unzip(xmiLoc + filesep + "xmi" + filesep + "supportFiles.zip", pwd);
     if (isempty(additionalURIs) || ~any(additionalURIs(:,1) == "SysML.xmi")) && ...
             contains(sysmlTok, "2018")
@@ -304,7 +304,7 @@ function impReport = import(xmiFileName, outputDirectory, varargin)
     m3iprofs = umlmmV.ProfilesFound;
     candProfiles = [];
     for k = 1:length(m3iprofs)
-        newProf = systemcomposer.xmi.CandidateProfile(string(m3iprofs(k).name));
+        newProf = xmi.CandidateProfile(string(m3iprofs(k).name));
         candProfiles = [candProfiles newProf]; %#ok
         
         numProfTypes = m3iprofs(k).ownedType.size;
@@ -317,11 +317,11 @@ function impReport = import(xmiFileName, outputDirectory, varargin)
                 if pType.superClass.size > 0
                     sc = pType.superClass.at(1);
                     if ~strncmp(sc.qualifiedName, 'SysML.', 6)
-                        scExtID = systemcomposer.xmi.UMLVisitor.getExtID(sc);
+                        scExtID = xmi.UMLVisitor.getExtID(sc);
                     end
                 end
                 
-                newStype = systemcomposer.xmi.CandidateStereotype(...
+                newStype = xmi.CandidateStereotype(...
                     string(pType.toString()), string(pType.name), ...
                     newProf, string(pType.qualifiedName), scExtID);
                 newProf.addStereotype(newStype);
@@ -330,11 +330,18 @@ function impReport = import(xmiFileName, outputDirectory, varargin)
                 for p = 1:pType.ownedAttribute.size
                     pElem = pType.ownedAttribute.at(p);
                     if ~strncmp(pElem.name, 'base_', 5)
-                        tName = "";
+                        elTypeName = "";
+                        elType = "";
                         if ~isempty(pElem.type)
-                            tName = string(pElem.type.name);
+                            if isa(pElem.type, 'umlmm.Enumeration')
+                                elType = umlmmV.visitEnumeration(pElem.type);
+                                elTypeName = "Enumeration";
+                            elseif isa(pElem.type, 'umlmm.DataType') || ...
+                                    isa(pElem.type,'M3I.ImmutablePrimitiveType')
+                                elTypeName = "Dtype:" + string(pElem.type.name);
+                            end
                         end
-                        newStype.addProperty(string(pElem.name), tName);
+                        newStype.addProperty(string(pElem.name), elTypeName, elType);
                     end
                 end
             end
@@ -375,18 +382,18 @@ function impReport = import(xmiFileName, outputDirectory, varargin)
     
 
     % Fetch lists of elements
-    candArchs = systemcomposer.xmi.CandidateElement.idMap(...
+    candArchs = xmi.CandidateElement.idMap(...
         "getElems", "xmi.CandidateArchitecture");
-    candActivities = systemcomposer.xmi.CandidateElement.idMap(...
+    candActivities = xmi.CandidateElement.idMap(...
         "getElems", "xmi.CandidateAD.Model");
-    candPkgs = systemcomposer.xmi.CandidateElement.idMap(...
+    candPkgs = xmi.CandidateElement.idMap(...
         "getElems", "xmi.CandidatePackage");
-    candIntfs = systemcomposer.xmi.CandidateElement.idMap(...
-        "getElems", "systemcomposer.xmi.CandidateInterface");
-    candReqs = systemcomposer.xmi.CandidateElement.idMap(...
-        "getElems", "systemcomposer.xmi.CandidateRequirement");
-    candReqLinks = systemcomposer.xmi.CandidateElement.idMap(...
-        "getElems", "systemcomposer.xmi.CandidateReqLink");
+    candIntfs = xmi.CandidateElement.idMap(...
+        "getElems", "xmi.CandidateInterface");
+    candReqs = xmi.CandidateElement.idMap(...
+        "getElems", "xmi.CandidateRequirement");
+    candReqLinks = xmi.CandidateElement.idMap(...
+        "getElems", "xmi.CandidateReqLink");
 
     % Merge in generalizations
     for k = 1:length(candArchs)
@@ -463,8 +470,8 @@ function impReport = import(xmiFileName, outputDirectory, varargin)
         thisLink.link();
     end
     % Refresh to get new links that may have been added
-    candReqLinks = systemcomposer.xmi.CandidateElement.idMap(...
-        "getElems", "systemcomposer.xmi.CandidateReqLink");
+    candReqLinks = xmi.CandidateElement.idMap(...
+        "getElems", "xmi.CandidateReqLink");
     
     %% Prune pkg tree
     buildRootPkg = rootPkg.visitAndPrunePackageBuildTree(...
@@ -479,12 +486,14 @@ function impReport = import(xmiFileName, outputDirectory, varargin)
     
     %% Build model
     repFileName = "";
-    if ~tryOnly && (~isempty(buildRootPkg) || ~isempty(candReqs))
+    if ~tryOnly
         if exist(outputDirectory + filesep + outputProjName, 'dir')
             error('Output project already exists. Cannot overwrite.')
         end
         repFileName = outputDirectory + filesep + outputProjName + "_report.txt";
+    end
 
+     if ~tryOnly && (~isempty(buildRootPkg) || ~isempty(candReqs))
         builder = xmi.Builder(...
             outputDirectory, outputProjName, dtypeMapping, validNameStyle);
         builder.createProfiles(candProfiles);
@@ -510,7 +519,7 @@ function impReport = import(xmiFileName, outputDirectory, varargin)
 
     %% Print for reporting
     if ~strcmp(repFileName, "")
-        printer = systemcomposer.xmi.Printer(repFileName, verboseImport, tryOnly);
+        printer = xmi.Printer(repFileName, verboseImport, tryOnly);
         
         printer.startSection('NOT IMPORTED FROM XML');
         for k = 1:length(umlmmV.NotImported)

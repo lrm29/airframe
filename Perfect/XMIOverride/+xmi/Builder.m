@@ -1,5 +1,5 @@
 classdef Builder < handle
-% BUILDER Helper class for systemcomposer.xmi.import that helps build model.
+% BUILDER Helper class for xmi.import that helps build model.
     properties
         BuildDir = ""
         BuildProject = ""
@@ -143,8 +143,8 @@ classdef Builder < handle
         function populateEnumerations(this)
             
             ddHdl = Simulink.data.dictionary.open(this.ProjectSLDDName);
-            enumTypes = systemcomposer.xmi.CandidateElement.idMap(...
-                "getElems", "systemcomposer.xmi.CandidateEnum");
+            enumTypes = xmi.CandidateElement.idMap(...
+                "getElems", "xmi.CandidateEnum");
             for k = 1:length(enumTypes)
                 thisEnum = enumTypes{k};
                 thisEnum.BuildName = this.makeValidName(thisEnum.Name);
@@ -171,8 +171,8 @@ classdef Builder < handle
         end
         
         function populateInterfaces(this)
-            intfTypes = systemcomposer.xmi.CandidateElement.idMap(...
-                "getElems", "systemcomposer.xmi.CandidateInterface");
+            intfTypes = xmi.CandidateElement.idMap(...
+                "getElems", "xmi.CandidateInterface");
             allIntfNames = [];
             for k = 1:length(intfTypes)
                 thisIntf = intfTypes{k};
@@ -421,8 +421,30 @@ classdef Builder < handle
                         this.Stats.NumStereotypes = this.Stats.NumStereotypes + 1;
                         
                         for m = 1:length(props)
+                            tName = 'string';
+                            ptName = props(m).DatatypeName;
+                            if contains(ptName, "Enumeration")
+                                 tName = ['Enum:' char(thisPrm.Type.BuildName)];
+                            elseif contains(ptName, "Dtype:")
+                                dtypeName = extractAfter(ptName, "Dtype:");
+                                if isKey(this.DatatypeMapping, dtypeName)
+                                    tName = char(builder.DatatypeMapping(dtypeName));
+                                else
+                                    if contains(dtypeName, 'Bool', 'IgnoreCase', true)
+                                        tName = 'boolean';
+                                    elseif contains(dtypeName, 'Int', 'IgnoreCase', true) || ...
+                                            contains(dtypeName, 'Natural', 'IgnoreCase', true)
+                                        tName = 'int32';
+                                    elseif contains(dtypeName, 'Real', 'IgnoreCase', true)
+                                        tName = 'double';
+                                    elseif contains(dtypeName, 'string', 'IgnoreCase', true)
+                                        tName = 'string';
+                                    end
+                                end
+                            end
+                            
                             st.ZCHandle.addProperty(...
-                                char(props(m).FinalName),'Type','string');
+                                char(props(m).FinalName),'Type', tName);
                             
                             this.Stats.NumStereotypeProps = this.Stats.NumStereotypeProps+1;
                         end
@@ -443,7 +465,7 @@ classdef Builder < handle
             zcElem = elem.ZCHandle;
             
             for k = 1:length(elem.StereotypesExtIDs)
-                elemST = systemcomposer.xmi.CandidateElement.idMap(...
+                elemST = xmi.CandidateElement.idMap(...
                     "lookup", elem.StereotypesExtIDs(k));
                 if ~isempty(elemST) 
                     zcElem.applyStereotype(...
@@ -455,7 +477,7 @@ classdef Builder < handle
             end
             props = elem.StereotypePropVals;
             for p = 1:length(props)
-                propST = systemcomposer.xmi.CandidateElement.idMap(...
+                propST = xmi.CandidateElement.idMap(...
                     "lookup", props(p).Stereotype);
                 if ~isempty(propST)
                     prop = propST.findProperty(props(p).PropertyName);
@@ -586,8 +608,8 @@ classdef Builder < handle
                 supp = thisLink.Supplier;
                 client = thisLink.Client;
                 
-                if isa(supp,'systemcomposer.xmi.CandidateRequirement') && ...
-                        isa(client,'systemcomposer.xmi.CandidateRequirement')
+                if isa(supp,'xmi.CandidateRequirement') && ...
+                        isa(client,'xmi.CandidateRequirement')
                         
                     lnk = slreq.createLink(supp.ZCHandle, client.ZCHandle);
                     if thisLink.LinkType == "SysML.DeriveReqt"
@@ -596,13 +618,13 @@ classdef Builder < handle
                     
                     thisLink.ZCHandle = lnk;
                     this.Stats.NumReqLinks = this.Stats.NumReqLinks + 1;
-                elseif isa(supp,'systemcomposer.xmi.CandidateRequirement')
+                elseif isa(supp,'xmi.CandidateRequirement')
                     if ~isempty(client.ZCHandle)
                         lnk = slreq.createLink(client.ZCHandle.SimulinkHandle, supp.ZCHandle);
                         lnk.Type = 'Implement';
                         this.Stats.NumReqLinks = this.Stats.NumReqLinks + 1;
                     end
-                elseif isa(client,'systemcomposer.xmi.CandidateRequirement')
+                elseif isa(client,'xmi.CandidateRequirement')
                     if ~isempty(supp.ZCHandle)
                         lnk = slreq.createLink(supp.ZCHandle.SimulinkHandle, client.ZCHandle);
                         lnk.Type = 'Implement';

@@ -12,7 +12,7 @@ classdef Model < xmi.CandidateAD.Node
         end
 
         function element = lookup(~, elementID)
-            element = systemcomposer.xmi.CandidateElement.idMap("lookup", elementID);
+            element = xmi.CandidateElement.idMap("lookup", elementID);
         end
 
         function doPublish(this, varargin)
@@ -36,7 +36,7 @@ classdef Model < xmi.CandidateAD.Node
         end
 
         function linkPackage(this)            
-            compPkg = systemcomposer.xmi.CandidateElement.idMap(...
+            compPkg = xmi.CandidateElement.idMap(...
                 "lookup", this.ParentPackageExtElementID);
 
             compPkg.addActivity(this);

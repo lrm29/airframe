@@ -1,5 +1,5 @@
-classdef CandidateArchitecture < systemcomposer.xmi.CandidateElement
-% CANDIDATEARCHITECTURE Helper class for systemcomposer.xmi.import that holds canidate Architecture models
+classdef CandidateArchitecture < xmi.CandidateElement
+% CANDIDATEARCHITECTURE Helper class for xmi.import that holds canidate Architecture models
     properties
         Name = "";
         
@@ -70,6 +70,9 @@ classdef CandidateArchitecture < systemcomposer.xmi.CandidateElement
 
             [~, pArchs, pComps] = xmi.CandidateArchitecture.recMarkHier(...
                 comp.ParentArchitecture, endArch, [], []);
+
+            pArchs = fliplr(pArchs);
+            pComps = fliplr(pComps);
         end
         
         
@@ -385,7 +388,7 @@ classdef CandidateArchitecture < systemcomposer.xmi.CandidateElement
     methods
         function this = CandidateArchitecture(name, extID, ...
                                               parPackageExtID, genIDs)
-            this@systemcomposer.xmi.CandidateElement(extID);
+            this@xmi.CandidateElement(extID);
 
             this.Name = name;
             this.ParentPackageExtElementID = parPackageExtID;
@@ -407,7 +410,7 @@ classdef CandidateArchitecture < systemcomposer.xmi.CandidateElement
                 intfID = intf.ExtElementID;
             end
             
-            newPort = systemcomposer.xmi.CandidatePort(...
+            newPort = xmi.CandidatePort(...
                 this, portName, extID, isConjugated, intfID, intf, isDerived);
             
             if ~isempty(intf)
@@ -426,7 +429,7 @@ classdef CandidateArchitecture < systemcomposer.xmi.CandidateElement
         end
         
         function cComp = addChildComponent(this, compName, extID, refCompID)
-            cComp = systemcomposer.xmi.CandidateComponent(...
+            cComp = xmi.CandidateComponent(...
                 compName, this, extID, refCompID);
             this.ChildComponents = [this.ChildComponents cComp];
 
@@ -438,7 +441,7 @@ classdef CandidateArchitecture < systemcomposer.xmi.CandidateElement
             this, extID, end1CompID, ...
             end1RefPortID, end1RefPortCompID, ...
             end2CompID, end2RefPortID, end2RefPortCompID, isDerived)
-            cConn = systemcomposer.xmi.CandidateConnector(...
+            cConn = xmi.CandidateConnector(...
                 this, extID,  end1CompID, end1RefPortID, end1RefPortCompID, ...
                 end2CompID, end2RefPortID, end2RefPortCompID, isDerived);
             this.ChildConnectors = [this.ChildConnectors cConn];
@@ -461,7 +464,7 @@ classdef CandidateArchitecture < systemcomposer.xmi.CandidateElement
             if ~this.GenMerged
                 genIDs = this.GeneralizationExtElementIDs;
                 for k = 1:length(genIDs)
-                    genArch = systemcomposer.xmi.CandidateElement.idMap(...
+                    genArch = xmi.CandidateElement.idMap(...
                         "lookup", genIDs(k));
 
                     if isa(genArch, 'xmi.CandidateArchitecture')
@@ -482,7 +485,7 @@ classdef CandidateArchitecture < systemcomposer.xmi.CandidateElement
                 thisComp = cComps(k);
                 if ~strcmp(thisComp.ReferenceArchExtElementID, "")
                     thisCompRefArch = ...
-                        systemcomposer.xmi.CandidateElement.idMap(...
+                        xmi.CandidateElement.idMap(...
                         "lookup", thisComp.ReferenceArchExtElementID);
                     thisComp.ReferenceArch = thisCompRefArch;
                     thisCompRefArch.addReferencingComp(thisComp);
@@ -494,14 +497,14 @@ classdef CandidateArchitecture < systemcomposer.xmi.CandidateElement
                 thisPort = cPorts{k};
                 if thisPort.InterfaceExtElementID ~= ""
                     thisPortIntf = ...
-                        systemcomposer.xmi.CandidateElement.idMap(...
+                        xmi.CandidateElement.idMap(...
                             "lookup", thisPort.InterfaceExtElementID);
                     thisPortIntf.addReferencingArchPort(thisPort);
                     thisPort.Interface = thisPortIntf;
                 end
             end
             
-            compPkg = systemcomposer.xmi.CandidateElement.idMap(...
+            compPkg = xmi.CandidateElement.idMap(...
                 "lookup", this.ParentPackageExtElementID);
             compPkg.addArchitecture(this);
             this.ParentPackage = compPkg;

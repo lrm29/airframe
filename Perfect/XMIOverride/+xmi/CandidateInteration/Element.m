@@ -1,4 +1,4 @@
-classdef Element < systemcomposer.xmi.CandidateElement & matlab.mixin.SetGetExactNames
+classdef Element < xmi.CandidateElement & matlab.mixin.SetGetExactNames
     properties
         Name (1,:) char
         Parent
@@ -21,7 +21,7 @@ classdef Element < systemcomposer.xmi.CandidateElement & matlab.mixin.SetGetExac
                 NameValueArgs.ExternalID
                 NameValueArgs.Parent = [];
             end
-            elementObj@systemcomposer.xmi.CandidateElement(NameValueArgs.ExternalID);
+            elementObj@xmi.CandidateElement(NameValueArgs.ExternalID);
 
             elementObj.Name = NameValueArgs.Name;
             elementObj.Parent = NameValueArgs.Parent;
