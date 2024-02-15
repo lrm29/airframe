@@ -597,14 +597,7 @@ classdef UMLVisitor < m3i.Visitor
         function ret = visitumlmmPort(this,element,thisArch)
 
             ret = [];
-            % Ensure port is ProxyPort
-            pStrName = this.getSysMLStereotype(element);
-            if pStrName ~= "SysML.ProxyPort" && pStrName ~= "SysML.FullPort" ...
-                    && pStrName ~= "SysML.FlowPort"
-                addNotImported(this, element, "Port", "Not a proxy port or full port");
-                return;
-            end
-
+            
             % Process port type
             pType = element.type;
             pTypeStype = "";
@@ -612,6 +605,26 @@ classdef UMLVisitor < m3i.Visitor
             if ~isempty(pType)
                 pTypeStype = this.getSysMLStereotype(pType);
                 pTypeID = this.getExtID(pType);                
+            end
+
+            % Ensure port is a supported port type explicitely or implied
+            pStrName = this.getSysMLStereotype(element);
+            if pStrName ~= "SysML.ProxyPort" && pStrName ~= "SysML.FullPort" ...
+                    && pStrName ~= "SysML.FlowPort"
+
+                if pTypeStype == "SysML.Block"
+                    % Assume port is a Full Port when typed by a SysML
+                    % Block
+                    pStrName = "SysML.FullPort";
+                elseif pTypeStype == "SysML.InterfaceBlock"
+                    % Assume port is a Full Port when typed by a SysML
+                    % Block
+                    pStrName = "SysML.ProxyPort";
+                else
+                    % Unable to infer port type.
+                    addNotImported(this, element, "Port", "Not a proxy port or full port");
+                    return;
+                end
             end
             
             if (pStrName == "SysML.FullPort") && (pTypeStype ~= "SysML.InterfaceBlock")
