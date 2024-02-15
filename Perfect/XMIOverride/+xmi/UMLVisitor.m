@@ -35,25 +35,31 @@ classdef UMLVisitor < m3i.Visitor
             end
         end
         
+        function stype = findSysMLSuperType(st)
+             if strncmp(st.qualifiedName, 'SysML.', length('SysML.'))
+                 stype = st;
+             else
+                 for si = 1:st.superClass.size
+                     stype = xmi.UMLVisitor.findSysMLSuperType(st.superClass.at(si));
+                     if ~isempty(stype)
+                         return;
+                     end
+                 end
+                 stype = [];
+             end
+        end
+
         function [className,stypeInst] = getSysMLStereotype(element)
             className = "";
             stypeInst = [];
             stypes = element.appliedStereotypeInstance;
             for k = 1:stypes.size
                 stypeIn = stypes.at(k);
-                st = stypeIn.getMetaStereotype;
-                while ~isempty(st)
-                    if strncmp(st.qualifiedName, 'SysML.', length('SysML.'))
-                        className = string(st.qualifiedName);
-                        stypeInst = stypeIn;
-                        break;
-                    end
-                    
-                    if st.superClass.size == 0
-                        st = [];
-                    else
-                        st = st.superClass.at(1);
-                    end
+                st = xmi.UMLVisitor.findSysMLSuperType(stypeIn.getMetaStereotype);
+                if ~isempty(st)
+                    className = string(st.qualifiedName);
+                    stypeInst = stypeIn;
+                    break;
                 end
             end
         end
@@ -127,11 +133,6 @@ classdef UMLVisitor < m3i.Visitor
                         st = [];
                     end
                 end
-                %currST = xmi.CandidateElement.idMap(...
-                %        "lookup", stExtID);
-                %candElem.addStereotype(currST);
-                %    currST.trackAppliedElement(candElem);
-
             end
         end
 
@@ -146,8 +147,8 @@ classdef UMLVisitor < m3i.Visitor
         end
 
         function ret = isBlock(~, sType)
-            ret = (sType =="SysML.Block") || ...
-                  (sType =="SysML.System") || ...
+            ret = (sType == "SysML.Block") || ...
+                  (sType == "SysML.System") || ...
                   (sType == "SysML.Subsystem");
         end
         
@@ -269,8 +270,8 @@ classdef UMLVisitor < m3i.Visitor
             [~,cStype] = this.getSysMLStereotype(element);
             reqID = this.getExtID(element);
             xmi.CandidateRequirement(...
-                reqID, string(element.name), string(cStype.Id), ...
-                string(cStype.Text), reqOwner);
+                reqID, string(element.name), string(cStype.getOne('Id').toString), ...
+                string(cStype.getOne('Text').toString), reqOwner);
             
             % Process nested classes (requirements)
             for i=1:element.nestedClassifier.size
@@ -583,9 +584,9 @@ classdef UMLVisitor < m3i.Visitor
                 this.visitInterface(element);
             elseif cStypeStr == "SysML.Requirement"
                 this.visitRequirement(element);
-            elseif cStypeStr == "SysML.Block"
-                this.visitBlock(element);
             elseif this.isBlock(cStypeStr)
+                this.visitBlock(element);
+            elseif cStypeStr == "SysML.Viewpoint"
                 this.visitViewpoint(element);
             else
                 addNotImported(this, element, "Class", ...
@@ -612,7 +613,7 @@ classdef UMLVisitor < m3i.Visitor
             if pStrName ~= "SysML.ProxyPort" && pStrName ~= "SysML.FullPort" ...
                     && pStrName ~= "SysML.FlowPort"
 
-                if pTypeStype == "SysML.Block"
+                if this.isBlock(pTypeStype)
                     % Assume port is a Full Port when typed by a SysML
                     % Block
                     pStrName = "SysML.FullPort";

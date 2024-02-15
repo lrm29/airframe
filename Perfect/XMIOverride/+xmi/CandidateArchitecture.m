@@ -100,7 +100,7 @@ classdef CandidateArchitecture < xmi.CandidateElement
         end
         
         function newConn = addDerivedConnector(thisArch, comp1, aPort1, ...
-            comp2, aPort2)
+            comp2, aPort2, connID)
             
             comp1ID = "";
             if ~isempty(comp1)
@@ -113,7 +113,7 @@ classdef CandidateArchitecture < xmi.CandidateElement
             end
             
             newConn = thisArch.addChildConnector(...
-                thisArch.ExtElementID + "DerivedConn" + thisArch.DerivedConnectorIdx, ...
+                connID + "DerivedConn" + thisArch.DerivedConnectorIdx, ...
                 comp1ID, aPort1.ExtElementID, ...
                 aPort1.ParentArch.ExtElementID, ...
                 comp2ID, aPort2.ExtElementID, ...
@@ -186,6 +186,7 @@ classdef CandidateArchitecture < xmi.CandidateElement
             
             endComp = [];
             nonSibling = false; % assume
+            endAPort = [];
             if endCompID == ""
                 % Architecture port connector
                 archPort = this.PortMapFromExtElementID(endPortID);
@@ -193,13 +194,15 @@ classdef CandidateArchitecture < xmi.CandidateElement
                 endAPort = archPort;
             else
                 endComp = this.findChildComponent(endCompID);
-                endAPort = ...
-                    endComp.ReferenceArch.PortMapFromExtElementID(endPortID);
-                if endComp.ParentArchitecture ~= this
-                    % Handle connection of non sibling Components
-                    nonSibling = true;
-                else
-                    endComp.addConnector(endAPort, thisConn);
+                if ~isempty(endComp)
+                    endAPort = ...
+                        endComp.ReferenceArch.PortMapFromExtElementID(endPortID);
+                    if endComp.ParentArchitecture ~= this
+                        % Handle connection of non sibling Components
+                        nonSibling = true;
+                    else
+                        endComp.addConnector(endAPort, thisConn);
+                    end
                 end
             end
         end
@@ -244,7 +247,7 @@ classdef CandidateArchitecture < xmi.CandidateElement
                     % Add connector
                     repConn = this.addDerivedConnector(...
                         thisArch, thisComp, thisAPort, ...
-                        [], newPort);
+                        [], newPort, thisConn.ExtElementID);
                     repConns = [repConns repConn]; %#ok
                     
                     this.trackPortAddedForNonSibling(thisComp, thisAPort, newPort);
@@ -279,7 +282,7 @@ classdef CandidateArchitecture < xmi.CandidateElement
                     % Add connector
                     repConn = this.addDerivedConnector(...
                         thisArch, thisComp, thisAPort, ...
-                        [], newPort);
+                        [], newPort, thisConn.ExtElementID);
                     repConns = [repConns repConn]; %#ok
                     
                     this.trackPortAddedForNonSibling(thisComp, thisAPort, newPort);
@@ -297,7 +300,7 @@ classdef CandidateArchitecture < xmi.CandidateElement
             % Add final connector
             repConn = this.addDerivedConnector(...
                 this, finalEnd1Comp, finalEnd1APort, ...
-                finalEnd2Comp, finalEnd2APort);
+                finalEnd2Comp, finalEnd2APort, thisConn.ExtElementID);
             repConns = [repConns repConn];
             
             thisConn.setReplacements(repConns);
@@ -571,9 +574,13 @@ classdef CandidateArchitecture < xmi.CandidateElement
                             thisConn, ...
                             thisConn.End2CompExtElementID, ...
                             thisConn.End2RefPortExtElementID);
-                    thisConn.setEndComps(...
-                        end1APort, end1Comp, end1APort.ParentArch, ...
-                        end2APort, end2Comp, end2APort.ParentArch);
+                    if ~isempty(end1APort) && ~isempty(end2APort)
+                        thisConn.setEndComps(...
+                            end1APort, end1Comp, end1APort.ParentArch, ...
+                            end2APort, end2Comp, end2APort.ParentArch);
+                    else
+                        thisConn.Valid = false;
+                    end
                 else
                     nonSibling1 = false;
                     if ~isempty(thisConn.End1Comp)
@@ -593,12 +600,14 @@ classdef CandidateArchitecture < xmi.CandidateElement
                                 this,thisConn.End1Comp, ...
                                 thisConn.End1APort.Replacements(1), ...
                                 thisConn.End2Comp, ...
-                                thisConn.End2APort.Replacements(1));
+                                thisConn.End2APort.Replacements(1), ...
+                                thisConn.ExtElementID);
                             newConn2 = this.addDerivedConnector(...
                                 this,thisConn.End1Comp, ...
                                 thisConn.End1APort.Replacements(2), ...
                                 thisConn.End2Comp, ...
-                                thisConn.End2APort.Replacements(2));
+                                thisConn.End2APort.Replacements(2), ...
+                                thisConn.ExtElementID);
                             thisConn.setReplacements([newConn1 newConn2]);
                             
                             if newConn1.Valid && (nonSibling1 || nonSibling2)
@@ -753,12 +762,12 @@ classdef CandidateArchitecture < xmi.CandidateElement
                 end
                 repConn = this.addDerivedConnector(...
                     this, othComp, othAPorts(k), ...
-                    adComp, adArchInports(k));
+                    adComp, adArchInports(k), thisConn.ExtElementID);
                 thisConn.setReplacements(repConn);
             end
             this.addDerivedConnector(...
                 this, dstComp, dstCompArchPort, ...
-                adComp, adArchOutport);
+                adComp, adArchOutport, thisConn.ExtElementID);
         end
         
         function build = buildCheck(this, inlineSingleUseArchsAcrossPackages, ...
