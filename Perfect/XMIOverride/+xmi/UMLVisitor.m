@@ -268,10 +268,25 @@ classdef UMLVisitor < m3i.Visitor
             end
             
             [~,cStype] = this.getSysMLStereotype(element);
-            reqID = this.getExtID(element);
+            reqXMIID = this.getExtID(element);
+            
+            reqID = cStype.getOne('Id');
+            if ~isempty(reqID)
+               reqIDString = string(reqID.toString); 
+            else
+               reqIDString = "";
+            end
+
+            reqText = cStype.getOne('Text');
+            if ~isempty(reqText)
+               reqTextString = string(reqText.toString); 
+            else
+               reqTextString = "";
+            end
+
             xmi.CandidateRequirement(...
-                reqID, string(element.name), string(cStype.getOne('Id').toString), ...
-                string(cStype.getOne('Text').toString), reqOwner);
+                reqXMIID, string(element.name), reqIDString, ...
+                reqTextString, reqOwner);
             
             % Process nested classes (requirements)
             for i=1:element.nestedClassifier.size
