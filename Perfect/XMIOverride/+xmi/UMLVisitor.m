@@ -519,8 +519,12 @@ classdef UMLVisitor < m3i.Visitor
         end
 
         function ret = visitViewpoint(this, element)
-            % Treat a viewpoint as a package for now.
+            % Treat a viewpoint as a package for now but log it as not
+            % imported.
             ret = this.visitumlmmPackage(element);
+
+            addNotImported(this, element, "Viewpoint", ...
+                               "Viewpoint import not supported.");
         end
     end
     
@@ -745,17 +749,25 @@ classdef UMLVisitor < m3i.Visitor
         end
 
         function ret = visitumlmmInteraction(this, element)
+            % Import any behaviors but still log the sequence diagram
+            % itself as not imported.
             ret = [];
-            %fprintf('\nvisited interaction: %s\n%s\n\n', element.name, formattedDisplayText(element));
 
             visitChildren(this, element.ownedBehavior);
+
+            addNotImported(this, element, "Sequence Diagram", ...
+                               "Sequence Diagram import not supported.");
         end
 
         function ret = visitumlmmUseCase(this, element)
+            % Import any behaviors but still log the use case itself as not
+            % imported.
             ret = [];
-            %fprintf('visited use case: %s\n', element.name)
 
             visitChildren(this, element.ownedBehavior);
+
+            addNotImported(this, element, "Use Case", ...
+                               "Use Case import not supported.");
         end
     end    
 

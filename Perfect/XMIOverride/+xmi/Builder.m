@@ -496,16 +496,48 @@ classdef Builder < handle
         end
 
         function createParameters(this, candArch)
+            if isempty(candArch.Parameters)
+                return;
+            end
+
             arch = candArch.ZCHandle;
-            allPrmNames = [];
+
+            % Start with built-ins
+            allPrmNames = string(fieldnames(get_param(arch.SimulinkHandle, 'ObjectParameters')))';
+
+            newPrmNames = [candArch.Parameters.Name];
+
+            [allPrmNames, modified] = matlab.lang.makeUniqueStrings(...
+                    lower([allPrmNames, newPrmNames]), ...
+                    [false(1, length(allPrmNames)) true(1, length(newPrmNames))], namelengthmax);
+
+            % Remove built-ins
+            modified = modified(end-length(newPrmNames)+1:end);
+            allPrmNames = allPrmNames(end-length(newPrmNames)+1:end);
+
             for k = 1:length(candArch.Parameters)
                 thisPrm = candArch.Parameters(k);
+                prmName = allPrmNames(k);
 
-                prmName = string(this.makeValidName(thisPrm.Name));
-                allPrmNames = matlab.lang.makeUniqueStrings(...
-                    [allPrmNames, prmName], ...
-                    [false(1, length(allPrmNames)) true], namelengthmax);
-                prmName = allPrmNames(end);
+                if modified(k)
+                    % The parameter name was modified so honor the original
+                    % case.
+                    originalPrmName = char(thisPrm.Name);
+                    newPrmName = char(prmName);
+
+                    finalLength = length(newPrmName);
+                    startLength = length(originalPrmName);
+
+                    left  = repmat(' ', [max(finalLength, startLength) 1]);
+                    right = left;
+
+                    left(1:startLength) = originalPrmName';
+                    right(1:finalLength) = newPrmName';
+
+                    diffIdx = find(left~=right, 1);
+
+                    prmName = string([originalPrmName(1:diffIdx-1) newPrmName(diffIdx:finalLength)]);
+                end
 
                 options = {};
                 if ~strcmp(thisPrm.Dim, "1")
@@ -556,18 +588,7 @@ classdef Builder < handle
                         arch.addParameter(prmName,options{:});
                     catch ME
                         arch.addParameter(prmName);
-                    end
-                else
-                    try
-                        arch.addParameter(prmName);
-                    catch ME
-                        if strcmp(ME.identifier, 'Simulink:Masking:ParameterNameClash')
-                            % Conflict with a built-in parameter name so need to adjust it.
-                            prmName = sprintf('%s_imported', prmName);
-                            arch.addParameter(prmName);
-                        else
-                            rethrow(ME);
-                        end
+                        warning('xmi:Builder:createParameters:InvalidOptions', 'Unable to add options for parameter ''%s'' in architecture ''%s''.\nOptions:\n%s', prmName, getQualifiedName(arch), formattedDisplayText(options));
                     end
                 end
             end
