@@ -376,10 +376,12 @@ classdef Builder < handle
         
         function recAddRequirementToSet(this, req, reqParent)
             req.ReqID = strrep(req.ReqID, '#', '');
-            req.Text = strrep(slreq.cpputils.htmlToText(req.Text), newline, ' ');
+            req.Name  = strrep(slreq.cpputils.htmlToText(req.Name), newline, ' ');
+            req.Text  = strrep(slreq.cpputils.htmlToText(req.Text), newline, ' ');
             
-            thisReq = reqParent.add('Id', req.ReqID, ...
-                                    'Summary', req.Text);
+            thisReq = reqParent.add(Id=req.ReqID, ...
+                                    Summary=req.Name, ...
+                                    Description=req.Text);
             req.ZCHandle = thisReq;
             this.Stats.NumRequirements = this.Stats.NumRequirements + 1;
             for k = 1:length(req.ChildRequirements)
