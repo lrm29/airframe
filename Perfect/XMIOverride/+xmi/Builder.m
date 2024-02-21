@@ -505,7 +505,7 @@ classdef Builder < handle
             % Start with built-ins
             allPrmNames = string(fieldnames(get_param(arch.SimulinkHandle, 'ObjectParameters')))';
 
-            newPrmNames = [candArch.Parameters.Name];
+            newPrmNames = arrayfun(@this.makeValidName, [candArch.Parameters.Name]);
 
             [allPrmNames, modified] = matlab.lang.makeUniqueStrings(...
                     lower([allPrmNames, newPrmNames]), ...
