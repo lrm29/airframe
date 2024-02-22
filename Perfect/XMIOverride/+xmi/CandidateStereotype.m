@@ -63,14 +63,23 @@ classdef CandidateStereotype < xmi.CandidateElement
         end
         
         function uniquePropNames(this, builder)
-            if ~isempty(this.SuperClass) 
-                if ~this.SuperClass.Uniqued
-                    this.SuperClass.uniquePropNames(builder);
+            sClassPropNames = [];
+            if ~isempty(this.SuperClass)
+                % There can be multiple superclasses after generalizations
+                % have been merged in.
+                sClassPropNameCells = cell(0, numel(this.SuperClass));
+                for superClassIdx = 1:numel(this.SuperClass)
+                    superClass = this.SuperClass(superClassIdx);
+
+                    if ~superClass.Uniqued
+                        superClass.uniquePropNames(builder);
+                    end
+
+                    sClassPropNameCells{superClassIdx} = superClass.PropNamesInScope;
                 end
-                sClassPropNames = this.SuperClass.PropNamesInScope;
-            else
-                sClassPropNames = [];
+                sClassPropNames = [sClassPropNameCells{:}];
             end
+
             propNames = [];
             for k = 1:length(this.Properties)
                 thisName = builder.makeValidName(this.Properties(k).Name);

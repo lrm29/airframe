@@ -71,7 +71,17 @@ classdef Builder < handle
         
             this.ProjectSLDDName = this.makeValidName(buildProj) + "_DD.sldd";
             ddFile = this.ProjectPath + filesep + this.ProjectSLDDName;
-            this.ProjectSLDD = systemcomposer.createDictionary(ddFile);
+
+            try
+                this.ProjectSLDD = systemcomposer.createDictionary(ddFile);
+            catch ME
+                if ~strcmp(ME.identifier, 'mf0:messages:UniquenessConstraint')
+                    rethrow(ME);
+                end
+                close(systemcomposer.openDictionary(ddFile));
+                this.ProjectSLDD = systemcomposer.createDictionary(ddFile);
+            end
+
             this.ProjectSLDDPath = ddFile;
             this.RootProject.addFile(ddFile);
         
@@ -444,8 +454,9 @@ classdef Builder < handle
                                     end
                                 end
                             end
-                            
-                            st.ZCHandle.addProperty(...
+
+                            props(m).Datatype = tName;
+                            props(m).ZCHandle = st.ZCHandle.addProperty(...
                                 char(props(m).FinalName),'Type', tName);
                             
                             this.Stats.NumStereotypeProps = this.Stats.NumStereotypeProps+1;
@@ -455,8 +466,12 @@ classdef Builder < handle
                     % Add superclasses
                     for p = 1:length(thisProf.Stereotypes)
                         st = thisProf.Stereotypes(p);
-                        if ~isempty(st.SuperClass) && ~isempty(st.SuperClass.ZCHandle)
+                        if ~isempty(st.SuperClass) && ~isempty(st.SuperClass(1).ZCHandle)
                             st.ZCHandle.Parent = st.SuperClass.ZCHandle;
+                        end
+
+                        if numel(st.SuperClass) > 1
+                            warning('xmi:Builder:createProfiles:UnresolvedMultipleInheritance', 'Stereotype ''%s'' in profile ''%s'' has multiple parents. Only the first was linked.\nParents:\n%s', st.Name, thisProf.Name, formattedDisplayText([st.SuperClass.Name]'));
                         end
                     end
                 end
@@ -467,14 +482,16 @@ classdef Builder < handle
             zcElem = elem.ZCHandle;
             
             for k = 1:length(elem.StereotypesExtIDs)
-                elemST = xmi.CandidateElement.idMap(...
+                candidateStereotypes = xmi.CandidateElement.idMap(...
                     "lookup", elem.StereotypesExtIDs(k));
-                if ~isempty(elemST) 
-                    zcElem.applyStereotype(...
-                        char(elemST.Profile.FinalName + "." + elemST.Name));
-                    elemST.trackAppliedElement(zcElem)
-                    this.Stats.NumStereotypesApplied = ...
-                        this.Stats.NumStereotypesApplied+1;
+                if ~isempty(candidateStereotypes) 
+                    for candidateStereotype = candidateStereotypes
+                        zcElem.applyStereotype(...
+                            char(candidateStereotype.Profile.FinalName + "." + candidateStereotype.Name));
+                        candidateStereotype.trackAppliedElement(zcElem)
+                        this.Stats.NumStereotypesApplied = ...
+                            this.Stats.NumStereotypesApplied+1;
+                    end
                 end
             end
             props = elem.StereotypePropVals;
@@ -485,8 +502,14 @@ classdef Builder < handle
                     prop = propST.findProperty(props(p).PropertyName);
                     if ~isempty(prop)
                         propName = propST.Profile.FinalName + "." + propST.Name + "." + prop.FinalName;
-                        zcElem.setProperty(char(propName), ...
-                                           ['''' props(p).Value  '''']);
+
+                        if strcmp(prop.Datatype, 'boolean')
+                            propValueString = props(p).Value;
+                        else
+                            propValueString = ['''' props(p).Value  ''''];
+                        end
+
+                        zcElem.setProperty(char(propName), propValueString);
                         
                         this.Stats.NumStereotypePropsSet = ...
                             this.Stats.NumStereotypePropsSet + 1;

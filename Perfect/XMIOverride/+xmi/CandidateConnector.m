@@ -131,14 +131,29 @@ classdef CandidateConnector < xmi.CandidateElement
         
         function print(this, printer)
             if isempty(this.End1Comp)
-                e1Pname = "[Aport]." + this.End1RefArch.getPortName(this.End1RefPortExtElementID);
+                if ~isempty(this.End1RefArch)
+                    e1Pname = "[Aport]." + this.End1RefArch.getPortName(this.End1RefPortExtElementID);
+                else
+                    % The ports cannot be connected, probably because of
+                    % incompatible directions.
+                    port = xmi.CandidateElement.idMap("lookup", this.End1RefPortExtElementID);
+                    e1Pname = "[Aport]." + port.BuildName;
+                end
             else
                 e1Pname = "[" + this.End1Comp.Name + "]" + "<" + ...
                           this.End1Comp.ReferenceArch.Name + ">." + ...
                           this.End1RefArch.getPortName(this.End1RefPortExtElementID);
             end
+
             if isempty(this.End2Comp)
-                e2Pname = "[Aport]." + this.End2RefArch.getPortName(this.End2RefPortExtElementID);
+                if ~isempty(this.End2RefArch)
+                    e2Pname = "[Aport]." + this.End2RefArch.getPortName(this.End2RefPortExtElementID);
+                else
+                    % The ports cannot be connected, probably because of
+                    % incompatible directions.
+                    port = xmi.CandidateElement.idMap("lookup", this.End2RefPortExtElementID);
+                    e2Pname = "[Aport]." + port.BuildName;
+                end
             else
                 e2Pname = "[" + this.End2Comp.Name + "]" + "<" + ...
                           this.End2Comp.ReferenceArch.Name + ">." + ...
