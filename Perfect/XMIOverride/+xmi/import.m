@@ -282,7 +282,7 @@ function impReport = import(xmiFileName, outputDirectory, varargin)
         end
     end
     if ~isempty(additionalURIs)
-        mTmp = size(additionalURIs); 
+        mTmp = height(additionalURIs); 
         for k = 1:mTmp
             s.addRemoteUri(additionalURIs(k,1), additionalURIs(k,2), {});
             copyfile(additionalURIs(k,3), string(pwd) + filesep + additionalURIs(k,2));
