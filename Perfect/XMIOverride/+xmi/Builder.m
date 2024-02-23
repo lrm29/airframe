@@ -84,6 +84,7 @@ classdef Builder < handle
 
             this.ProjectSLDDPath = ddFile;
             this.RootProject.addFile(ddFile);
+            this.RootProject.addPath(this.ProjectPath);
         
             this.Stats.NumProjectFolders = 0;
 
