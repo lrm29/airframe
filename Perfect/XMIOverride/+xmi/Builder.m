@@ -94,6 +94,7 @@ classdef Builder < handle
             this.Stats.NumInterfaces = 0;  
 
             this.Stats.NumActivityDiagrams = 0;
+            this.Stats.NumInteractions = 0;
 
             this.Stats.NumRequirements = 0;
             this.Stats.NumReqLinks = 0;
@@ -300,6 +301,28 @@ classdef Builder < handle
             this.ArchModelExtIDMap(candAct.ExtElementID) = slHandle;
         
             this.Stats.NumActivityDiagrams = this.Stats.NumActivityDiagrams + 1;
+        end
+
+        function interactionMdl = createInteraction(this, candInteraction)
+            archMdlName = this.getModelName(candInteraction.Name);
+            candInteraction.BuildName = archMdlName;
+            publish(candInteraction);
+            interactionArch  = xmi.CandidateAD.internal.getArchitecturePeer(candInteraction.ZCElement);
+            interactionMdl  = interactionArch.Model;
+            slHandle = interactionMdl.SimulinkHandle;
+            
+            candProj = candInteraction.ParentPackage;
+            archMdlPath = this.ProjectPath + ...
+                candProj.ZCProjectFolder + filesep + archMdlName + ".slx";
+            this.AllModelPaths = [this.AllModelPaths archMdlPath];
+
+            save_system(slHandle, archMdlPath);
+
+            this.RootProject.addFile(archMdlPath);
+
+            this.ArchModelExtIDMap(candInteraction.ExtElementID) = slHandle;
+        
+            this.Stats.NumInteractions = this.Stats.NumInteractions + 1;
         end
         
         function archMdl = createArchitectureModel(this, candArch)

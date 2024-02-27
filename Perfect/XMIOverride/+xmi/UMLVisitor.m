@@ -154,15 +154,7 @@ classdef UMLVisitor < m3i.Visitor
         
         function visitBlock(this, element)            
             % SysML:Block -- Create candidate architecture
-            ppID = "";
-            owner = element.owner;
-            while ppID == ""
-                if isa(owner, 'umlmm.Package')
-                    ppID = this.getExtID(owner);
-                end
-                owner = owner.owner;
-            end
-            assert(ppID ~= "");
+            ppID = xmi.utils.getUMLPackageParentID(element);
             
             cID =  this.getExtID(element);
             aName = string(element.name);
@@ -731,15 +723,7 @@ classdef UMLVisitor < m3i.Visitor
             %fprintf('visited actitity: %s\n', element.name);
 
             % uml:Activity -- Create candidate activity diagram
-            ppID = "";
-            owner = element.owner;
-            while ppID == ""
-                if isa(owner, 'umlmm.Package')
-                    ppID = this.getExtID(owner);
-                end
-                owner = owner.owner;
-            end
-            assert(ppID ~= "");
+            ppID = xmi.utils.getUMLPackageParentID(element);
 
             [CandidateAD, notImported] = xmi.CandidateAD.buildCandidateAD(element);
             CandidateAD.ParentPackageExtElementID = ppID;
@@ -752,11 +736,14 @@ classdef UMLVisitor < m3i.Visitor
             % Import any behaviors but still log the sequence diagram
             % itself as not imported.
             ret = [];
+            
+            ppID = xmi.utils.getUMLPackageParentID(element);
+
+            [candidateInteraction, notImported] = xmi.CandidateInteraction.buildCandidateInteraction(element);
+            candidateInteraction.ParentPackageExtElementID = ppID;
+            this.NotImported = [this.NotImported notImported];
 
             visitChildren(this, element.ownedBehavior);
-
-            addNotImported(this, element, "Sequence Diagram", ...
-                               "Sequence Diagram import not supported.");
         end
 
         function ret = visitumlmmUseCase(this, element)

@@ -14,12 +14,14 @@ classdef CandidatePackage < xmi.CandidateElement
         
         Architectures = [];  
         Activities = [];
+        Interactions = [];
 
         Build = false;
         BuildParentPackage = [];
         BuildChildPackages = [];
         BuildArchitectures = [];
         BuildActivities    = [];
+        BuildInteractions  = [];
         
         ZCProjectFolder = "";
     end
@@ -56,6 +58,10 @@ classdef CandidatePackage < xmi.CandidateElement
 
         function addActivity(this, activity)
             this.Activities = [this.Activities activity];
+        end
+
+        function addInteraction(this, interaction)
+            this.Interactions = [this.Interactions interaction];
         end
         
         function print(this, printer)
@@ -100,11 +106,14 @@ classdef CandidatePackage < xmi.CandidateElement
         end
 
         function finishBuild(this, builder)
-            for k = 1:length(this.BuildArchitectures)
-                this.BuildArchitectures(k).finishBuild(builder);
+            for h = 1:length(this.BuildArchitectures)
+                this.BuildArchitectures(h).finishBuild(builder);
             end
-            for k = 1:length(this.BuildActivities)
-                this.BuildActivities(k).finishBuild(builder);
+            for i = 1:length(this.BuildActivities)
+                this.BuildActivities(i).finishBuild(builder);
+            end
+            for j = 1:length(this.BuildInteractions)
+                this.BuildInteractions(j).finishBuild(builder);
             end
             for k = 1:length(this.BuildChildPackages)
                 this.BuildChildPackages(k).finishBuild(builder)
@@ -112,7 +121,7 @@ classdef CandidatePackage < xmi.CandidateElement
         end
 
         function buildChildRet = recVisitForPrune(this)
-            this.Build = ~isempty(this.BuildArchitectures) || ~isempty(this.BuildActivities);
+            this.Build = ~isempty(this.BuildArchitectures) || ~isempty(this.BuildActivities) || ~isempty(this.BuildInteractions);
             
             buildChildren = [];
             for k = 1:length(this.ChildPackages)
@@ -152,6 +161,9 @@ classdef CandidatePackage < xmi.CandidateElement
 
             % Build all activity diagrams
             this.BuildActivities = this.Activities;
+            
+            % Build all sequence diagrams
+            this.BuildInteractions = this.Interactions;
             
             for k = 1:length(this.ChildPackages)
                 this.ChildPackages(k).recVisitForArchPrune(...

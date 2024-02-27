@@ -3,6 +3,7 @@ classdef Element < xmi.CandidateElement & matlab.mixin.SetGetExactNames
         Name (1,:) char
         Parent
         Model
+        ReferenceElementID
     end
 
     properties
@@ -12,6 +13,7 @@ classdef Element < xmi.CandidateElement & matlab.mixin.SetGetExactNames
     properties (Dependent)
         QualifiedName
         ElementType
+        ReferenceElement
     end
     
     methods
@@ -27,6 +29,14 @@ classdef Element < xmi.CandidateElement & matlab.mixin.SetGetExactNames
             elementObj.Parent = NameValueArgs.Parent;
 
             setModel(elementObj);
+        end
+
+        function referenceElement = get.ReferenceElement(this)
+            referenceElement = [];
+            if ~isempty(this.ReferenceElementID)
+                referenceElement = xmi.CandidateElement.idMap(...
+                                "lookup", this.ReferenceElementID);
+            end
         end
 
         function elementType = get.ElementType(this)
@@ -72,6 +82,12 @@ classdef Element < xmi.CandidateElement & matlab.mixin.SetGetExactNames
         function setZCName(this, newName)
             xmi.CandidateAD.internal.setName(this.ZCElement, newName);
         end
+
+        function applyExternalUID(this)
+            if ~isempty(this.ZCElement)
+                this.ZCElement.ExternalUID = this.ExtElementID;
+            end
+        end
     end
     methods (Sealed)
         function print(this, printer)           
@@ -96,10 +112,7 @@ classdef Element < xmi.CandidateElement & matlab.mixin.SetGetExactNames
             doPublish(this, target);
 
             % Tag the element with the xmi id:
-            if ~isempty(this.ZCElement)
-                archElement = xmi.CandidateAD.internal.getArchitecturePeer(this.ZCElement);
-                archElement.ExternalUID = this.ExternalID;
-            end
+            applyExternalUID(this);
 
             postPublish(this, target);
         end
