@@ -18,7 +18,7 @@ classdef CandidateInterface < xmi.CandidateElement
         Valid = true;
         InvalidReason = "";
 
-        ZCHandle = []
+        ZCElement = []
     end
     
     methods
@@ -116,10 +116,10 @@ classdef CandidateInterface < xmi.CandidateElement
         end
 
         function buildZCInterface(this, builder)
-            if isempty(this.ZCHandle)
+            if isempty(this.ZCElement)
                 intf = builder.createInterface(this.ExtElementID, ...
                                                this.BuildName);
-                this.ZCHandle = intf;
+                this.ZCElement = intf;
                 intf.ExternalUID = this.ExtElementID;
                 for k = 1:length(this.Elements)
                     thisElem = this.Elements(k);

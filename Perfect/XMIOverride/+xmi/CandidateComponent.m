@@ -14,7 +14,7 @@ classdef CandidateComponent < xmi.CandidateElement
         Valid = true;
         InvalidReason = "";
         
-        ZCHandle = [];
+        ZCElement = [];
     end
     
     methods

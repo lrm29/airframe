@@ -74,6 +74,9 @@ classdef CandidatePackage < xmi.CandidateElement
             for k = 1:length(this.BuildActivities)
                 this.BuildActivities(k).print(printer)
             end
+            for k = 1:length(this.BuildInteractions)
+                this.BuildInteractions(k).print(printer)
+            end
             for k = 1:length(this.BuildChildPackages)
                 this.BuildChildPackages(k).print(printer)
             end
@@ -89,6 +92,10 @@ classdef CandidatePackage < xmi.CandidateElement
 
             for k = 1:length(this.BuildActivities)
                 this.BuildActivities(k).prelimBuild(builder);
+            end
+
+            for k = 1:length(this.BuildInteractions)
+                this.BuildInteractions(k).prelimBuild(builder);
             end
             
             % Unique child folder names

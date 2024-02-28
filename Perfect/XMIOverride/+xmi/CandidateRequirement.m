@@ -10,7 +10,7 @@ classdef CandidateRequirement < xmi.CandidateElement
         ChildRequirements
         ParentRequirement
         
-        ZCHandle = [];
+        ZCElement = [];
     end
     
     methods

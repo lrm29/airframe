@@ -23,7 +23,7 @@ classdef CandidateArchitecture < xmi.CandidateElement
         Generalizations = []
         Specializations = []
         
-        ZCHandle = []
+        ZCElement = []
         
         IsInlined = false;
         Visited = false;
@@ -328,11 +328,11 @@ classdef CandidateArchitecture < xmi.CandidateElement
                 if this.BuildAsSimulink
                     % Bug in ZC. Refresh Arch handle
                     set_param(this.SimulinkModelName, 'HasSystemComposerArchInfo', 'on');
-                    this.ZCHandle = get_param(this.SimulinkModelName, ...
+                    this.ZCElement = get_param(this.SimulinkModelName, ...
                                               'SystemComposerArchitecture');
                     set_param(this.SimulinkModelName, 'HasSystemComposerArchInfo', 'off');
                 end
-                allPorts = this.ZCHandle.Ports;
+                allPorts = this.ZCElement.Ports;
                 maxPortNameLenIn = 0;
                 maxPortNameLenOut = 0;
                 
@@ -825,7 +825,7 @@ classdef CandidateArchitecture < xmi.CandidateElement
         end
         
         function prelimBuildArchBody(this, thisArch, builder)
-            this.ZCHandle = thisArch;
+            this.ZCElement = thisArch;
             thisArch.ExternalUID = this.ExtElementID;
             
             % Apply stereotypes
@@ -838,7 +838,7 @@ classdef CandidateArchitecture < xmi.CandidateElement
                 thisComp = cComps(p);
                 if thisComp.Valid
                     c = builder.createComponent(thisArch, thisComp);
-                    thisComp.ZCHandle = c;
+                    thisComp.ZCElement = c;
                     c.ExternalUID = thisComp.ExtElementID;
                 end
             end
@@ -851,7 +851,7 @@ classdef CandidateArchitecture < xmi.CandidateElement
                 thisComp = cComps(p);
                 if thisComp.Valid && thisComp.IsInliningItsArch
                     thisComp.ReferenceArch.prelimBuildArchBody(...
-                        thisComp.ZCHandle.Architecture, builder);
+                        thisComp.ZCElement.Architecture, builder);
                 end
             end
             
@@ -864,11 +864,11 @@ classdef CandidateArchitecture < xmi.CandidateElement
                 if thisPort.Valid && ~thisPort.Replaced
                     aP = builder.createPort(thisArch, thisPort.Name, ...
                                             thisPort.ComputedDir);
-                    thisPort.ZCHandle = aP;
+                    thisPort.ZCElement = aP;
                     thisPort.BuildName = aP.Name;
                     aP.ExternalUID = thisPort.ExtElementID;
                     if ~isempty(thisPort.Interface)
-                        intf = thisPort.Interface.ZCHandle;
+                        intf = thisPort.Interface.ZCElement;
                         aP.setInterface(intf);
                     end
                 end
@@ -894,15 +894,15 @@ classdef CandidateArchitecture < xmi.CandidateElement
                         % Link to reference architecture model
                         refMdlName = builder.lookupModelNameFromExtID(...
                             thisComp.ReferenceArchExtElementID);
-                        thisComp.ZCHandle.linkToModel(refMdlName);
+                        thisComp.ZCElement.linkToModel(refMdlName);
                     else
                         thisComp.ReferenceArch.finishBuildLinkComps(builder);
                     end
                     
                     defWidth = thisComp.ReferenceArch.getDefaultCompWidth();
-                    compPos = get_param(thisComp.ZCHandle.SimulinkHandle,'Position');
+                    compPos = get_param(thisComp.ZCElement.SimulinkHandle,'Position');
                     offsetPos = 10 * (cIdx-1);
-                    set_param(thisComp.ZCHandle.SimulinkHandle,'Position',...
+                    set_param(thisComp.ZCElement.SimulinkHandle,'Position',...
                                             [compPos(1), compPos(2), ...
                                         compPos(1)+defWidth, ...
                                         compPos(4)] + offsetPos);
@@ -921,25 +921,25 @@ classdef CandidateArchitecture < xmi.CandidateElement
                         % Arch port
                         port1 = this.PortMapFromExtElementID(thisConn.End1RefPortExtElementID);
                         port1Dir = port1.ComputedDir;
-                        zcPort1 = port1.ZCHandle;
+                        zcPort1 = port1.ZCElement;
                         port1Arch = true;
                     else
                         % Comp port
                         port1 = thisConn.End1RefArch.PortMapFromExtElementID(thisConn.End1RefPortExtElementID);
                         port1Name = port1.BuildName;
                         port1Dir = port1.ComputedDir;
-                        zcPort1 = thisConn.End1Comp.ZCHandle.getPort(char(port1Name));
+                        zcPort1 = thisConn.End1Comp.ZCElement.getPort(char(port1Name));
                         port1Arch = false;
                     end
                     if isempty(thisConn.End2Comp)
                         % Arch port
                         port2 = this.PortMapFromExtElementID(thisConn.End2RefPortExtElementID);
-                        zcPort2 = port2.ZCHandle;
+                        zcPort2 = port2.ZCElement;
                     else
                         % Comp port
                         port2 = thisConn.End2RefArch.PortMapFromExtElementID(thisConn.End2RefPortExtElementID);
                         port2Name = port2.BuildName;
-                        zcPort2 = thisConn.End2Comp.ZCHandle.getPort(char(port2Name));
+                        zcPort2 = thisConn.End2Comp.ZCElement.getPort(char(port2Name));
                     end
                     
                     if (port1Arch && port1Dir == "in") || (~port1Arch && port1Dir == "out")
@@ -952,8 +952,8 @@ classdef CandidateArchitecture < xmi.CandidateElement
             end
             
             % Fix layout of Arch
-            this.ZCHandle.layout;
-            set_param(this.ZCHandle.SimulinkHandle, 'SystemRect', [0 0 0 0]);
+            this.ZCElement.layout;
+            set_param(this.ZCElement.SimulinkHandle, 'SystemRect', [0 0 0 0]);
             
             cComps = this.ChildComponents;
             for p = 1:length(cComps)

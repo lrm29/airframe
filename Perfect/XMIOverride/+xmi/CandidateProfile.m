@@ -5,7 +5,7 @@ classdef CandidateProfile < handle
         FinalName = ""
         Stereotypes = [];
         
-        ZCHandle = [];
+        ZCElement = [];
     end
     
     methods

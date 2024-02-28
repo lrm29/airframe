@@ -9,7 +9,7 @@ classdef CandidateStereotypeProp < xmi.CandidateElement
         
         Owner = []
         
-        ZCHandle = [];
+        ZCElement = [];
     end
     
     methods

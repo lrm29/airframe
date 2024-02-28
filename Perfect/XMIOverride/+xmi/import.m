@@ -386,10 +386,14 @@ function impReport = import(xmiFileName, outputDirectory, varargin)
         "getElems", "xmi.CandidateArchitecture");
     candActivities = xmi.CandidateElement.idMap(...
         "getElems", "xmi.CandidateAD.Model");
+    candInteractions = xmi.CandidateElement.idMap(...
+        "getElems", "xmi.CandidateInteraction.Interaction");
     candPkgs = xmi.CandidateElement.idMap(...
         "getElems", "xmi.CandidatePackage");
     candIntfs = xmi.CandidateElement.idMap(...
         "getElems", "xmi.CandidateInterface");
+    candAllocs = xmi.CandidateElement.idMap(...
+        "getElems", "xmi.CandidateAllocation.Allocation");
     candReqs = xmi.CandidateElement.idMap(...
         "getElems", "xmi.CandidateRequirement");
     candReqLinks = xmi.CandidateElement.idMap(...
@@ -417,6 +421,12 @@ function impReport = import(xmiFileName, outputDirectory, varargin)
     for k = 1:length(candActivities)
         thisActivity = candActivities{k};
         thisActivity.linkPackage();
+    end
+
+    % Link Interactions to Packages
+    for k = 1:length(candInteractions)
+        thisInteraction = candInteractions{k};
+        thisInteraction.linkPackage();
     end
     
     % Link Components to Architectures and Ports to Interfaces
@@ -502,14 +512,18 @@ function impReport = import(xmiFileName, outputDirectory, varargin)
             buildRootPkg.prelimBuild(builder);
             buildRootPkg.finishBuild(builder);
         end
-        
-        if ~isempty(candReqs)
-           builder.createRequirementsFile(candReqs);
+
+        if ~isempty(candAllocs)
+           builder.createAllocationFiles(candAllocs);
         end
         
-        if ~isempty(candReqLinks)
-           builder.createReqLinks(candReqLinks);
-        end
+        % if ~isempty(candReqs)
+        %    builder.createRequirementsFile(candReqs);
+        % end
+        % 
+        % if ~isempty(candReqLinks)
+        %    builder.createReqLinks(candReqLinks);
+        % end
         
         impReport.ImportedTotals = builder.Stats;
         

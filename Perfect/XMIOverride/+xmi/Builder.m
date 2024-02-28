@@ -27,6 +27,7 @@ classdef Builder < handle
         ReqFileName = ""
 
         ReqFile = []
+        AllocationSets = []
         AllLinkSets = []
         
         Profiles = []
@@ -132,6 +133,12 @@ classdef Builder < handle
                 save_system(allMdls{k}, '', ...
                             'SaveDirtyReferencedModels', 'on');
                 close_system(allMdls{k});
+            end
+
+            for k = 1:length(this.AllocationSets)
+                allocationSet = this.AllocationSets(k);
+                save(allocationSet);
+                close(allocationSet);
             end
             
             if ~isempty(this.ReqFile)
@@ -255,7 +262,7 @@ classdef Builder < handle
             tmpComp = tempMdlZCM.Architecture.addComponent(char(candArchName));
             candArch.prelimBuildPorts(tmpComp.Architecture, this);
             
-            candArch.ZCHandle = tmpComp.Architecture;
+            candArch.ZCElement = tmpComp.Architecture;
             
             this.applyStereotypes(candArch);
             this.createParameters(candArch);
@@ -274,9 +281,9 @@ classdef Builder < handle
             this.ArchModelExtIDMap(candArch.ExtElementID) = slMdlHdl;
             
             set_param(slMdlHdl, 'HasSystemComposerArchInfo', 'on');
-            candArch.ZCHandle = get_param(slMdlHdl, 'SystemComposerArchitecture');
+            candArch.ZCElement = get_param(slMdlHdl, 'SystemComposerArchitecture');
             set_param(slMdlHdl, 'HasSystemComposerArchInfo', 'off');
-            candArch.ZCHandle.ExternalUID = candArch.ExtElementID;
+            candArch.ZCElement.ExternalUID = candArch.ExtElementID;
 
             this.Stats.NumArchitectureModels = this.Stats.NumArchitectureModels + 1;
         end
@@ -307,8 +314,7 @@ classdef Builder < handle
             archMdlName = this.getModelName(candInteraction.Name);
             candInteraction.BuildName = archMdlName;
             publish(candInteraction);
-            interactionArch  = xmi.CandidateAD.internal.getArchitecturePeer(candInteraction.ZCElement);
-            interactionMdl  = interactionArch.Model;
+            interactionMdl  = candInteraction.ZCElement.Model;
             slHandle = interactionMdl.SimulinkHandle;
             
             candProj = candInteraction.ParentPackage;
@@ -415,7 +421,7 @@ classdef Builder < handle
             thisReq = reqParent.add(Id=req.ReqID, ...
                                     Summary=req.Name, ...
                                     Description=req.Text);
-            req.ZCHandle = thisReq;
+            req.ZCElement = thisReq;
             this.Stats.NumRequirements = this.Stats.NumRequirements + 1;
             for k = 1:length(req.ChildRequirements)
                 recAddRequirementToSet(...
@@ -451,7 +457,7 @@ classdef Builder < handle
                     % Add stereotypes 
                     for p = 1:length(thisProf.Stereotypes)
                         st = thisProf.Stereotypes(p);
-                        st.ZCHandle = newProf.addStereotype(st.Name);
+                        st.ZCElement = newProf.addStereotype(st.Name);
                         props = st.Properties;
                         this.Stats.NumStereotypes = this.Stats.NumStereotypes + 1;
                         
@@ -479,7 +485,7 @@ classdef Builder < handle
                             end
 
                             props(m).Datatype = tName;
-                            props(m).ZCHandle = st.ZCHandle.addProperty(...
+                            props(m).ZCElement = st.ZCElement.addProperty(...
                                 char(props(m).FinalName),'Type', tName);
                             
                             this.Stats.NumStereotypeProps = this.Stats.NumStereotypeProps+1;
@@ -489,8 +495,8 @@ classdef Builder < handle
                     % Add superclasses
                     for p = 1:length(thisProf.Stereotypes)
                         st = thisProf.Stereotypes(p);
-                        if ~isempty(st.SuperClass) && ~isempty(st.SuperClass(1).ZCHandle)
-                            st.ZCHandle.Parent = st.SuperClass.ZCHandle;
+                        if ~isempty(st.SuperClass) && ~isempty(st.SuperClass(1).ZCElement)
+                            st.ZCElement.Parent = st.SuperClass.ZCElement;
                         end
 
                         if numel(st.SuperClass) > 1
@@ -502,7 +508,7 @@ classdef Builder < handle
         end
         
         function applyStereotypes(this, elem)
-            zcElem = elem.ZCHandle;
+            zcElem = elem.ZCElement;
             
             for k = 1:length(elem.StereotypesExtIDs)
                 candidateStereotypes = xmi.CandidateElement.idMap(...
@@ -546,7 +552,7 @@ classdef Builder < handle
                 return;
             end
 
-            arch = candArch.ZCHandle;
+            arch = candArch.ZCElement;
 
             % Start with built-ins
             allPrmNames = string(fieldnames(get_param(arch.SimulinkHandle, 'ObjectParameters')))';
@@ -639,6 +645,95 @@ classdef Builder < handle
                 end
             end
         end
+
+        function createAllocationFiles(this, candidateAllocations)
+            if iscell(candidateAllocations)
+                % Homogenize the array
+                candidateAllocations = [candidateAllocations{:}];
+            end
+            
+            % At this point, the source and destination should be valid. If
+            % they are not, nothing can be done to fix it.
+            candidateAllocations = candidateAllocations([candidateAllocations.isValid]);
+            
+            if isempty(candidateAllocations)
+                % Nothing to do.
+                return;
+            end
+
+            % Populate the allocation sets and scenarios.
+            for allocationIdx = 1:numel(candidateAllocations)
+                candidateAllocation = candidateAllocations(allocationIdx);
+
+                allocSetName = candidateAllocation.AllocationSetName;
+                if isempty(candidateAllocation.Model)
+                    allocationSet = xmi.CandidateElement.idMap(...
+                                    "lookup", allocSetName);
+                    
+                    if isempty(allocationSet)
+                        allocationSet = xmi.CandidateAllocation.AllocationSet(Name=allocSetName, ExternalID=allocSetName);
+                    end
+
+                    allocationSet.BuildSource      = xmi.utils.getModelName(candidateAllocation.Source.ZCElement);
+                    allocationSet.BuildDestination = xmi.utils.getModelName(candidateAllocation.Destination.ZCElement);
+
+                    candidateAllocation.Model = allocationSet;
+                end
+
+                % Populate the default scenario if does not exist
+                if isempty(candidateAllocation.Parent)
+                    scenarioName = 'Allocations';
+                    scenarioID   = sprintf('%s_%s', allocSetName, scenarioName);
+
+                    allocationScenario = xmi.CandidateElement.idMap(...
+                                    "lookup", scenarioID);
+
+                    if isempty(allocationScenario)
+                        allocationScenario = allocationSet.addScenario(scenarioName, scenarioID);
+                    end
+
+                    candidateAllocation.Parent = allocationScenario;
+                    allocationScenario.Allocations = [allocationScenario.Allocations candidateAllocation];
+                end
+            end
+
+            candidateAllocationSets = xmi.CandidateElement.idMap(...
+                                    "getElems", "xmi.CandidateAllocation.AllocationSet");
+
+            for k = 1:length(candidateAllocationSets)
+                candidateAllocationSet = candidateAllocationSets{k};
+
+                linkPackage(candidateAllocationSet);
+
+                candidateAllocationSet.BuildName = candidateAllocationSet.Name;
+            
+                publish(candidateAllocationSet);
+
+                if ~isempty(candidateAllocationSet.ParentPackage)
+                    directoryPath = this.ProjectPath + ...
+                                candidateAllocationSet.ParentPackage.ZCProjectFolder;
+                else
+                    directoryPath = pwd;
+                end
+
+                this.saveFileToPath(candidateAllocationSet.ZCElement, directoryPath);
+
+                this.AllocationSets = [this.AllocationSets candidateAllocationSet.ZCElement];
+                
+                allocationSetName  = [candidateAllocationSet.ZCElement.Name '.mldatx'];
+                allocationFilepath = which(allocationSetName);
+                this.RootProject.addFile(allocationFilepath);
+            end
+        end
+
+        function saveFileToPath(~, fileObject, filePath)
+            % Workaround for allocation sets not accepting a filepath as an
+            % input.
+            startDir = pwd;
+            cleanup = onCleanup(@() cd(startDir));
+            cd(filePath);
+            save(fileObject);
+        end
         
         function createRequirementsFile(this, candReqs)
             reqFileName = this.ProjectPath + filesep + ...
@@ -680,29 +775,29 @@ classdef Builder < handle
                 if isa(supp,'xmi.CandidateRequirement') && ...
                         isa(client,'xmi.CandidateRequirement')
                         
-                    lnk = slreq.createLink(supp.ZCHandle, client.ZCHandle);
+                    lnk = slreq.createLink(supp.ZCElement, client.ZCElement);
                     if thisLink.LinkType == "SysML.DeriveReqt"
                         lnk.Type = 'Derive';
                     end
                     
-                    thisLink.ZCHandle = lnk;
+                    thisLink.ZCElement = lnk;
                     this.Stats.NumReqLinks = this.Stats.NumReqLinks + 1;
                 elseif isa(supp,'xmi.CandidateRequirement')
-                    if ~isempty(client.ZCHandle)
-                        lnk = slreq.createLink(client.ZCHandle.SimulinkHandle, supp.ZCHandle);
+                    if ~isempty(client.ZCElement)
+                        lnk = slreq.createLink(client.ZCElement.SimulinkHandle, supp.ZCElement);
                         lnk.Type = 'Implement';
                         this.Stats.NumReqLinks = this.Stats.NumReqLinks + 1;
                     end
                 elseif isa(client,'xmi.CandidateRequirement')
-                    if ~isempty(supp.ZCHandle)
-                        lnk = slreq.createLink(supp.ZCHandle.SimulinkHandle, client.ZCHandle);
+                    if ~isempty(supp.ZCElement)
+                        lnk = slreq.createLink(supp.ZCElement.SimulinkHandle, client.ZCElement);
                         lnk.Type = 'Implement';
                         this.Stats.NumReqLinks = this.Stats.NumReqLinks + 1;                    
                     end
                 else
-                    if ~isempty(client.ZCHandle) && ~isempty(supp.ZCHandle)
-                        slreq.createLink(supp.ZCHandle.SimulinkHandle, ...
-                                         client.ZCHandle.SimulinkHandle);
+                    if ~isempty(client.ZCElement) && ~isempty(supp.ZCElement)
+                        slreq.createLink(supp.ZCElement.SimulinkHandle, ...
+                                         client.ZCElement.SimulinkHandle);
                     end
                 end
             end

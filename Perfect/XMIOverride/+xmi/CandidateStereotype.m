@@ -16,7 +16,7 @@ classdef CandidateStereotype < xmi.CandidateElement
         
         AppliedElements = [];
         
-        ZCHandle = [];
+        ZCElement = [];
     end
     
     methods

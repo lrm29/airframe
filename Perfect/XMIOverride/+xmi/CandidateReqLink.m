@@ -17,7 +17,7 @@ classdef CandidateReqLink < xmi.CandidateElement
         Valid = true;
         InvalidReason = "";
         
-        ZCHandle = [];
+        ZCElement = [];
         
         DerivedID = 1;
     end

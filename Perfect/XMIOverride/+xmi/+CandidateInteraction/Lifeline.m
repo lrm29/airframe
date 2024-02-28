@@ -1,6 +1,5 @@
 classdef Lifeline < xmi.CandidateInteraction.Element
     properties
-        SourceID % The ID of the component/element that this lifeline represents
         FullPath
         Children
     end

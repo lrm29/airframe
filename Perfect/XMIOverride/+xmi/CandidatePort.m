@@ -20,7 +20,7 @@ classdef CandidatePort < xmi.CandidateElement
         Replacements = [];
         Derived = false;
     
-        ZCHandle = [];
+        ZCElement = [];
     end
     
     methods
