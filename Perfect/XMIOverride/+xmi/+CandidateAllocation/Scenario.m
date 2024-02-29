@@ -19,6 +19,12 @@ classdef Scenario < xmi.CandidateAllocation.Element
         function prePrint(this, printer)
             printer.openScope("Scenario: " + this.Name);
         end
+
+        function doPrint(this, printer)
+            printer.openScope("Allocations");
+            arrayfun(@(elem) print(elem, printer), this.Allocations);
+            printer.closeScope("Allocations");
+        end
         
         function postPrint(this, printer)
             printer.closeScope("Scenario: " + this.Name);

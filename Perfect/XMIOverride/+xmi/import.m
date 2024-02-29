@@ -517,13 +517,13 @@ function impReport = import(xmiFileName, outputDirectory, varargin)
            builder.createAllocationFiles(candAllocs);
         end
         
-        % if ~isempty(candReqs)
-        %    builder.createRequirementsFile(candReqs);
-        % end
-        % 
-        % if ~isempty(candReqLinks)
-        %    builder.createReqLinks(candReqLinks);
-        % end
+        if ~isempty(candReqs)
+           builder.createRequirementsFile(candReqs);
+        end
+
+        if ~isempty(candReqLinks)
+           builder.createReqLinks(candReqLinks);
+        end
         
         impReport.ImportedTotals = builder.Stats;
         

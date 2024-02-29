@@ -64,7 +64,7 @@ classdef Pin < xmi.CandidateAD.Element
         end
 
         function doPrint(this, printer)
-            printStr = sprintf('%s: [%s, Type: %s, Direction: %s]', this.ElementType, this.Name, char(this.TokenType), char(this.Direction));
+            printStr = sprintf('%s: [Type: %s, Direction: %s]', this.Name, char(this.TokenType), char(this.Direction));
             printer.print(string(printStr));
         end
     end

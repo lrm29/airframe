@@ -1,27 +1,28 @@
 classdef Allocation < xmi.CandidateAllocation.Element
     properties
         SourceID
-        DestinationID
+        TargetID
+        PrintString
     end
 
     properties (Dependent)
         AllocationSetName
         Source
-        Destination
+        Target
         isValid
     end
 
     methods
-        function allocObj = Allocation(sourceID, destinationID, varargin)
+        function allocObj = Allocation(sourceID, targetID, varargin)
             allocObj@xmi.CandidateAllocation.Element(varargin{:});
             
-            allocObj.SourceID      = sourceID;
-            allocObj.DestinationID = destinationID;
+            allocObj.SourceID = sourceID;
+            allocObj.TargetID = targetID;
         end
 
         function allocationSetName = get.AllocationSetName(this)
             allocationSetName = sprintf('%sTo%s_Allocations', xmi.utils.getModelName(this.Source.ZCElement), ...
-                                                              xmi.utils.getModelName(this.Destination.ZCElement));
+                                                              xmi.utils.getModelName(this.Target.ZCElement));
         end
 
         function referenceElement = get.Source(this)
@@ -32,25 +33,29 @@ classdef Allocation < xmi.CandidateAllocation.Element
             end
         end
 
-        function referenceElement = get.Destination(this)
+        function referenceElement = get.Target(this)
             referenceElement = [];
-            if ~isempty(this.DestinationID)
+            if ~isempty(this.TargetID)
                 referenceElement = xmi.CandidateElement.idMap(...
-                                "lookup", this.DestinationID);
+                                "lookup", this.TargetID);
             end
         end
 
         function tf = get.isValid(this)
-            tf = ~isempty(this.Source)           && ~isempty(this.Destination)                 ...
-              && ~isempty(this.Source.ZCElement) && ~isempty(this.Destination.ZCElement)       ...
-              &&  isvalid(this.Source.ZCElement) &&  isvalid(this.Destination.ZCElement);
+            tf = ~isempty(this.Source)           && ~isempty(this.Target)                 ...
+              && ~isempty(this.Source.ZCElement) && ~isempty(this.Target.ZCElement)       ...
+              &&  isvalid(this.Source.ZCElement) &&  isvalid(this.Target.ZCElement);
         end       
 
         function doPublish(this, varargin)
-            sourceElement      = this.getFinalElement(this.Source);
-            destinationElement = this.getFinalElement(this.Destination);
+            sourceElement = this.getFinalElement(this.Source);
+            targetElement = this.getFinalElement(this.Target);
 
-            this.Parent.ZCElement.allocate(sourceElement, destinationElement);
+            this.Parent.ZCElement.allocate(sourceElement, targetElement);
+
+            % Cache the print string for later in case the model has been
+            % closed.
+            this.PrintString = sprintf('[Source: %s, Target: %s]', sourceElement.getQualifiedName, targetElement.getQualifiedName);
         end
 
         function finalElement = getFinalElement(~, element)
@@ -69,8 +74,7 @@ classdef Allocation < xmi.CandidateAllocation.Element
         end
 
         function doPrint(this, printer)
-            printStr = sprintf('[Source: %s, Destination: %s]', char(this.Source.ZCElement.getQualifiedName), char(this.Destination.ZCElement.getQualifiedName));
-            printer.print(string(printStr));
+            printer.print(this.PrintString);
         end
     end
 end

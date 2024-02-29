@@ -43,6 +43,11 @@ classdef Interaction < xmi.CandidateInteraction.Element
             % Create as software architecture to model call/response via
             % client-server ports.
             this.ModelZCElement = systemcomposer.createModel(modelName, "SoftwareArchitecture");
+
+            % Toggle allocation badges on
+            set_param(this.ModelZCElement.SimulinkHandle, 'ShowAllocations', 'on')
+
+            % Add the sequence diagram to the model
             this.ZCElement = xmi.CandidateInteraction.internal.addInteraction(this.ModelZCElement, modelName);
         end
 
@@ -75,6 +80,13 @@ classdef Interaction < xmi.CandidateInteraction.Element
 
         function prePrint(this, printer)
             printer.openScope("SequenceDiagram: " + this.Name);
+        end
+
+        function doPrint(this, printer)
+            % Only Lifelines for now.
+            printer.openScope("Lifelines");
+            arrayfun(@(elem) print(elem, printer), this.Lifelines);
+            printer.closeScope("Lifelines");
         end
 
         function postPrint(this, printer)

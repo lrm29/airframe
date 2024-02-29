@@ -8,7 +8,7 @@ classdef AllocationSet < xmi.CandidateAllocation.Element
         ParentPackageExtElementID
         BuildName
         BuildSource
-        BuildDestination
+        BuildTarget
     end
 
     methods
@@ -35,7 +35,10 @@ classdef AllocationSet < xmi.CandidateAllocation.Element
             
             modelName = this.BuildName;
 
-            this.ZCElement = systemcomposer.allocation.createAllocationSet(modelName, this.BuildSource, this.BuildDestination);
+            this.ZCElement = systemcomposer.allocation.createAllocationSet(modelName, this.BuildSource, this.BuildTarget);
+            
+            % Delete the default scenario.
+            destroy(this.ZCElement.Scenarios);
         end
 
         function scenario = addScenario(this, scenarioName, scenarioID)
@@ -59,6 +62,7 @@ classdef AllocationSet < xmi.CandidateAllocation.Element
                 "lookup", this.ParentPackageExtElementID);
 
             this.ParentPackage = compPkg;
+            this.ParentPackage.BuildAllocations = [this.ParentPackage.BuildAllocations this];
         end
 
         function prelimBuild(~,~)
@@ -69,6 +73,12 @@ classdef AllocationSet < xmi.CandidateAllocation.Element
 
         function prePrint(this, printer)
             printer.openScope("AllocationSet: " + this.Name);
+        end
+
+        function doPrint(this, printer)
+            printer.openScope("Scenarios");
+            arrayfun(@(elem) print(elem, printer), this.Scenarios);
+            printer.closeScope("Scenarios");
         end
 
         function postPrint(this, printer)

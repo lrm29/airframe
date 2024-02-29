@@ -652,7 +652,7 @@ classdef Builder < handle
                 candidateAllocations = [candidateAllocations{:}];
             end
             
-            % At this point, the source and destination should be valid. If
+            % At this point, the source and target should be valid. If
             % they are not, nothing can be done to fix it.
             candidateAllocations = candidateAllocations([candidateAllocations.isValid]);
             
@@ -674,8 +674,8 @@ classdef Builder < handle
                         allocationSet = xmi.CandidateAllocation.AllocationSet(Name=allocSetName, ExternalID=allocSetName);
                     end
 
-                    allocationSet.BuildSource      = xmi.utils.getModelName(candidateAllocation.Source.ZCElement);
-                    allocationSet.BuildDestination = xmi.utils.getModelName(candidateAllocation.Destination.ZCElement);
+                    allocationSet.BuildSource = xmi.utils.getModelName(candidateAllocation.Source.ZCElement);
+                    allocationSet.BuildTarget = xmi.utils.getModelName(candidateAllocation.Target.ZCElement);
 
                     candidateAllocation.Model = allocationSet;
                 end

@@ -22,6 +22,7 @@ classdef CandidatePackage < xmi.CandidateElement
         BuildArchitectures = [];
         BuildActivities    = [];
         BuildInteractions  = [];
+        BuildAllocations   = [];
         
         ZCProjectFolder = "";
     end
@@ -76,6 +77,9 @@ classdef CandidatePackage < xmi.CandidateElement
             end
             for k = 1:length(this.BuildInteractions)
                 this.BuildInteractions(k).print(printer)
+            end
+            for k = 1:length(this.BuildAllocations)
+                this.BuildAllocations(k).print(printer);
             end
             for k = 1:length(this.BuildChildPackages)
                 this.BuildChildPackages(k).print(printer)
