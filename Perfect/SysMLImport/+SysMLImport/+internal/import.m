@@ -77,8 +77,6 @@ function impReport = import(xmiFileName, outputDirectory, varargin)
     defValidNameStyle = "default";
     % Datatype mapping table
     defDtypeMapping = strings(0);
-    % Enabling feature level
-    defFeatureLevel = "";
     % Additional URIs
     defAdditionalURIs = [];
     % Default patch MDZIP SysML Block ID to real URIs
@@ -112,9 +110,6 @@ function impReport = import(xmiFileName, outputDirectory, varargin)
     addOptional(ip, 'DatatypeMapping', ...
                 defDtypeMapping, ...
                 @(x) isstring(x) || ischar(x));
-    addOptional(ip, 'FeatureLevel', ...
-                defFeatureLevel, ...
-                @(x) isstring(x) || ischar(x));
     addOptional(ip, 'AdditionalURIs', ...
                 defAdditionalURIs, ...
                 @(x) isstring(x));
@@ -133,7 +128,6 @@ function impReport = import(xmiFileName, outputDirectory, varargin)
     pkgsToIgnore   = ip.Results.PackagesToIgnore;
     simulinkLeaf   = ip.Results.SimulinkBehaviorLeafComponents;
     validNameStyle = ip.Results.ValidNameStyle;
-    featureLevel   = ip.Results.FeatureLevel;
     dtypeMapping   = ip.Results.DatatypeMapping;
     additionalURIs = ip.Results.AdditionalURIs;
     patchMDZipSysMLBlockURIs = ip.Results.PatchMDZipSysMLBlockURIs;
@@ -144,15 +138,6 @@ function impReport = import(xmiFileName, outputDirectory, varargin)
                    'specifying a full URI, its corresponding short name, and file location.']);
         end
     end
-
-    
-    %% Check feature control
-    % if ~(strcmp(featureLevel, "R2021a") || ...
-    %         strcmp(featureLevel, "R2021b") || ...
-    %         strcmp(featureLevel, "InternalTesting"))
-    %     error(['This functionality is not available for general use. ', ...
-    %            'Please contact MathWorks for access to this trial functionality.']);
-    % end
     
     %% Check mapping table
     if ~isempty(dtypeMapping)
