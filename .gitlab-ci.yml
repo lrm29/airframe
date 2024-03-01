@@ -14,7 +14,7 @@ SimulinkPipelineGeneration:
     stage: SimulinkPipelineGeneration
 
     tags:
-        - Novi
+        - pilot
 
     script:
     # Open the project and generate the pipeline using

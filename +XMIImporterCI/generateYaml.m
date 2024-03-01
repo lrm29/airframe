@@ -1,5 +1,5 @@
 options = padv.pipeline.GitLabOptions;
-options.Tags = "Novi";
+options.Tags = "pilot";
 options.RerunFailedTasks = true;
 options.RerunErroredTasks = true;
 options.MatlabLaunchCmd = "mw -using BR2024ad matlab";
