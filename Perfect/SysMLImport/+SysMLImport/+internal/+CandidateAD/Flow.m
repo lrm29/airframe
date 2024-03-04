@@ -15,7 +15,7 @@ classdef Flow < SysMLImport.internal.CandidateAD.Element & matlab.mixin.Heteroge
         function flowObj = Flow(guard, sourcePinID, destinationPinID, varargin)
             flowObj@SysMLImport.internal.CandidateAD.Element(varargin{:});
 
-            flowObj.Guard = guard;
+            flowObj.Guard = string(guard);
             flowObj.SourcePinID = sourcePinID;
             flowObj.DestinationPinID = destinationPinID;
         end

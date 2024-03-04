@@ -76,10 +76,17 @@ classdef Builder < handle
             try
                 this.ProjectSLDD = systemcomposer.createDictionary(ddFile);
             catch ME
-                if ~strcmp(ME.identifier, 'mf0:messages:UniquenessConstraint')
+                if ~ismember(ME.identifier, {'mf0:messages:UniquenessConstraint', 'SLDD:sldd:SlddFileWithSameNameAlreadyOpen'})
                     rethrow(ME);
                 end
-                close(systemcomposer.openDictionary(ddFile));
+                [~, ddName] = fileparts(ddFile);
+
+                try
+                    close(systemcomposer.openDictionary(ddName + ".sldd"));
+                catch
+                    Simulink.data.dictionary.closeAll(ddName + ".sldd")
+                end
+
                 this.ProjectSLDD = systemcomposer.createDictionary(ddFile);
             end
 
@@ -160,33 +167,10 @@ classdef Builder < handle
         end
         
         function populateEnumerations(this)
-            
-            ddHdl = Simulink.data.dictionary.open(this.ProjectSLDDName);
             enumTypes = SysMLImport.internal.CandidateElement.idMap(...
                 "getElems", "SysMLImport.internal.CandidateEnum");
-            for k = 1:length(enumTypes)
-                thisEnum = enumTypes{k};
-                thisEnum.BuildName = this.makeValidName(thisEnum.Name);
-                thisEnum.BuildEnumStrs = thisEnum.EnumStrs; % assume
-                this.AllEnumNames = [this.AllEnumNames string(thisEnum.BuildName)]; 
-                evalin('base', ...
-                       [char(thisEnum.BuildName), ...
-                        '=Simulink.data.dictionary.EnumTypeDefinition;']);
-                
-                for p = 1:length(thisEnum.EnumStrs)
-                    thisEnum.BuildEnumStrs(p) = this.makeValidName(...
-                        thisEnum.EnumStrs(p));
-                    evalin('base', ...
-                           ['appendEnumeral(' char(thisEnum.BuildName) ',''' ...
-                            char(thisEnum.BuildEnumStrs(p)) ''',', ...
-                            int2str(p) ')']);
-                end
-                evalin('base', ...
-                       ['removeEnumeral(' char(thisEnum.BuildName) ', 1)']);
-                importFromBaseWorkspace(ddHdl, 'varList', ...
-                                              {char(thisEnum.BuildName)});
-                evalin('base', ['clear ' char(thisEnum.BuildName)]);
-            end
+
+            arrayfun(@(enumType) prelimBuild(enumType, this), [enumTypes{:}]);
         end
         
         function populateInterfaces(this)
@@ -235,19 +219,32 @@ classdef Builder < handle
             mn = this.AllModelNames(end);
         end
         
-        function createProjectFolder(this, candProj)
-            if ~isempty(candProj.BuildParentPackage)
+        function projFolderPath = createProjectFolder(this, candProj)
+            projFolderPath = this.ProjectPath;
+
+            if ~isempty(candProj) && ~isempty(candProj.BuildParentPackage)
                 candProjName = candProj.BuildName;
                 
                 candProj.ZCProjectFolder = ...
                     candProj.BuildParentPackage.ZCProjectFolder + filesep + candProjName;
-                projFolderPath = this.ProjectPath + filesep + candProj.ZCProjectFolder;
+                projFolderPath = projFolderPath + filesep + candProj.ZCProjectFolder;
                 mkdir(projFolderPath);
                 
                 this.RootProject.addPath(projFolderPath);
                 
                 this.Stats.NumProjectFolders = this.Stats.NumProjectFolders + 1;
             end
+        end
+
+        function createPackagedFile(this, element)
+            candProj = element.ParentPackage;
+            
+            folderPath = this.createProjectFolder(candProj);
+            filePath = folderPath + filesep + element.BuildFileName;
+
+            fid = fopen(filePath, 'w');
+            cleanup = onCleanup(@()fclose(fid));
+            fprintf(fid, element.BuildFileContent);
         end
         
         function slMdlHdl = createSimulinkModel(this, candArch)
@@ -466,7 +463,7 @@ classdef Builder < handle
                             tName = 'string';
                             ptName = props(m).DatatypeName;
                             if contains(ptName, "Enumeration")
-                                 tName = ['Enum:' char(thisPrm.Type.BuildName)];
+                                 tName = char(props(m).Enumtype.BuildName);
                             elseif contains(ptName, "Dtype:")
                                 dtypeName = extractAfter(ptName, "Dtype:");
                                 if isKey(this.DatatypeMapping, dtypeName)
@@ -533,16 +530,23 @@ classdef Builder < handle
                     if ~isempty(prop)
                         propName = propST.Profile.FinalName + "." + propST.Name + "." + prop.FinalName;
 
-                        if strcmp(prop.Datatype, 'boolean')
+                        if ismember(prop.Datatype, {'boolean', 'uint8', 'uint16', 'uint32', 'uint64', 'int8', 'int16', 'int32', 'int64', 'single', 'double'})
                             propValueString = props(p).Value;
                         else
+                            if strcmp(prop.DatatypeName, 'Enumeration')
+                                props(p).Value = this.makeValidName(props(p).Value);
+                            end
                             propValueString = ['''' props(p).Value  ''''];
                         end
 
-                        zcElem.setProperty(char(propName), propValueString);
-                        
-                        this.Stats.NumStereotypePropsSet = ...
+                        try
+                            zcElem.setProperty(char(propName), propValueString);
+
+                            this.Stats.NumStereotypePropsSet = ...
                             this.Stats.NumStereotypePropsSet + 1;
+                        catch ME
+                            warning('SysMLImport:internal:Builder:ErrorSettingStereotypePropertyValue', 'Unable to set property ''%s'' on element ''%s'' due to the following error:\n%s\n', propName, zcElem.getQualifiedName, getReport(ME));
+                        end
                     end
                 end
             end
@@ -741,7 +745,17 @@ classdef Builder < handle
                 this.makeValidName(this.BuildProject) + "_REQ.slreqx";
             this.ReqFileName = reqFileName;
             
-            this.ReqFile = slreq.new(reqFileName);
+            try
+                this.ReqFile = slreq.new(reqFileName);
+            catch ME
+                if ~strcmp(ME.identifier, 'Slvnv:slreq:RequirementSetAlreadyLoaded')
+                    rethrow(ME);
+                end
+
+                close(slreq.find('Type', 'ReqSet', 'Filename', reqFileName));
+                this.ReqFile = slreq.new(reqFileName);
+            end
+
             this.RootProject.addFile(reqFileName);
             
             for k = 1:length(candReqs)

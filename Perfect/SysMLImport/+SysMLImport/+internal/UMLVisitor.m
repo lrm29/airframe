@@ -113,14 +113,25 @@ classdef UMLVisitor < m3i.Visitor
                             pElem = st.ownedAttribute.at(p);
                             if ~strncmp(pElem.name, 'base_', 5)
                                 tName = "";
+                                propVal = [];
                                 if ~isempty(pElem.type)
                                     tName = string(pElem.type.name);
                                 end
+
                                 try %#ok (getOne may error)
                                     pVal = stypeIn.getOne(pElem.name);
                                     if ~isempty(pVal)
-                                        candElem.addStereotypePropVal(...
+                                        propVal = candElem.addStereotypePropVal(...
                                             stExtID, string(pElem.name), tName, pVal.toString());
+                                    end
+                                end
+
+                                if isempty(propVal)
+                                    % Try to recover using regex
+                                    pVal = SysMLImport.internal.utils.getStereotypePropertyValue(element, pElem.qualifiedName);
+                                    if ~isempty(pVal)
+                                        propVal = candElem.addStereotypePropVal(...
+                                            stExtID, string(pElem.name), tName, pVal); %#ok<NASGU>
                                     end
                                 end
                             end
@@ -408,6 +419,10 @@ classdef UMLVisitor < m3i.Visitor
                 newEnum = SysMLImport.internal.CandidateEnum(...
                     enumID, string(element.name), ...
                     enumStrs);
+
+                % Set the package parent in case this becomes an external enumeration.
+                ppID = SysMLImport.internal.utils.getUMLPackageParentID(element);
+                newEnum.ParentPackageExtElementID = ppID;
             end
         end
         
@@ -730,6 +745,10 @@ classdef UMLVisitor < m3i.Visitor
             this.NotImported = [this.NotImported notImported];
 
             visitChildren(this, element.ownedBehavior);
+        end
+
+        function newEnum = visitumlmmEnumeration(this, element)
+            newEnum = visitEnumeration(this, element);
         end
 
         function ret = visitumlmmInteraction(this, element)

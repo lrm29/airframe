@@ -12,6 +12,7 @@ classdef CandidatePackage < SysMLImport.internal.CandidateElement
         ParentPackage = [];
         ChildPackages = [];
         
+        Enumerations = [];
         Architectures = [];  
         Activities = [];
         Interactions = [];
@@ -23,6 +24,7 @@ classdef CandidatePackage < SysMLImport.internal.CandidateElement
         BuildActivities    = [];
         BuildInteractions  = [];
         BuildAllocations   = [];
+        BuildEnumerations  = [];
         
         ZCProjectFolder = "";
     end
@@ -64,6 +66,10 @@ classdef CandidatePackage < SysMLImport.internal.CandidateElement
         function addInteraction(this, interaction)
             this.Interactions = [this.Interactions interaction];
         end
+
+        function addEnumeration(this, enumeration)
+            this.Enumerations = [this.Enumerations enumeration];
+        end
         
         function print(this, printer)
             printer.openScope("Package: [Persist= " + ...
@@ -78,6 +84,9 @@ classdef CandidatePackage < SysMLImport.internal.CandidateElement
             for k = 1:length(this.BuildInteractions)
                 this.BuildInteractions(k).print(printer)
             end
+            for k = 1:length(this.BuildEnumerations)
+                this.BuildEnumerations(k).print(printer);
+            end
             for k = 1:length(this.BuildAllocations)
                 this.BuildAllocations(k).print(printer);
             end
@@ -90,6 +99,7 @@ classdef CandidatePackage < SysMLImport.internal.CandidateElement
         
         function prelimBuild(this, builder)
             builder.createProjectFolder(this);
+            
             for k = 1:length(this.BuildArchitectures)
                 this.BuildArchitectures(k).prelimBuild(builder);
             end

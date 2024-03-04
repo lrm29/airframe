@@ -82,7 +82,8 @@ function impReport = import(xmiFileName, outputDirectory, varargin)
     % Default patch MDZIP SysML Block ID to real URIs
     defPatchMDZipSysMLBlockURIs = false;
     
-    SysMLImport.internal.CandidateElement.idMap("reset");
+    % Reset cached functions
+    SysMLImport.internal.utils.reset;
     
     %% Parse input args
     ip = inputParser;
@@ -285,7 +286,7 @@ function impReport = import(xmiFileName, outputDirectory, varargin)
     umlmmV.PackagesToIgnore = string(pkgsToIgnore);
     umlmmV.apply(mod);
 
-    % Extract profiles and steoreotypes
+    % Extract profiles and stereotypes
     m3iprofs = umlmmV.ProfilesFound;
     candProfiles = [];
     for k = 1:length(m3iprofs)
@@ -317,15 +318,31 @@ function impReport = import(xmiFileName, outputDirectory, varargin)
                     if ~strncmp(pElem.name, 'base_', 5)
                         elTypeName = "";
                         elType = "";
-                        if ~isempty(pElem.type)
-                            if isa(pElem.type, 'umlmm.Enumeration')
-                                elType = umlmmV.visitEnumeration(pElem.type);
-                                elTypeName = "Enumeration";
-                            elseif isa(pElem.type, 'umlmm.DataType') || ...
-                                    isa(pElem.type,'M3I.ImmutablePrimitiveType')
-                                elTypeName = "Dtype:" + string(pElem.type.name);
+                        pElemType = pElem.type;
+
+                        if isempty(pElemType)
+                            % Try to resolve one more time using regex
+                            typeID = SysMLImport.internal.utils.getStereotypePropertyTypeID(pElem);
+                            if ~isempty(typeID)
+                                elType = SysMLImport.internal.CandidateElement.idMap("lookup", typeID);
+                            end
+                        else
+                            if isa(pElemType, 'umlmm.Enumeration')
+                                elType = umlmmV.visitEnumeration(pElemType);
+                            elseif isa(pElemType, 'umlmm.DataType') || ...
+                                    isa(pElemType,'M3I.ImmutablePrimitiveType')
+                                elTypeName = "Dtype:" + string(pElemType.name);
                             end
                         end
+
+                        if isa(elType, 'SysMLImport.internal.CandidateEnum')
+                            % Stereotype properties do not support
+                            % dictionary enumerations so mark this one
+                            % to generate as a MATLAB class instead.
+                            elType.Internal = false;
+                            elTypeName = "Enumeration";
+                        end
+
                         newStype.addProperty(string(pElem.name), elTypeName, elType);
                     end
                 end

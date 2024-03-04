@@ -60,11 +60,11 @@ classdef CandidateElement < handle
                 "add", extElemID, this);
         end
         
-        function addStereotype(this, st)
+        function st = addStereotype(this, st)
             this.StereotypesExtIDs = [this.StereotypesExtIDs st];
         end
 
-        function addStereotypePropVal(this, stype, prop, propType, val)
+        function pVal = addStereotypePropVal(this, stype, prop, propType, val)
             pVal.Stereotype = stype;
             pVal.PropertyName = prop;
             pVal.Type = propType;
