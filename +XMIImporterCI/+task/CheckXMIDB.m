@@ -79,8 +79,7 @@ classdef CheckXMIDB < padv.Task
             % diagrams)
             importQuery = padv.builtin.query.FindModels;
             importedArtifacts = importQuery.run();
-            foundInXMI = cell(size(importedArtifacts));
-            notFoundInXMI = foundInXMI;
+            elementDicitonary = dictionary;
             for i = 1:numel(importedArtifacts)
                 try 
                     model = systemcomposer.loadModel( ...
@@ -89,46 +88,42 @@ classdef CheckXMIDB < padv.Task
                     % path)
                     cd(processProject.RootFolder);
                     elements = obj.findElemetsWithExternalUID(model.Architecture);
-                    tempFound = cell(size(elements));
-                    tempNotFound = tempFound;
-                    for j = 1:numel(elements)
-                        try
-                            xmidb.LookupTable(elements{j}.ExternalUID);
-                            tempFound{j} = elements(j);
-                            taskResult.ResultValues.Pass = 1 + ...
-                                taskResult.ResultValues.Pass;
-                        catch ME
-                            if strcmp(ME.identifier,'MATLAB:Containers:Map:NoKey')
-                                tempNotFound{j} = elements(j);
-                                taskResult.ResultValues.Warn = 1 + ...
-                                    taskResult.ResultValues.Warn;
-                            else
-                                taskResult.Status = padv.TaskStatus.Error;
-                                warning(ME.message);
-                                openProject(processProject.RootFolder);
-                                processAdvisorWindow();
-                                return;
-                            end
-                        end
-                    end
-                    tempFound = [tempFound{:}];
-                    tempNotFound = [tempNotFound{:}];
-                    foundInXMI{i} = tempFound;
-                    notFoundInXMI{i} = tempNotFound;
+                    elementDicitonary(...
+                        string(...
+                        cellfun(@(e) e.ExternalUID,elements,...
+                        'UniformOutput',false))) ...
+                        = elements;
                     % move back to keep things working
                     cd(importedProject.RootFolder);
                 catch ME
                     warning(ME.message);
                 end
             end
-
-            % flatten element data
-            foundInXMI = [foundInXMI{:}];
-            notFoundInXMI = [notFoundInXMI{:}];
-            % count the missing elements
+            %% need to analyse the collected data
+            % need a list of expected items 
+            % faking for now
+            expectedIDs = report.ElementIDs.keys;
+            found.inXMI = expectedIDs(ismember(expectedIDs,xmidb.LookupTable.keys));
+            notFound.inXMI = expectedIDs(~ismember(expectedIDs,xmidb.LookupTable.keys));
+            found.imported = expectedIDs(ismember(expectedIDs,elementDicitonary.keys));
+            notFound.imported = expectedIDs(~ismember(expectedIDs,elementDicitonary.keys));
+            % compare to find pass warn and fail numbers
+            % pass for any ID found in the XMI file and the imported model
+            taskResult.ResultValues.Pass = numel(intersect(found.inXMI,found.imported));
+            % fail for the IDs reported as imported but was not found and
+            % is in the XMI
+            taskResult.ResultValues.Fail = numel(intersect(found.inXMI,notFound.imported));
+            % warnings mean something weird happened
+            % an ID is reported imported but not in the XMI
+            taskResult.ResultValues.Warn = numel(notFound.inXMI);
+            % IDs found in the imported model and the XMI, but not reported
             taskResult.ResultValues.Warn = taskResult.ResultValues.Warn + ...
-                sum(~ismember(xmidb.LookupTable.keys, ...
-                cellfun(@(x)x.ExternalUID,foundInXMI,'UniformOutput',false)));
+                sum(~ismember( ...
+                intersect(elementDicitonary.keys,xmidb.LookupTable.keys), ...
+                found.imported));
+            % external IDs found in the import that are not in the XMI 
+            taskResult.ResultValues.Warn = taskResult.ResultValues.Warn + ...
+                sum(~ismember(elementDicitonary.keys,xmidb.LookupTable.keys));
             %% go back to the process project
             openProject(processProject.RootFolder);
             processAdvisorWindow();

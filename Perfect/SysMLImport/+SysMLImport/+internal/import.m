@@ -527,11 +527,14 @@ function impReport = import(xmiFileName, outputDirectory, varargin)
            builder.createReqLinks(candReqLinks);
         end
         
-        impReport.ImportedTotals = builder.Stats;
+        impReport.ImportedTotals = builder.Stats;       
         
         delete(builder);
     
-    end
+     end
+
+    %% add elements to report
+    impReport.ElementIDs = SysMLImport.internal.CandidateElement.idMap("getAll");
 
     %% Print for reporting
     if ~strcmp(repFileName, "")
