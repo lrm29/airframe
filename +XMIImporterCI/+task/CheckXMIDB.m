@@ -105,6 +105,22 @@ classdef CheckXMIDB < padv.Task
             explorer = XMIChecker.CandidateExplorer();
             cellfun(@(i) explorer.explore(i),report.imported);
             expectedIDs = explorer.dictionary.keys;
+            %% filter expectedIDs based on candidate types
+            values = explorer.dictionary.values;
+            packages = values(...
+                cellfun(@(v) isa(v,"SysMLImport.internal.CandidatePackage"), ...
+                values));
+            % remove the IDs for the packages
+            expectedIDs = setxor(expectedIDs, ...
+                cellfun(@(p) p.ExtElementID,packages));
+            packageValidators = cellfun(@(p) XMIChecker.Validator.CandidatePackage(p),packages);
+            for i = 1:numel(packageValidators)
+                if ~packageValidators(i).skip
+                    expectedIDs = union(expectedIDs, ...
+                        packageValidators(i).explorer.dictionary.keys);
+                end
+            end
+            %% work out result
             found.inXMI = expectedIDs(ismember(expectedIDs,xmidb.LookupTable.keys));
             notFound.inXMI = expectedIDs(~ismember(expectedIDs,xmidb.LookupTable.keys));
             found.imported = expectedIDs(ismember(expectedIDs,elementDicitonary.keys));

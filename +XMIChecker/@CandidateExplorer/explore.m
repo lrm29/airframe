@@ -7,6 +7,8 @@ if isscalar(candidate)
         return;
     end
     fields = fieldnames(candidate);
+    % remove excluded fields
+    fields = fields(~ismember(fields,obj.exclusions));
     if ismember("ExtElementID",fields)
         % check if it has been explored (assuming there aren't duplicates)
         if obj.dictionary.isConfigured &&...
