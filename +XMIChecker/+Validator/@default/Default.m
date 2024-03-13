@@ -1,22 +1,39 @@
-classdef untitled
-    %UNTITLED Summary of this class goes here
-    %   Detailed explanation goes here
-    
-    properties
-        Property1
-    end
-    
+classdef Default < XMIChecker.Validator.Validator
+    %DEFAULT default validator for all types
+
     methods
-        function obj = untitled(inputArg1,inputArg2)
-            %UNTITLED Construct an instance of this class
-            %   Detailed explanation goes here
-            obj.Property1 = inputArg1 + inputArg2;
-        end
-        
-        function outputArg = method1(obj,inputArg)
-            %METHOD1 Summary of this method goes here
-            %   Detailed explanation goes here
-            outputArg = obj.Property1 + inputArg;
+        function obj = Default(candidate,xmidb,foundElements)
+            %DEFAULT Construct an instance of this class
+            % processes elements on arrival
+            if isscalar(candidate)
+                % have a single candidate
+                % check which combination of places the ID is found
+                if ismember(candidate.ExtElementID,xmidb.LookupTable.keys)
+                    if ismember(candidate.ExtElementID,foundElements.keys)
+                        % this means the ID was found in the XML and the
+                        % imported files
+                        obj.pass = 1;
+                    else
+                        % found in the XML but the element wasn't found
+                        % this is a failure
+                        obj.fail = 1;
+                    end
+                else
+                    % going to be a warning 
+                    % might put some diagnostic checks here later
+                    obj.warn = 1;
+                end
+            elseif iscell(candidate)
+                % assume this is a cell fun
+                obj = cellfun(...
+                    @(c) XMIChecker.Validator.Default(c,xmidb,foundElements), ...
+                    candidate);
+            else
+                % assume this is an array
+                obj = arrayfun(...
+                    @(c) XMIChecker.Validator.Default(c,xmidb,foundElements), ...
+                    candidate);
+            end
         end
     end
 end
