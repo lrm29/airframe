@@ -101,8 +101,10 @@ classdef CheckXMIDB < padv.Task
             end
             %% need to analyse the collected data
             % need a list of expected items 
-            % faking for now
-            expectedIDs = report.ElementIDs.keys;
+            cd(processProject.RootFolder);
+            explorer = XMIChecker.CandidateExplorer();
+            cellfun(@(i) explorer.explore(i),report.imported);
+            expectedIDs = explorer.dictionary.keys;
             found.inXMI = expectedIDs(ismember(expectedIDs,xmidb.LookupTable.keys));
             notFound.inXMI = expectedIDs(~ismember(expectedIDs,xmidb.LookupTable.keys));
             found.imported = expectedIDs(ismember(expectedIDs,elementDicitonary.keys));

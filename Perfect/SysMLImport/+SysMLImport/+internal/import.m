@@ -534,7 +534,12 @@ function impReport = import(xmiFileName, outputDirectory, varargin)
      end
 
     %% add elements to report
-    impReport.ElementIDs = SysMLImport.internal.CandidateElement.idMap("getAll");
+    %% TODO: switch to using candidate packages
+    % start with one type and build up from there
+    % right now just including the ones to import
+    % need to add a mechanism for not imported
+    % impReport.ElementIDs = SysMLImport.internal.CandidateElement.idMap("getAll");
+    impReport.imported = candPkgs(cellfun(@(p) p.OwnerExtElementID == "",candPkgs));
 
     %% Print for reporting
     if ~strcmp(repFileName, "")
