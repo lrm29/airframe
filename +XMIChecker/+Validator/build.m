@@ -14,11 +14,11 @@ if iscell(candidate)
 elseif isscalar(candidate)
     % determine class name of the candidate
     [~,~,classname] = fileparts(class(candidate));
-    classname = string(classname);
+    classname = extractAfter(string(classname),".");
     % find if there is a validator
-    if exist("XMIChecker.Validator"+classname,"class") == 8
-        obj = eval("XMIChecker.Validator"+classname+...
-            "(candidate,xmidb,foundElements)");
+    if exist("XMIChecker.Validator."+classname,"class") == 8
+        obj = XMIChecker.Validator.(classname)(...
+            candidate,xmidb,foundElements);
     else
         % don't have a specific validator for this yet
         obj = XMIChecker.Validator.Default(...
