@@ -4,17 +4,17 @@ classdef CandidateExplorer < handle
     
     properties (SetAccess=protected)
         dictionary dictionary = dictionary()
-        exclusions string
+        propertyValidator function_handle
     end
     
     methods
-        function obj = CandidateExplorer(exclusions)
+        function obj = CandidateExplorer(propertyValidator)
             %CANDIDATEEXPLORER Construct an instance of this class
             % exclude field by exact name
             arguments
-                exclusions string = string.empty
+                propertyValidator function_handle = @(~) true
             end
-            obj.exclusions = exclusions;
+            obj.propertyValidator = propertyValidator;
         end
         
         explore(obj,candidate);

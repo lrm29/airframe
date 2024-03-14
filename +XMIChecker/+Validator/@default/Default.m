@@ -6,7 +6,12 @@ classdef Default < XMIChecker.Validator.Validator
             %DEFAULT Construct an instance of this class
             % processes elements on arrival
             obj.candidate = candidate;
-            if isscalar(candidate)
+            if iscell(candidate)
+                % assume this is a cell fun
+                obj = cellfun(...
+                    @(c) XMIChecker.Validator.Default(c,xmidb,foundElements), ...
+                    candidate,UniformOutput=false);
+            elseif isscalar(candidate)
                 % have a single candidate
                 % check which combination of places the ID is found
                 if ismember(candidate.ExtElementID,xmidb.LookupTable.keys)
@@ -24,11 +29,6 @@ classdef Default < XMIChecker.Validator.Validator
                     % might put some diagnostic checks here later
                     obj.warn = 1;
                 end
-            elseif iscell(candidate)
-                % assume this is a cell fun
-                obj = cellfun(...
-                    @(c) XMIChecker.Validator.Default(c,xmidb,foundElements), ...
-                    candidate,UniformOutput=false);
             else
                 % assume this is an array
                 obj = arrayfun(...

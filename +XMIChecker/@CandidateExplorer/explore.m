@@ -1,14 +1,17 @@
 function explore(obj,candidate)
 %EXPLORE explores candidate and fills the dictionary
 % searches through all layers for candidate hierarchy
-if isscalar(candidate)
-    if ~isstruct(candidate) && ~isvalid(candidate)
+if iscell(candidate)
+    % might be a cell array
+    % explore each piece
+    cellfun(@(c) obj.explore(c),candidate);
+elseif isscalar(candidate)
+    if isenum(candidate) || ...
+            (~isstruct(candidate) && ~isvalid(candidate))
         % invalid stop digging
         return;
     end
     fields = fieldnames(candidate);
-    % remove excluded fields
-    fields = fields(~ismember(fields,obj.exclusions));
     if ismember("ExtElementID",fields)
         % check if it has been explored (assuming there aren't duplicates)
         if obj.dictionary.isConfigured &&...
@@ -20,16 +23,15 @@ if isscalar(candidate)
             obj.dictionary(candidate.ExtElementID) = {candidate};
         end
     end
-    for i = 1:numel(fields)
-        if isobject(candidate.(fields{i})) && ~isstring(candidate.(fields{i}))
-            % this field has an object assume its a candidate
-            obj.explore(candidate.(fields{i}));
-        end
-    end
-elseif iscell(candidate)
-    % might be a cell array
-    % explore each piece
-    cellfun(@(c) obj.explore(c),candidate);
+    %% filter with validation function
+    fields = fields(cellfun(@(f) obj.propertyValidator(f),fields));
+    %% filter fields more before processing
+    fields = fields(cellfun(@(f) ~isempty(candidate.(f)),fields));
+    fields = fields( ...
+        cellfun(@(f) isobject(candidate.(f)) || iscell(candidate.(f)),fields));
+    fields = fields(cellfun(@(f) ~isstring(candidate.(f)),fields));
+    %% process the filtered fields
+    cellfun(@(f) obj.explore(candidate.(f)),fields);
 elseif isa(candidate,"containers.Map")
     % need to unpack the map
     obj.explore(candidate.values);

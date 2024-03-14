@@ -6,7 +6,12 @@ arguments
     xmidb SysMLImport.internal.CandidateAD.internal.XMIDatabase
     foundElements dictionary
 end
-if isscalar(candidate)
+if iscell(candidate)
+    % cell array of mixed or same type
+    obj = cellfun( ...
+        @(c) XMIChecker.Validator.build(c,xmidb,foundElements), ...
+        candidate,UniformOutput=false);
+elseif isscalar(candidate)
     % determine class name of the candidate
     [~,~,classname] = fileparts(class(candidate));
     classname = string(classname);
@@ -19,11 +24,6 @@ if isscalar(candidate)
         obj = XMIChecker.Validator.Default(...
             candidate,xmidb,foundElements);
     end
-elseif iscell(candidate)
-    % cell array of mixed or same type
-    obj = cellfun( ...
-        @(c) XMIChecker.Validator.build(c,xmidb,foundElements), ...
-        candidate,UniformOutput=false);
 else
     % assume array of like type
     obj = arrayfun(...
