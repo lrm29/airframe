@@ -1,7 +1,7 @@
 classdef CheckXMIDB < padv.Task
     %CHECKXMIDB checks import agains xmidb
-    
-    properties 
+
+    properties
         processedUUIDs = {}
         ExternalUIDs = {}
     end
@@ -31,7 +31,7 @@ classdef CheckXMIDB < padv.Task
                 InputQueries=options.InputQueries);
             obj.OutputDirectory = options.OutputDirectory;
         end
-        
+
         function taskResult = run(obj,inputArtifacts)
             % run checks how the import worked
             taskResult = padv.TaskResult;
@@ -74,14 +74,17 @@ classdef CheckXMIDB < padv.Task
             % need to open the generated project
             [importedPath,~,~] = fileparts(archiveFilePath);
             importedProject = openProject(importedPath);
-            
+
+            % name save file for later 
+            outputFileName = importedProject.Name+"_checkData.mat";
+
             % need to find all the architectures (including activity
             % diagrams)
             importQuery = padv.builtin.query.FindModels;
             importedArtifacts = importQuery.run();
             elementDicitonary = dictionary;
             for i = 1:numel(importedArtifacts)
-                try 
+                try
                     model = systemcomposer.loadModel( ...
                         importedArtifacts(i).ArtifactAddress.getFileAddress());
                     % need to move back process project (hack to keep this file on
@@ -100,50 +103,30 @@ classdef CheckXMIDB < padv.Task
                 end
             end
             %% need to analyse the collected data
-            % need a list of expected items 
+            % need a list of expected items
             cd(processProject.RootFolder);
             explorer = XMIChecker.CandidateExplorer();
             cellfun(@(i) explorer.explore(i),report.imported);
-            expectedIDs = explorer.dictionary.keys;
-            %% filter expectedIDs based on candidate types
-            values = explorer.dictionary.values;
-            packages = values(...
-                cellfun(@(v) isa(v,"SysMLImport.internal.CandidatePackage"), ...
-                values));
-            % remove the IDs for the packages
-            expectedIDs = setxor(expectedIDs, ...
-                cellfun(@(p) p.ExtElementID,packages));
-            packageValidators = cellfun(@(p) XMIChecker.Validator.CandidatePackage(p),packages);
-            for i = 1:numel(packageValidators)
-                if ~packageValidators(i).skip
-                    expectedIDs = union(expectedIDs, ...
-                        packageValidators(i).explorer.dictionary.keys);
-                end
-            end
-            %% work out result
-            found.inXMI = expectedIDs(ismember(expectedIDs,xmidb.LookupTable.keys));
-            notFound.inXMI = expectedIDs(~ismember(expectedIDs,xmidb.LookupTable.keys));
-            found.imported = expectedIDs(ismember(expectedIDs,elementDicitonary.keys));
-            notFound.imported = expectedIDs(~ismember(expectedIDs,elementDicitonary.keys));
-            % compare to find pass warn and fail numbers
-            % pass for any ID found in the XMI file and the imported model
-            taskResult.ResultValues.Pass = numel(intersect(found.inXMI,found.imported));
-            % fail for the IDs reported as imported but was not found and
-            % is in the XMI
-            taskResult.ResultValues.Fail = numel(intersect(found.inXMI,notFound.imported));
-            % warnings mean something weird happened
-            % an ID is reported imported but not in the XMI
-            taskResult.ResultValues.Warn = numel(notFound.inXMI);
-            % IDs found in the imported model and the XMI, but not reported
-            taskResult.ResultValues.Warn = taskResult.ResultValues.Warn + ...
-                sum(~ismember( ...
-                intersect(elementDicitonary.keys,xmidb.LookupTable.keys), ...
-                found.imported));
-            % external IDs found in the import that are not in the XMI 
-            taskResult.ResultValues.Warn = taskResult.ResultValues.Warn + ...
-                sum(~ismember(elementDicitonary.keys,xmidb.LookupTable.keys));
+            %% Validate imported data
+            candidates = explorer.dictionary.values;
+            validators = XMIChecker.Validator.build(candidates,xmidb,elementDicitonary);
+            taskResult.ResultValues.Pass = sum(cellfun(@(v) v.pass,validators));
+            taskResult.ResultValues.Warn = sum(cellfun(@(v) v.warn,validators));
+            taskResult.ResultValues.Fail = sum(cellfun(@(v) v.fail,validators));
+            %% TODO: need to find all the escapes 
+            % that is the elements imported but not repoted 
+            % these are additional warnings
             %% go back to the process project
             openProject(processProject.RootFolder);
+            %% save important data
+            outputFilePath = fullfile(obj.resolvePath(obj.OutputDirectory),...
+                outputFileName);
+            if ~exist(obj.resolvePath(obj.OutputDirectory),"dir")
+                mkdir(obj.resolvePath(obj.OutputDirectory));
+            end
+            save(outputFilePath,"validators","xmidb","elementDicitonary");
+            taskResult.OutputPaths = outputFilePath;
+            %% re-open process advisor window
             processAdvisorWindow();
         end
 
@@ -154,7 +137,7 @@ classdef CheckXMIDB < padv.Task
             %
             % check if element is an array if so deal with it
             if isscalar(element)
-                % get the properties of this element 
+                % get the properties of this element
                 properties = fieldnames(element);
                 % first make sure this is an System Composer and has not
                 % been processed

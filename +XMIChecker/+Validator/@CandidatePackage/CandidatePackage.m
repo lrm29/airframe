@@ -1,21 +1,13 @@
-classdef CandidatePackage < handle
+classdef CandidatePackage < XMIChecker.Validator.Validator
     %PACKAGE validates a candidate pacakge
 
-    properties (SetAccess=protected)
-        % the explorer has all the elements (mapped to IDs) that need to be
-        % found in order to prove this package was imported
-        explorer = XMIChecker.CandidateExplorer
-        % skip means nothing to validate it was reported but not imported
-        skip logical = false;
-        % keep the candidate around
-        candidate SysMLImport.internal.CandidatePackage
-    end
-
     methods
-        function obj = CandidatePackage(candidate)
+        function obj = CandidatePackage(candidate,xmidb,foundElements)
             %PACKAGE Construct an instance of this class
             arguments
                 candidate SysMLImport.internal.CandidatePackage
+                xmidb SysMLImport.internal.CandidateAD.internal.XMIDatabase
+                foundElements dictionary
             end
             % store the candidate
             obj.candidate = candidate;
@@ -23,7 +15,7 @@ classdef CandidatePackage < handle
             if candidate.Build
                 % if build is set have to check that all items under it are
                 % built
-                obj.explorer = XMIChecker.CandidateExplorer("ParentPackage");
+                explorer = XMIChecker.CandidateExplorer("ParentPackage");
                 fields = fieldnames(candidate);
                 childFields = fields(~contains(lower(fields),"parent"));
                 for i = 1:numel(childFields)
@@ -31,13 +23,30 @@ classdef CandidatePackage < handle
                             ~isstring(candidate.(childFields{i}))
                         % call the explore on child fields to avoid finding
                         % parent(s)
-                        obj.explorer.explore(candidate.(childFields{i}));
+                        explorer.explore(candidate.(childFields{i}));
                     end
+                end
+                % need to validate all the elements found during
+                % exploration
+                validators = XMIChecker.Validator.build( ...
+                    explorer.dictionary.values,xmidb,foundElements);
+                % need to parse result for validators
+                % priority is fail, then warn, finally pass
+                % any of each sets the results
+                if any(cellfun(@(v) v.fail,validators))
+                    obj.fail = 1;
+                elseif any(cellfun(@(v) v.warn,validators))
+                    obj.warn = 1;
+                elseif any(cellfun(@(v) v.pass,validators))
+                    obj.pass = 1;
+                else
+                    % no result...
+                    error("No result was reported %s",candidate.Name);
                 end
             else
                 % assume there will be no sign of this one
-                % skip this one
-                obj.skip = true;
+                % mark it passed
+                obj.pass = 1;
             end
         end
     end

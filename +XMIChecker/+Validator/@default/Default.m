@@ -5,6 +5,7 @@ classdef Default < XMIChecker.Validator.Validator
         function obj = Default(candidate,xmidb,foundElements)
             %DEFAULT Construct an instance of this class
             % processes elements on arrival
+            obj.candidate = candidate;
             if isscalar(candidate)
                 % have a single candidate
                 % check which combination of places the ID is found
@@ -27,7 +28,7 @@ classdef Default < XMIChecker.Validator.Validator
                 % assume this is a cell fun
                 obj = cellfun(...
                     @(c) XMIChecker.Validator.Default(c,xmidb,foundElements), ...
-                    candidate);
+                    candidate,UniformOutput=false);
             else
                 % assume this is an array
                 obj = arrayfun(...
