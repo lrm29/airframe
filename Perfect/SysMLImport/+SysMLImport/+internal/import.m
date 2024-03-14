@@ -540,7 +540,7 @@ function impReport = import(xmiFileName, outputDirectory, varargin)
     % need to add a mechanism for not imported
     % impReport.imported = SysMLImport.internal.CandidateElement.idMap("getAll");
     impReport.imported = [candPkgs, candArchs, candActivities, ...
-        candInteractions,candIntfs, candAllocs];
+        candInteractions,candIntfs, candAllocs, candReqs];
 
     %% Print for reporting
     if ~strcmp(repFileName, "")
