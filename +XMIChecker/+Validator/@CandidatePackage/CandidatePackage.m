@@ -30,9 +30,17 @@ classdef CandidatePackage < XMIChecker.Validator.Validator
                 explorer.explore(candidate);
                 % make a copy of the values
                 children = explorer.dictionary.values;
-                % remove the candidate as property filter 
+                % remove the candidate as property filter
                 children = children(~strcmp(explorer.dictionary.keys, ...
                     candidate.ExtElementID));
+                % that gives me the direct children based on "Build"
+                % attributes, but I need all the children
+                childExplorer = XMIChecker.CandidateExplorer(...
+                    @(fieldname) ~contains(fieldname,"Parent"));
+                % explore again
+                childExplorer.explore(children);
+                % get the full set of candidates
+                children = childExplorer.dictionary.values;
                 validators = XMIChecker.Validator.build( ...
                     children,xmidb,foundElements);
                 % need to parse result for validators
