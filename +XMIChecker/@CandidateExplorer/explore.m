@@ -20,6 +20,7 @@ elseif isscalar(candidate)
             return;
         else
             % means this has an ExtElementID, add to the dictionary
+            % disp(obj.dictionary.numEntries); % useful when errors occur
             obj.dictionary(candidate.ExtElementID) = {candidate};
         end
     end
@@ -32,7 +33,9 @@ elseif isscalar(candidate)
             cellfun(@(f) isobject(candidate.(f)) || iscell(candidate.(f)),fields));
         fields = fields(cellfun(@(f) ~isstring(candidate.(f)),fields));
     catch ME
-        if strcmp(ME.identifier,'MATLAB:structRefFromNonStruct')
+        if ismember(ME.identifier, ...
+                ["MATLAB:structRefFromNonStruct", ...
+                "Simulink:Commands:InvSimulinkObjHandle"])
             return;
         else
             rethrow(ME);
