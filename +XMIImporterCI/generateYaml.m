@@ -5,7 +5,7 @@ arguments
     options.force = false
 end
 pipeline = padv.pipeline.GitLabOptions;
-pipeline.Tags = "pilot";
+pipeline.Tags = "long-jobs";
 pipeline.RerunFailedTasks = true;
 pipeline.RerunErroredTasks = true;
 pipeline.MatlabLaunchCmd = "mw -using BR2024ad matlab";
