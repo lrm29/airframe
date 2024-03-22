@@ -534,7 +534,6 @@ function impReport = import(xmiFileName, outputDirectory, varargin)
      end
 
     %% add elements to report
-    %% TODO: switch to using candidate packages
     % start with one type and build up from there
     % right now just including the ones to import
     % need to add a mechanism for not imported
