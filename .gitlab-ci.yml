@@ -1,7 +1,7 @@
 # Copyright 2023 The MathWorks, Inc.
 
 variables:
-  MODE: "1"
+  FORCE: "false"
   MATLAB_LOG_FILE: "MATLAB_Log_Output.txt"
 
 stages:
@@ -25,7 +25,7 @@ SimulinkPipelineGeneration:
             -logfile "$MATLAB_LOG_FILE"
             -batch "
             cp = openProject(pwd);
-            XMIImporterCI.generateYaml();
+            XMIImporterCI.generateYaml(force=$FORCE);
             "
   
     artifacts:

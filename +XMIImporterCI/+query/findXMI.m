@@ -45,7 +45,8 @@ classdef findXMI < padv.Query
                 if ~ismember(filename,obj.exclusions)
                     % if not excluded add to artifacts
                     artifacts = [artifacts,padv.Artifact("other_file", ...
-                        padv.util.ArtifactAddress(fullfile(file.Path)))];
+                        padv.util.ArtifactAddress(fullfile(file.Path),...
+                        OwningProjectName=project.Name))];
                 end
             end
         end

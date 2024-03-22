@@ -1,7 +1,7 @@
 classdef CheckXMIDB < padv.Task
     %CHECKXMIDB checks import agains xmidb
-    
-    properties 
+
+    properties
         processedUUIDs = {}
         ExternalUIDs = {}
     end
@@ -24,14 +24,24 @@ classdef CheckXMIDB < padv.Task
                 % where the task outputs artifacts
                 options.OutputDirectory = fullfile(...
                     '$DEFAULTOUTPUTDIR$','CheckXMI');
+                % dependencies just incase
+                options.InputDependencyQuery = padv.Query.empty();
             end
+            % add self to the dependency list
+            options.InputDependencyQuery = XMIImporterCI.query.multiQuery(...
+                [options.InputDependencyQuery,...
+                XMIImporterCI.query.findByPath(ArtifactType="m_file",...
+                filePath=string(mfilename("fullpath"))+".m"),...
+                padv.builtin.query.FindArtifacts(ArtifactType="m_file",...
+                IncludePath="XMIChecker")]);
             % call the constructor of the superclass
             obj@padv.Task(options.Name, ...
                 IterationQuery=options.IterationQuery, ...
-                InputQueries=options.InputQueries);
+                InputQueries=options.InputQueries,...
+                InputDependencyQuery=options.InputDependencyQuery);
             obj.OutputDirectory = options.OutputDirectory;
         end
-        
+
         function taskResult = run(obj,inputArtifacts)
             % run checks how the import worked
             taskResult = padv.TaskResult;
@@ -74,63 +84,59 @@ classdef CheckXMIDB < padv.Task
             % need to open the generated project
             [importedPath,~,~] = fileparts(archiveFilePath);
             importedProject = openProject(importedPath);
-            
+
+            % name save file for later 
+            outputFileName = importedProject.Name+"_checkData.mat";
+
             % need to find all the architectures (including activity
             % diagrams)
             importQuery = padv.builtin.query.FindModels;
             importedArtifacts = importQuery.run();
-            foundInXMI = cell(size(importedArtifacts));
-            notFoundInXMI = foundInXMI;
+            elementDicitonary = dictionary;
             for i = 1:numel(importedArtifacts)
-                try 
+                try
                     model = systemcomposer.loadModel( ...
                         importedArtifacts(i).ArtifactAddress.getFileAddress());
                     % need to move back process project (hack to keep this file on
                     % path)
                     cd(processProject.RootFolder);
                     elements = obj.findElemetsWithExternalUID(model.Architecture);
-                    tempFound = cell(size(elements));
-                    tempNotFound = tempFound;
-                    for j = 1:numel(elements)
-                        try
-                            xmidb.LookupTable(elements{j}.ExternalUID);
-                            tempFound{j} = elements(j);
-                            taskResult.ResultValues.Pass = 1 + ...
-                                taskResult.ResultValues.Pass;
-                        catch ME
-                            if strcmp(ME.identifier,'MATLAB:Containers:Map:NoKey')
-                                tempNotFound{j} = elements(j);
-                                taskResult.ResultValues.Warn = 1 + ...
-                                    taskResult.ResultValues.Warn;
-                            else
-                                taskResult.Status = padv.TaskStatus.Error;
-                                warning(ME.message);
-                                openProject(processProject.RootFolder);
-                                processAdvisorWindow();
-                                return;
-                            end
-                        end
-                    end
-                    tempFound = [tempFound{:}];
-                    tempNotFound = [tempNotFound{:}];
-                    foundInXMI{i} = tempFound;
-                    notFoundInXMI{i} = tempNotFound;
+                    elementDicitonary(...
+                        string(...
+                        cellfun(@(e) e.ExternalUID,elements,...
+                        'UniformOutput',false))) ...
+                        = elements;
                     % move back to keep things working
                     cd(importedProject.RootFolder);
                 catch ME
                     warning(ME.message);
                 end
             end
-
-            % flatten element data
-            foundInXMI = [foundInXMI{:}];
-            notFoundInXMI = [notFoundInXMI{:}];
-            % count the missing elements
-            taskResult.ResultValues.Warn = taskResult.ResultValues.Warn + ...
-                sum(~ismember(xmidb.LookupTable.keys, ...
-                cellfun(@(x)x.ExternalUID,foundInXMI,'UniformOutput',false)));
+            %% need to analyse the collected data
+            % need a list of expected items
+            cd(processProject.RootFolder);
+            explorer = XMIChecker.CandidateExplorer();
+            explorer.explore(report.imported);
+            %% Validate imported data
+            candidates = explorer.dictionary.values;
+            validators = XMIChecker.Validator.build(candidates,xmidb,elementDicitonary);
+            taskResult.ResultValues.Pass = sum(cellfun(@(v) v.pass,validators));
+            taskResult.ResultValues.Warn = sum(cellfun(@(v) v.warn,validators));
+            taskResult.ResultValues.Fail = sum(cellfun(@(v) v.fail,validators));
+            %% TODO: need to find all the escapes 
+            % that is the elements imported but not repoted 
+            % these are additional warnings
             %% go back to the process project
             openProject(processProject.RootFolder);
+            %% save important data
+            outputFilePath = fullfile(obj.resolvePath(obj.OutputDirectory),...
+                outputFileName);
+            if ~exist(obj.resolvePath(obj.OutputDirectory),"dir")
+                mkdir(obj.resolvePath(obj.OutputDirectory));
+            end
+            save(outputFilePath,"validators","xmidb","elementDicitonary");
+            taskResult.OutputPaths = outputFilePath;
+            %% re-open process advisor window
             processAdvisorWindow();
         end
 
@@ -141,7 +147,7 @@ classdef CheckXMIDB < padv.Task
             %
             % check if element is an array if so deal with it
             if isscalar(element)
-                % get the properties of this element 
+                % get the properties of this element
                 properties = fieldnames(element);
                 % first make sure this is an System Composer and has not
                 % been processed

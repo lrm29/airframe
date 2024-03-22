@@ -527,11 +527,19 @@ function impReport = import(xmiFileName, outputDirectory, varargin)
            builder.createReqLinks(candReqLinks);
         end
         
-        impReport.ImportedTotals = builder.Stats;
+        impReport.ImportedTotals = builder.Stats;       
         
         delete(builder);
     
-    end
+     end
+
+    %% add elements to report
+    % start with one type and build up from there
+    % right now just including the ones to import
+    % need to add a mechanism for not imported
+    % impReport.imported = SysMLImport.internal.CandidateElement.idMap("getAll");
+    impReport.imported = [candPkgs, candArchs, candActivities, ...
+        candInteractions,candIntfs, candAllocs, candReqs];
 
     %% Print for reporting
     if ~strcmp(repFileName, "")
