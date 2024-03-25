@@ -25,8 +25,6 @@ function export(inpModelSet, outXMIFileName, varargin)
 %     - Views are not exported
 %
 
-%   Copyright 2022 The MathWorks, Inc.
-
     %% Parse input args
     defFeatureLevel = "";
     defUseExternalIDs = false;
@@ -67,7 +65,7 @@ function export(inpModelSet, outXMIFileName, varargin)
     intfToIntfBlockMap = containers.Map;
     portToProxyPortMap = containers.Map;
     
-    %% Read sysml profile
+    %% Read SysML profile
     f = M3I.XmiReaderFactory();
     s = M3I.XmiReaderSettings;
     s.ProcessTopLevelSettings=true;
@@ -125,7 +123,7 @@ function export(inpModelSet, outXMIFileName, varargin)
                                   m3im, umlBlkPkg, umlIntfPkg, m3iIDtoExtIDMap, useExternalIDs, makeNestedSignals);
             allArchMdlsVisited(allArchMdlsToVisit(nVisited).Name) = true;
             
-            allArchMdlsToVisit = [allArchMdlsToVisit childArchMdls]; %#ok
+            allArchMdlsToVisit = [allArchMdlsToVisit childArchMdls]; %#ok<AGROW>
         end
         
         nVisited = nVisited + 1;
@@ -242,14 +240,14 @@ function [childArchMdls, archToBlockMap, archToArchHdlMap, portToProxyPortMap, .
                                   umlBlkPkg, umlIntfPkg, m3iIDtoExtIDMap, ...
                                   useExternalIDs, origProcessAsSignal);
         else
-            childArchMdls = [childArchMdls, compArch.Model]; %#ok
+            childArchMdls = [childArchMdls, compArch.Model]; %#ok<AGROW>
         end
     end
     
 end
 
 function uid = getUUID(element)
-% UUIDs are not unique across models and need to be uniqued with
+% UUIDs are not unique across models and need to be uniquified with
 % model name.
     if isa(element, 'systemcomposer.arch.Architecture') || ...
             isa(element, 'systemcomposer.arch.BasePort') || ...

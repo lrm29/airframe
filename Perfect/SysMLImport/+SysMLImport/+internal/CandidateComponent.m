@@ -55,7 +55,7 @@ classdef CandidateComponent < SysMLImport.internal.CandidateElement
                         validConn = [];
                         for m = 1:length(conn)
                             if conn(m).Valid && ~conn(m).Replaced
-                                validConn = [validConn conn(m)]; %#ok
+                                validConn = [validConn conn(m)]; %#ok<AGROW>
                             end
                         end
                         

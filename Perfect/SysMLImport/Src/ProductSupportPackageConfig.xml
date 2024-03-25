@@ -1,0 +1,24 @@
+<ProductSupportPackage>
+	<!-- Required Tags -->
+	<Name>System Composer SysML XMI Importer</Name>
+	<Image>+SysMLImport/+internal/icons/ico-sysml-import.png</Image>
+	<Author>Josh Kahn</Author>
+	<Email>JoshKahn@mathworks.com</Email>
+	<Company>MathWorks</Company>
+	<Package>SysMLImport</Package>
+	<Platform>Windows</Platform>
+	<Dependency>MATLAB</Dependency>
+	<Dependency>Simulink</Dependency>
+	<Dependency>System Composer</Dependency>
+    <!--Opt-->
+    <Remove>Src</Remove>
+    <Word>enums</Word>
+    <Word>evaluatable</Word>
+    <Word>Inlines</Word>
+    <Word>Inlining</Word>
+    <Word>sequencediagram</Word>
+    <Word>SingleUseArchitectureInlining</Word>
+    <Word>superclasses</Word>
+    <Word>xmiFileName</Word>
+    <Word>zcMdl</Word>
+</ProductSupportPackage>

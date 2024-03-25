@@ -88,7 +88,7 @@ classdef CandidateStereotype < SysMLImport.internal.CandidateElement
                     [false(1, length(sClassPropNames)) true]);
                 thisName = thisName(end);
                 this.Properties(k).FinalName = thisName;
-                propNames = [propNames thisName]; %#ok
+                propNames = [propNames thisName]; %#ok<AGROW>
             end
             
             this.PropNamesInScope = [sClassPropNames propNames];

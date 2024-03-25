@@ -67,7 +67,7 @@ classdef Element < SysMLImport.internal.CandidateElement & matlab.mixin.SetGetEx
         end
 
         function setModel(this)
-            % Can be overriden during element construction.
+            % Can be overridden during element construction.
             this.Model = this.Parent.Model;
         end
 

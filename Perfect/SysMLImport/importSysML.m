@@ -16,7 +16,7 @@ function report = importSysML(model, outputDirectory, varargin)
 %    a non-trial import.
 %
 %    REQUIRED INPUTS:
-%       model (1,:) char - Full XMI filepath
+%       model (1,:) char - Full XMI file path
 %    
 %    OPTIONAL INPUTS:
 %       outputDirectory (1,:) char = pwd
@@ -61,7 +61,7 @@ function report = importSysML(model, outputDirectory, varargin)
 %           true  - Make leaf components Simulink behavior models
 %
 %        DatatypeMapping (:,2) string = ""
-%          An Nx2 string array specifying mapping of UML Datatypes. 
+%          An N x 2 string array specifying mapping of UML Datatypes. 
 %          This is used to map into primitive System Composer datatypes.
 %          The first column is the name of the UML Datatype (e.g Integer).
 %          The second column is the name of System Composer primitive type

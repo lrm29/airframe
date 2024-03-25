@@ -84,7 +84,7 @@ function [candidateAD, notImported] = buildCandidateAD(adStruct, candidateAD)
 
                 pin = addParameter(candidateAD, nodeName, ...
                              systemcomposer.activitydiagram.model.TokenType.OBJECT, ...
-                             direction, nodeID); %#ok<NASGU>
+                             direction, nodeID); 
 
                 if ~isempty(parameter)
                     pin.ReferenceID = SysMLImport.internal.utils.getExtID(parameter);
@@ -144,7 +144,7 @@ function [candidateAD, notImported] = buildCandidateAD(adStruct, candidateAD)
             end
         end
 
-        % Add sub-activites
+        % Add sub-activities
         if behavior
             if structuredActivity
                 node.ActionBehavior = systemcomposer.activitydiagram.model.BehaviorLanguage.ACTIVITY;

@@ -31,7 +31,7 @@ classdef Flow < SysMLImport.internal.CandidateAD.Element & matlab.mixin.Heteroge
         function doPublish(this, ~)
             this.PrintStr = '';
 
-            % Check if the pins were created explicitely. If not, they will
+            % Check if the pins were created explicitly. If not, they will
             % be created by the flow function. 
             source = this.SourcePin;
             if isa(source, 'SysMLImport.internal.CandidateAD.Pin') && isempty(source.ZCElement)

@@ -1,5 +1,6 @@
 classdef CandidateArchitecture < SysMLImport.internal.CandidateElement
-% CANDIDATEARCHITECTURE Helper class for SysMLImport.internal.import that holds canidate Architecture models
+% CANDIDATEARCHITECTURE Helper class for SysMLImport.internal.import that
+% holds candidate Architecture models
     properties
         Name = "";
         
@@ -58,8 +59,8 @@ classdef CandidateArchitecture < SysMLImport.internal.CandidateElement
                         SysMLImport.internal.CandidateArchitecture.recMarkHier(...
                             rComps(k).ParentArchitecture, endArch, pArchs, pComps);
                     if reached
-                        pArchs1 = [pArchs1 arch]; %#ok
-                        pComps1 = [pComps1 rComps(k)]; %#ok
+                        pArchs1 = [pArchs1 arch]; %#ok<AGROW>
+                        pComps1 = [pComps1 rComps(k)]; %#ok<AGROW>
                         break;
                     end
                 end
@@ -81,7 +82,7 @@ classdef CandidateArchitecture < SysMLImport.internal.CandidateElement
             pArchs = [];
             pArch = comp.ParentArchitecture;
             while pArch ~= endArch                    
-                pArchs = [pArchs pArch]; %#ok
+                pArchs = [pArchs pArch]; %#ok<AGROW>
                 rComps = pArch.ReferencingComps;
                 if length(rComps) > 1
                     notUnique = true;
@@ -248,7 +249,7 @@ classdef CandidateArchitecture < SysMLImport.internal.CandidateElement
                     repConn = this.addDerivedConnector(...
                         thisArch, thisComp, thisAPort, ...
                         [], newPort, thisConn.ExtElementID);
-                    repConns = [repConns repConn]; %#ok
+                    repConns = [repConns repConn]; %#ok<AGROW>
                     
                     this.trackPortAddedForNonSibling(thisComp, thisAPort, newPort);
                 else
@@ -283,7 +284,7 @@ classdef CandidateArchitecture < SysMLImport.internal.CandidateElement
                     repConn = this.addDerivedConnector(...
                         thisArch, thisComp, thisAPort, ...
                         [], newPort, thisConn.ExtElementID);
-                    repConns = [repConns repConn]; %#ok
+                    repConns = [repConns repConn]; %#ok<AGROW>
                     
                     this.trackPortAddedForNonSibling(thisComp, thisAPort, newPort);
                 else
@@ -671,8 +672,8 @@ classdef CandidateArchitecture < SysMLImport.internal.CandidateElement
                     for n = 1:length(archCheck.ReferencingComps)
                         parArch = archCheck.ReferencingComps(n).ParentArchitecture;
                         if ~parArch.Visited
-                            archsToCheck = [archsToCheck, parArch]; %#ok
-                            allArchsToCheck = [allArchsToCheck parArch]; %#ok
+                            archsToCheck = [archsToCheck, parArch]; %#ok<AGROW>
+                            allArchsToCheck = [allArchsToCheck parArch]; %#ok<AGROW>
                         end
                     end
                 end
@@ -723,7 +724,7 @@ classdef CandidateArchitecture < SysMLImport.internal.CandidateElement
                     othAPort = thisConn.End1APort;
                 end
                 othComps{k} = othComp;
-                othAPorts = [othAPorts othAPort]; %#ok
+                othAPorts = [othAPorts othAPort]; %#ok<AGROW>
             end
             
             adArchInports = [];
@@ -734,7 +735,7 @@ classdef CandidateArchitecture < SysMLImport.internal.CandidateElement
                     "", othAPorts(k).Interface, true);
                 adArch.DerivedPortIdx = adArch.DerivedPortIdx + 1;
                 newPort.ComputedDir = "in";
-                adArchInports = [adArchInports newPort]; %#ok
+                adArchInports = [adArchInports newPort]; %#ok<AGROW>
             end
             
             adArchOutport = adArch.addPort(...
@@ -780,8 +781,7 @@ classdef CandidateArchitecture < SysMLImport.internal.CandidateElement
             elseif isempty(this.ChildComponents) && simulinkLeaf
                 % Build will happen
                 this.BuildAsSimulink = true;
-            elseif length(this.ReferencingComps) == 1
-                
+            elseif isscalar(this.ReferencingComps)
                 % If a single reference, check if we should inline
                 aPrj = this.ParentPackage;
                 rcPrj = this.ReferencingComps.ParentArchitecture.ParentPackage;
@@ -791,7 +791,7 @@ classdef CandidateArchitecture < SysMLImport.internal.CandidateElement
                     this.IsInlined = true;
                     this.ReferencingComps.IsInliningItsArch = true;
                     this.ParentPackage = rcPrj; % Fixup parent pkg link for book keeping
-                    build = false; % Will be built when building the Component insted of Prj
+                    build = false; % Will be built when building the Component instead of Prj
                 end
             end
             this.Build = build;

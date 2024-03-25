@@ -1,4 +1,3 @@
-function xmiDatabase = xmiToDB(umlStruct)
+function xmiDatabase = xmiToDB(~)
     xmiDatabase = SysMLImport.internal.CandidateAD.Index;
-    
 end

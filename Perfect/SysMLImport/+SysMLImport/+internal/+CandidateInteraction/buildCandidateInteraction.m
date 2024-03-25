@@ -9,7 +9,7 @@ function [candidateInteraction, notImported] = buildCandidateInteraction(element
         umlLifelineNameParts = {};
 
         if ~isempty(umlLifeline.name)
-            umlLifelineNameParts{umlLifelineNameIdx} = umlLifeline.name;
+            umlLifelineNameParts{umlLifelineNameIdx} = umlLifeline.name; %#ok<AGROW>
             umlLifelineNameIdx = umlLifelineNameIdx + 1;
         end
         
@@ -21,7 +21,7 @@ function [candidateInteraction, notImported] = buildCandidateInteraction(element
             referenceID = SysMLImport.internal.utils.getExtID(umlLifeline.represents);
 
             if ~isempty(umlLifeline.represents.name)
-                umlLifelineNameParts{umlLifelineNameIdx} = umlLifeline.represents.name;
+                umlLifelineNameParts{umlLifelineNameIdx} = umlLifeline.represents.name; %#ok<AGROW>
                 umlLifelineNameIdx = umlLifelineNameIdx + 1;
             end
 
@@ -29,8 +29,8 @@ function [candidateInteraction, notImported] = buildCandidateInteraction(element
                 referenceID = SysMLImport.internal.utils.getExtID(umlLifeline.represents.type);
 
                 if ~isempty(umlLifeline.represents.type.name)
-                    umlLifelineNameParts{umlLifelineNameIdx} = umlLifeline.represents.type.name;
-                    umlLifelineNameIdx = umlLifelineNameIdx + 1;
+                    umlLifelineNameParts{umlLifelineNameIdx} = umlLifeline.represents.type.name; %#ok<AGROW>
+                    umlLifelineNameIdx = umlLifelineNameIdx + 1; %#ok<NASGU>
                 end
             end
         end

@@ -147,7 +147,7 @@ classdef CandidatePackage < SysMLImport.internal.CandidateElement
             buildChildren = [];
             for k = 1:length(this.ChildPackages)
                 bc = this.ChildPackages(k).recVisitForPrune();
-                buildChildren = [buildChildren bc]; %#ok
+                buildChildren = [buildChildren bc]; %#ok<AGROW>
             end
             
             if this.Build || length(buildChildren) > 1

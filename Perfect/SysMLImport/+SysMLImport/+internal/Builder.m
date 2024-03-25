@@ -43,7 +43,7 @@ classdef Builder < handle
             end
             
             vName = matlab.lang.makeValidName(name);
-            eN = exist(vName); %#ok
+            eN = exist(vName); %#ok<EXIST>
             if eN > 0 && eN ~= 7
                 vName = vName + "_1";
             end
@@ -180,7 +180,7 @@ classdef Builder < handle
             for k = 1:length(intfTypes)
                 thisIntf = intfTypes{k};
                 if thisIntf.doBuild()
-                    allIntfNames = [allIntfNames this.makeValidName(thisIntf.Name)]; %#ok
+                    allIntfNames = [allIntfNames this.makeValidName(thisIntf.Name)]; %#ok<AGROW>
                 end
             end
             if ~isempty(allIntfNames)
@@ -370,7 +370,7 @@ classdef Builder < handle
             % Unique component names
             otherNames = [];
             for k = 1:length(cComps)
-                otherNames = [otherNames string(cComps(k).Name)]; %#ok
+                otherNames = [otherNames string(cComps(k).Name)]; %#ok<AGROW>
             end
             
             cn = matlab.lang.makeUniqueStrings(...
@@ -598,8 +598,8 @@ classdef Builder < handle
 
                 options = {};
                 if ~strcmp(thisPrm.Dim, "1")
-                    options{end+1} = "Dimensions"; %#ok
-                    options{end+1} = thisPrm.Dim; %#ok
+                    options{end+1} = "Dimensions"; %#ok<AGROW>
+                    options{end+1} = thisPrm.Dim; %#ok<AGROW>
                 end
                 tName = 'double';
                 if thisPrm.TypeName ~= ""
@@ -623,20 +623,20 @@ classdef Builder < handle
                             end
                         end
                     end
-                    options{end+1} = "Type"; %#ok
-                    options{end+1} = string(tName); %#ok
+                    options{end+1} = "Type"; %#ok<AGROW>
+                    options{end+1} = string(tName); %#ok<AGROW>
                 end
                 if thisPrm.DefaultValue ~= ""
                     if string(tName) ~= "string"
                         % Needs to be evaluatable
-                        try %#ok
+                        try %#ok<TRYNC>
                             eval(string(thisPrm.DefaultValue) + ";");
-                            options{end+1} = "Value"; %#ok
-                            options{end+1} = thisPrm.DefaultValue; %#ok
+                            options{end+1} = "Value"; %#ok<AGROW>
+                            options{end+1} = thisPrm.DefaultValue; %#ok<AGROW>
                         end
                     else
-                        options{end+1} = "Value"; %#ok
-                        options{end+1} = thisPrm.DefaultValue; %#ok
+                        options{end+1} = "Value"; %#ok<AGROW>
+                        options{end+1} = thisPrm.DefaultValue; %#ok<AGROW>
                     end
                 end
 
@@ -732,8 +732,8 @@ classdef Builder < handle
         end
 
         function saveFileToPath(~, fileObject, filePath)
-            % Workaround for allocation sets not accepting a filepath as an
-            % input.
+            % Workaround for allocation sets not accepting a file path as
+            % an input.
             startDir = pwd;
             cleanup = onCleanup(@() cd(startDir));
             cd(filePath);

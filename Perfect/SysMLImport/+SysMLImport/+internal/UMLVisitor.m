@@ -5,7 +5,7 @@ classdef UMLVisitor < m3i.Visitor
 % SysML->ZC Mapping table:
 % -------------------------------------------    
 %      UMLPackage -> MATLAB Project (and project sub-folder when sub-package)
-%      UMLClass stereotyped by SysML Block -> Architecure model    
+%      UMLClass stereotyped by SysML Block -> Architecture model    
 %         UMLProperty typed by UMLClass stereotyped by SysML Block -> Component
 %         UMLPort stereotyped by SysML ProxyPort -> Architecture port
 %         UMLPort's type (UMLClass) whose properties are stereotyped by SysML FlowProperty -> Interface with elements
@@ -118,7 +118,7 @@ classdef UMLVisitor < m3i.Visitor
                                     tName = string(pElem.type.name);
                                 end
 
-                                try %#ok (getOne may error)
+                                try %#ok<TRYNC> (getOne may error)
                                     pVal = stypeIn.getOne(pElem.name);
                                     if ~isempty(pVal)
                                         propVal = candElem.addStereotypePropVal(...
@@ -180,7 +180,7 @@ classdef UMLVisitor < m3i.Visitor
                 gen = element.generalization.at(g);
                 if ~isempty(gen) && ~isempty(gen.general)
                     genID = this.getExtID(gen.general);
-                    genIDs = [genIDs genID]; %#ok
+                    genIDs = [genIDs genID]; %#ok<AGROW>
                 end
             end
             
@@ -371,7 +371,7 @@ classdef UMLVisitor < m3i.Visitor
                     end
                     if pA.redefinedProperty.size > 0
                         rdP = pA.redefinedProperty.at(1);
-                        redefProps = [redefProps this.getExtID(rdP)]; %#ok
+                        redefProps = [redefProps this.getExtID(rdP)]; %#ok<AGROW>
                     end
                     elDim = inf;
                     if ~isempty(pA.upperValue)
@@ -414,7 +414,7 @@ classdef UMLVisitor < m3i.Visitor
             if isempty(newEnum)
                 enumStrs = [];
                 for ol = 1:element.ownedLiteral.size
-                    enumStrs = [enumStrs string(element.ownedLiteral.at(ol).name)]; %#ok
+                    enumStrs = [enumStrs string(element.ownedLiteral.at(ol).name)]; %#ok<AGROW>
                 end
                 newEnum = SysMLImport.internal.CandidateEnum(...
                     enumID, string(element.name), ...
@@ -463,7 +463,7 @@ classdef UMLVisitor < m3i.Visitor
                         
                         if prop.redefinedProperty.size > 0
                             rdP = prop.redefinedProperty.at(1);
-                            redefProps = [redefProps this.getExtID(rdP)]; %#ok
+                            redefProps = [redefProps this.getExtID(rdP)]; %#ok<AGROW>
                         end
                         propDim = inf;
                         if ~isempty(prop.upperValue)
@@ -634,7 +634,7 @@ classdef UMLVisitor < m3i.Visitor
                 pTypeID = this.getExtID(pType);                
             end
 
-            % Ensure port is a supported port type explicitely or implied
+            % Ensure port is a supported port type explicitly or implied
             pStrName = this.getSysMLStereotype(element);
             if pStrName ~= "SysML.ProxyPort" && pStrName ~= "SysML.FullPort" ...
                     && pStrName ~= "SysML.FlowPort"
@@ -735,7 +735,7 @@ classdef UMLVisitor < m3i.Visitor
 
         function ret = visitumlmmActivity(this, element)
             ret = [];
-            %fprintf('visited actitity: %s\n', element.name);
+            %fprintf('visited activity: %s\n', element.name);
 
             % uml:Activity -- Create candidate activity diagram
             ppID = SysMLImport.internal.utils.getUMLPackageParentID(element);

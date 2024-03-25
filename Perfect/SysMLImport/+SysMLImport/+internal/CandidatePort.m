@@ -80,7 +80,7 @@ classdef CandidatePort < SysMLImport.internal.CandidateElement
                 validConns = [];
                 for k = 1:length(this.Connectors)
                     if this.Connectors(k).Valid && ~this.Connectors(k).Replaced
-                        validConns = [validConns this.Connectors(k)]; %#ok
+                        validConns = [validConns this.Connectors(k)]; %#ok<AGROW>
                     end
                 end
                 if length(validConns) > 1

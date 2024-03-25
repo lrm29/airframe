@@ -1,5 +1,5 @@
-function processXMI(xmiFileName)
-    %% processXMI - Process an XMI file and make corrections to prepare it for import into System Composer
+function processRhapsodyXMI(xmiFileName)
+    %% processRhapsodyXMI - Process an XMI file and make corrections to prepare it for import into System Composer
     % This script makes the following changes to the input XMI file:
     %   1. Adds a sysml:Block for RhapsodyProfile:TopLevelClass.
     %   2. Adds a sysml:Block for every HarmonySE:ActorBlock.
@@ -11,7 +11,7 @@ function processXMI(xmiFileName)
     % Output: Generates an XMI file in the same directory as the input file
     %         named [xmiFileName]_processed.SysMLImport.internal.
     % Usage:
-    %   processXMI('MyXMIFile.xmi')
+    %   processRhapsodyXMI('MyXMIFile.xmi')
     % 
 
     [xmiPath, xmiName, xmiExt] = fileparts(xmiFileName);
@@ -37,7 +37,7 @@ function processXMI(xmiFileName)
     outputFID = fopen(fullfile(xmiPath, [xmiName '_processed' xmiExt]), 'w');
     outputCleanup = onCleanup(@() fclose(outputFID));
 
-    % Remove the end delimeter to add more content
+    % Remove the end delimiter to add more content
     outputContents = strrep(outputContents, '</xmi:XMI>', '');
 
     % Insert the processed contents into the file
@@ -56,6 +56,6 @@ function processXMI(xmiFileName)
         end
     end
 
-    % Add the end delimeter
+    % Add the end delimiter
     fprintf(outputFID, '</xmi:XMI>\n');
 end

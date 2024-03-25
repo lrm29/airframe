@@ -21,7 +21,7 @@ classdef CandidateProfile < handle
             sNames = [];
             for k = 1:length(this.Stereotypes)
                 sNames = [sNames ...
-                          builder.makeValidName(this.Stereotypes(k).Name)]; %#ok
+                          builder.makeValidName(this.Stereotypes(k).Name)]; %#ok<AGROW>
             end
             if ~isempty(sNames)
                 sNames = matlab.lang.makeUniqueStrings(sNames, 1:length(sNames), ...

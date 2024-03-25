@@ -52,8 +52,6 @@ function impReport = import(xmiFileName, outputDirectory, varargin)
 %          the name of System Composer primitive type (e.g. int16). This is
 %          especially useful for interface elements.
 % 
-%   Copyright 2022 The MathWorks, Inc.
-
     
 % List of pending enhancements:
 % + Support for custom stereotype property datatypes (all strings right now)
@@ -291,7 +289,7 @@ function impReport = import(xmiFileName, outputDirectory, varargin)
     candProfiles = [];
     for k = 1:length(m3iprofs)
         newProf = SysMLImport.internal.CandidateProfile(string(m3iprofs(k).name));
-        candProfiles = [candProfiles newProf]; %#ok
+        candProfiles = [candProfiles newProf]; %#ok<AGROW>
         
         numProfTypes = m3iprofs(k).ownedType.size;
         for m = 1:numProfTypes
