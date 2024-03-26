@@ -3,7 +3,7 @@ function nextNameString = nextName(existingNames, startString)
     % found.
     %
     % for example where inputArray is an array of names {'pin1', 'pin', 'pin7'}:
-    %   >> nextNameString = SysMLImport.internal.CandidateAD.nextName(inputArray, 'pin');
+    %   >> nextNameString = SysMLImport.internal.utils.nextName(inputArray, 'pin');
     %
     %      nextNameString = 'pin8'
     %

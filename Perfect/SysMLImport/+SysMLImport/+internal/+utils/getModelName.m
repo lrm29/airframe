@@ -8,4 +8,6 @@ function modelName = getModelName(element)
     else
         modelName = element.Model.Name;
     end
+
+    % <ProductSupportPackage><Protect/></ProductSupportPackage>
 end

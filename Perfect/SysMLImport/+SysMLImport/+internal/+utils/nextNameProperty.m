@@ -3,6 +3,6 @@ function nextName = nextNameProperty(objectArray, name)
         nextName = name;
     else
         existingNames = {objectArray.Name};
-        nextName = SysMLImport.internal.CandidateAD.internal.nextName(existingNames, name);
+        nextName = SysMLImport.internal.utils.nextName(existingNames, name);
     end
 end

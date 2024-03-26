@@ -13,7 +13,7 @@ classdef Activity < SysMLImport.internal.CandidateAD.Node
             activityObj@SysMLImport.internal.CandidateAD.Node(varargin{:});
             
             if isempty(activityObj.Name)
-                activityObj.Name = SysMLImport.internal.CandidateAD.internal.nextNameProperty(activityObj.Parent.Nodes, 'Activity');
+                activityObj.Name = SysMLImport.internal.utils.nextNameProperty(activityObj.Parent.Nodes, 'Activity');
             end
         end
 

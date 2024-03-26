@@ -22,7 +22,7 @@ classdef Model < SysMLImport.internal.CandidateAD.Node
                 % Deconflict filenames
                 files = dir(pwd);
                 [~, fileNames] = fileparts({files.name});
-                this.BuildName = SysMLImport.internal.CandidateAD.internal.nextName(fileNames, this.BuildName);    
+                this.BuildName = SysMLImport.internal.utils.nextName(fileNames, this.BuildName);    
             end
             
             modelName = this.BuildName;

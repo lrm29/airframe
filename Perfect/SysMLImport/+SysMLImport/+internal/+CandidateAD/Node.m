@@ -40,7 +40,7 @@ classdef Node < SysMLImport.internal.CandidateAD.Element & matlab.mixin.Heteroge
 
         function pin = addPin(this, name, type, direction, externalID)
             if isempty(name)
-                name = SysMLImport.internal.CandidateAD.internal.nextNameProperty(this.Pins, 'Pin');
+                name = SysMLImport.internal.utils.nextNameProperty(this.Pins, 'Pin');
             end
 
             if nargin > 4
@@ -54,7 +54,7 @@ classdef Node < SysMLImport.internal.CandidateAD.Element & matlab.mixin.Heteroge
 
         function parameter = addParameter(this, name, type, direction, externalID)
             if isempty(name)
-                name = SysMLImport.internal.CandidateAD.internal.nextNameProperty(this.Parameters, 'Parameter');
+                name = SysMLImport.internal.utils.nextNameProperty(this.Parameters, 'Parameter');
             end
 
             if nargin > 4

@@ -4,7 +4,7 @@ classdef JoinForkNode < SysMLImport.internal.CandidateAD.Node
             nodeObj@SysMLImport.internal.CandidateAD.Node(varargin{:});
 
             if isempty(nodeObj.Name)
-                nodeObj.Name = SysMLImport.internal.CandidateAD.internal.nextNameProperty(nodeObj.Parent.Nodes, 'JoinFork');
+                nodeObj.Name = SysMLImport.internal.utils.nextNameProperty(nodeObj.Parent.Nodes, 'JoinFork');
             end
         end
 
@@ -14,4 +14,6 @@ classdef JoinForkNode < SysMLImport.internal.CandidateAD.Node
             this.ZCElement = adCommands.addJoinFork(SysMLImport.internal.CandidateAD.internal.getQualifiedName(target), this.Name);
         end
     end
+
+    % <ProductSupportPackage><Protect/></ProductSupportPackage>
 end

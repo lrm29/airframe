@@ -9,7 +9,7 @@ classdef Allocation < SysMLImport.internal.CandidateAllocation.Element
         AllocationSetName
         Source
         Target
-        isValid
+        IsValid
     end
 
     methods
@@ -41,7 +41,7 @@ classdef Allocation < SysMLImport.internal.CandidateAllocation.Element
             end
         end
 
-        function tf = get.isValid(this)
+        function tf = get.IsValid(this)
             tf = ~isempty(this.Source)           && ~isempty(this.Target)                 ...
               && ~isempty(this.Source.ZCElement) && ~isempty(this.Target.ZCElement)       ...
               &&  isvalid(this.Source.ZCElement) &&  isvalid(this.Target.ZCElement);

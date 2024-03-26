@@ -7,4 +7,6 @@ function activity = createActivity(activityName, openFlag)
     adCommands = systemcomposer.activitydiagram.internal.ActivityCommands;
 
     activity = adCommands.newActivity(activityName, openFlag);
+
+    % <ProductSupportPackage><Protect/></ProductSupportPackage>
 end

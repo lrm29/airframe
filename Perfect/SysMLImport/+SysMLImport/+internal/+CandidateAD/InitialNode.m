@@ -13,4 +13,6 @@ classdef InitialNode < SysMLImport.internal.CandidateAD.Node
             this.ZCElement = adCommands.addInitial(SysMLImport.internal.CandidateAD.internal.getQualifiedName(target), this.Name);
         end
     end
+
+    % <ProductSupportPackage><Protect/></ProductSupportPackage>
 end

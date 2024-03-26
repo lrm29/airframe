@@ -12,4 +12,6 @@ classdef FinalNode < SysMLImport.internal.CandidateAD.Node
             this.ZCElement = adCommands.addActivityFinal(SysMLImport.internal.CandidateAD.internal.getQualifiedName(target), this.Name);
         end
     end
+
+    % <ProductSupportPackage><Protect/></ProductSupportPackage>
 end

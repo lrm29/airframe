@@ -71,4 +71,6 @@ function [portHandle, parentPath] = getPortHandle(activityObject, isInput)
         otherwise
             error('xmi:CandidateAD:internal:addZCActivityFlow:UnexpectedInputType', 'addZCActivityFlow received an unexpected input type of ''%s''.\n\n%s\n', class(activityObject), formattedDisplayText(activityObject));
     end
+
+    % <ProductSupportPackage><Protect/></ProductSupportPackage>
 end

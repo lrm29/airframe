@@ -9,8 +9,11 @@
 	<Platform>Windows</Platform>
 	<Dependency>MATLAB</Dependency>
 	<Dependency>Simulink</Dependency>
+    <Dependency>Requirements Toolbox</Dependency>
 	<Dependency>System Composer</Dependency>
     <!--Opt-->
+    <PreRemoveFcn>PreRemoveFcn</PreRemoveFcn>
+    <Remove>DocSrc</Remove>
     <Remove>Src</Remove>
     <Word>enums</Word>
     <Word>evaluatable</Word>

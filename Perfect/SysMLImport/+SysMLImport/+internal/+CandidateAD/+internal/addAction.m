@@ -11,7 +11,7 @@ function actionNode = addAction(target, nodeName)
 
         existingComponents = targetElement.Nodes;
         
-        actionName = SysMLImport.internal.CandidateAD.internal.nextNameProperty(existingComponents, nodeName);
+        actionName = SysMLImport.internal.utils.nextNameProperty(existingComponents, nodeName);
 
         targetPath = SysMLImport.internal.CandidateAD.internal.getQualifiedName(target);
 
@@ -22,4 +22,6 @@ function actionNode = addAction(target, nodeName)
         actionNode = adCommands.addAction(targetPath, 'tempName'); 
         archElement = SysMLImport.internal.CandidateAD.internal.getArchitecturePeer(actionNode);
         archElement.Name = actionName;
+
+        % <ProductSupportPackage><Protect/></ProductSupportPackage>
 end

@@ -1,6 +1,6 @@
 function lifeline = addLifeline(parent, name)
     if isempty(name)
-        name = SysMLImport.internal.CandidateAD.internal.nextName({parent.Model.Architecture.Components.Name}, 'Unnamed');
+        name = SysMLImport.internal.utils.nextName({parent.Model.Architecture.Components.Name}, 'Unnamed');
     end
     % Escape slashes in name
     name = strrep(name, '/', '//');
@@ -11,4 +11,6 @@ function lifeline = addLifeline(parent, name)
     % Add the lifeline
     sequencediagram.internal.addLifeline(component.getQualifiedName, parent.Model.Name);
     lifeline = parent.Lifelines([parent.Lifelines.RelatedElements] == component);
+
+    % <ProductSupportPackage><Protect/></ProductSupportPackage>
 end

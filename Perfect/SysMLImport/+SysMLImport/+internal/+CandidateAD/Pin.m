@@ -17,9 +17,9 @@ classdef Pin < SysMLImport.internal.CandidateAD.Element
 
             % Ensure that the pin is given a unique name.
             if isempty(name)
-                name = SysMLImport.internal.CandidateAD.internal.nextNameProperty(parent.Pins, 'Pin');
+                name = SysMLImport.internal.utils.nextNameProperty(parent.Pins, 'Pin');
             else
-                name = SysMLImport.internal.CandidateAD.internal.nextNameProperty(parent.Pins, name);
+                name = SysMLImport.internal.utils.nextNameProperty(parent.Pins, name);
             end
 
             pinObj@SysMLImport.internal.CandidateAD.Element(Name=name, ExternalID=externalID, Parent=parent);
@@ -37,14 +37,12 @@ classdef Pin < SysMLImport.internal.CandidateAD.Element
                 return;
             end
 
-            adCommands = systemcomposer.activitydiagram.internal.ActivityCommands;
-
             isInput = isequal(this.Direction, systemcomposer.activitydiagram.model.PortDirection.INPUT);
 
             try
                 activityPath = SysMLImport.internal.CandidateAD.internal.getQualifiedName(target);
 
-                this.ZCElement = adCommands.addPin(activityPath, this.Name, isInput);
+                this.ZCElement = SysMLImport.internal.CandidateAD.internal.addPin(activityPath, this.Name, isInput);
             catch
                 % Try to recover 
                 if ~isa(target.ZCElement, 'systemcomposer.activitydiagram.model.Activity')

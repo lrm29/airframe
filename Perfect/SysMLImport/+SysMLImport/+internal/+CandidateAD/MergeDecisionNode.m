@@ -8,7 +8,7 @@ classdef MergeDecisionNode < SysMLImport.internal.CandidateAD.Node
             nodeObj@SysMLImport.internal.CandidateAD.Node(varargin{:});
 
             if isempty(nodeObj.Name)
-                nodeObj.Name = SysMLImport.internal.CandidateAD.internal.nextNameProperty(nodeObj.Parent.Nodes, 'MergeDecision');
+                nodeObj.Name = SysMLImport.internal.utils.nextNameProperty(nodeObj.Parent.Nodes, 'MergeDecision');
             else
                 nodeObj.ShowName = true;
             end
@@ -21,4 +21,6 @@ classdef MergeDecisionNode < SysMLImport.internal.CandidateAD.Node
             this.ZCElement.NameVisible = this.ShowName;
         end
     end
+
+    % <ProductSupportPackage><Protect/></ProductSupportPackage>
 end

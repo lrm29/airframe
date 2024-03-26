@@ -11,9 +11,9 @@ classdef Parameter < SysMLImport.internal.CandidateAD.Pin
 
             % Ensure that the pin is given a unique name.
             if isempty(name)
-                name = SysMLImport.internal.CandidateAD.internal.nextNameProperty(parent.Parameters, 'Parameter');
+                name = SysMLImport.internal.utils.nextNameProperty(parent.Parameters, 'Parameter');
             else
-                name = SysMLImport.internal.CandidateAD.internal.nextNameProperty(parent.Parameters, name);
+                name = SysMLImport.internal.utils.nextNameProperty(parent.Parameters, name);
             end
 
             pinObj@SysMLImport.internal.CandidateAD.Pin(type, direction, parent, name, externalID);

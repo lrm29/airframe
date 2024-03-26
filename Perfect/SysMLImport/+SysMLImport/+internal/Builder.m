@@ -659,7 +659,7 @@ classdef Builder < handle
             
             % At this point, the source and target should be valid. If
             % they are not, nothing can be done to fix it.
-            candidateAllocations = candidateAllocations([candidateAllocations.isValid]);
+            candidateAllocations = candidateAllocations([candidateAllocations.IsValid]);
             
             if isempty(candidateAllocations)
                 % Nothing to do.
