@@ -14,8 +14,8 @@ classdef Default < XMIChecker.Validator.Validator
             elseif isscalar(candidate)
                 % have a single candidate
                 % check which combination of places the ID is found
-                if ismember(candidate.ExtElementID,xmidb.LookupTable.keys)
-                    if ismember(candidate.ExtElementID,foundElements.keys)
+                if startsWith(candidate.ExtElementID,xmidb.LookupTable.keys)
+                    if any(startsWith(foundElements.keys,candidate.ExtElementID))
                         % this means the ID was found in the XML and the
                         % imported files
                         obj.pass = 1;
