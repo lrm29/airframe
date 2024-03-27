@@ -33,6 +33,8 @@ classdef CandidateRequirement < XMIChecker.Validator.Validator
                     end
                 end
             end
+            %% TODO: check XMI database
+            % nothing is found fail
             obj.fail = 1;
         end
     end
