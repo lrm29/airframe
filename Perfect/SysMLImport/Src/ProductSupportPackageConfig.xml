@@ -17,6 +17,7 @@
     <Remove>Src</Remove>
     <Word>enums</Word>
     <Word>evaluatable</Word>
+    <Word>fqn</Word>
     <Word>Inlines</Word>
     <Word>Inlining</Word>
     <Word>sequencediagram</Word>
