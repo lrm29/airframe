@@ -1,0 +1,58 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<xmi:XMI xmlns:uml='http://www.omg.org/spec/UML/20131001' xmlns:xmi='http://www.omg.org/spec/XMI/20131001' xmlns:Validation_Profile='http://www.magicdraw.com/schemas/Validation_Profile.xmi' xmlns:StandardProfile='http://www.omg.org/spec/UML/20131001/StandardProfile' xmlns:sysml='http://www.omg.org/spec/SysML/20181001/SysML' xmlns:DSL_Customization='http://www.magicdraw.com/schemas/DSL_Customization.xmi' xmlns:MD_Customization_for_Requirements__additional_stereotypes='http://www.magicdraw.com/spec/Customization/180/Requirements' xmlns:MagicDraw_Profile='http://www.omg.org/spec/UML/20131001/MagicDrawProfile' xmlns:MD_Customization_for_SysML__additional_stereotypes='http://www.magicdraw.com/spec/Customization/180/SysML' xmlns:MyExampleProfile='http://www.magicdraw.com/schemas/MyExampleProfile.xmi'>
+	<xmi:Documentation>
+		<xmi:exporter>MagicDraw UML</xmi:exporter>
+		<xmi:exporterVersion>2021x</xmi:exporterVersion>
+	</xmi:Documentation>
+	<uml:Model xmi:type='uml:Model' xmi:id='eee_1045467100313_135436_1' name='Model'>
+		<ownedComment xmi:type='uml:Comment' xmi:id='_2021x_2_f340357_1710373385077_227446_3009' body='Author:ykamatan.&#10;Created:10/1/12 3:10 PM.&#10;Title:.&#10;Comment:.&#10;'>
+			<annotatedElement xmi:idref='eee_1045467100313_135436_1'/>
+		</ownedComment>
+		<packagedElement xmi:type='uml:Package' xmi:id='_2021x_2_f340357_1710397251744_934146_2800' name='Components'>
+			<packagedElement xmi:type='uml:Class' xmi:id='_2021x_2_f340357_1710373395694_551703_3237' name='MyBlock'>
+				<ownedAttribute xmi:type='uml:Property' xmi:id='_2021x_2_f340357_1710401812423_962569_3767' name='MySubblock' visibility='public' aggregation='composite' type='_2021x_2_f340357_1710391478997_853436_2895' association='_2021x_2_f340357_1710401812447_536751_3790'/>
+			</packagedElement>
+			<packagedElement xmi:type='uml:Association' xmi:id='_2021x_2_f340357_1710401812447_536751_3790'>
+				<memberEnd xmi:idref='_2021x_2_f340357_1710401812423_962569_3767'/>
+				<memberEnd xmi:idref='_2021x_2_f340357_1710401812448_226295_3792'/>
+				<ownedEnd xmi:type='uml:Property' xmi:id='_2021x_2_f340357_1710401812448_226295_3792' visibility='private' type='_2021x_2_f340357_1710373395694_551703_3237' association='_2021x_2_f340357_1710401812447_536751_3790'/>
+			</packagedElement>
+			<packagedElement xmi:type='uml:Class' xmi:id='_2021x_2_f340357_1710391478997_853436_2895' name='MySubblock'/>
+		</packagedElement>
+		<packagedElement xmi:type='uml:Profile' xmi:id='_2021x_2_f340357_1710398380452_387858_3222' name='MyExampleProfile'>
+			<metamodelReference xmi:idref='_2021x_2_f340357_1710398380452_220937_3223'/>
+			<packageImport xmi:type='uml:PackageImport' xmi:id='_2021x_2_f340357_1710398380452_220937_3223'>
+				<importedPackage href='http://www.omg.org/spec/UML/20131001/UML.xmi#_0'>
+					<xmi:Extension extender='MagicDraw UML 2021x'>
+						<referenceExtension referentPath='UML Standard Profile::UML2 Metamodel' referentType='Model' originalID='_9_0_be00301_1108053761194_467635_11463'/>
+					</xmi:Extension>
+				</importedPackage>
+			</packageImport>
+			<packagedElement xmi:type='uml:Extension' xmi:id='_2021x_2_f340357_1710398198385_806953_3198'>
+				<memberEnd xmi:idref='_2021x_2_f340357_1710398198385_820624_3199'/>
+				<memberEnd xmi:idref='_2021x_2_f340357_1710398198386_992605_3200'/>
+				<navigableOwnedEnd xmi:idref='_2021x_2_f340357_1710398198386_992605_3200'/>
+				<ownedEnd xmi:type='uml:ExtensionEnd' xmi:id='_2021x_2_f340357_1710398198386_992605_3200' name='extension_' visibility='private' aggregation='composite' type='_2021x_2_f340357_1710398198383_595241_3197' association='_2021x_2_f340357_1710398198385_806953_3198'>
+					<lowerValue xmi:type='uml:LiteralInteger' xmi:id='_2021x_2_f340357_1710398198386_851765_3201'/>
+				</ownedEnd>
+			</packagedElement>
+			<packagedElement xmi:type='uml:Stereotype' xmi:id='_2021x_2_f340357_1710398198383_595241_3197' name='MyStereotype'>
+				<ownedAttribute xmi:type='uml:Property' xmi:id='_2021x_2_f340357_1710398198385_820624_3199' name='base_Element' visibility='private' association='_2021x_2_f340357_1710398198385_806953_3198'>
+					<type href='http://www.omg.org/spec/UML/20131001/UML.xmi#Element'>
+						<xmi:Extension extender='MagicDraw UML 2021x'>
+							<referenceExtension referentPath='UML Standard Profile::UML2 Metamodel::Element' referentType='Class'/>
+						</xmi:Extension>
+					</type>
+				</ownedAttribute>
+				<ownedAttribute xmi:type='uml:Property' xmi:id='_2021x_2_f340357_1710398470247_870847_3230' name='MyPr[op]erty' visibility='public'/>
+			</packagedElement>
+		</packagedElement>
+		<profileApplication xmi:type='uml:ProfileApplication' xmi:id='_2021x_2_f340357_1710373385074_598592_2970'>
+			<appliedProfile href='http://www.omg.org/spec/SysML/20181001/SysML.xmi#SysML' />
+		</profileApplication>
+	</uml:Model>
+	<sysml:Block xmi:id='_2021x_2_f340357_1710373395694_551703_3237_application' base_Class='_2021x_2_f340357_1710373395694_551703_3237'/>
+	<MyExampleProfile:MyStereotype xmi:id='_2021x_2_f340357_1710373395694_551703_3237_application1' base_Element='_2021x_2_f340357_1710373395694_551703_3237' MyPr_op_erty='0'/>
+	<sysml:Block xmi:id='_2021x_2_f340357_1710391478997_853436_2895_application' base_Class='_2021x_2_f340357_1710391478997_853436_2895'/>
+	<MyExampleProfile:MyStereotype xmi:id='_2021x_2_f340357_1710391478997_853436_2895_application1' base_Element='_2021x_2_f340357_1710391478997_853436_2895' MyPr_op_erty='0.8'/>
+</xmi:XMI>

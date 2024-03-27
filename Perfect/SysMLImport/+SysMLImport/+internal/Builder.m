@@ -752,7 +752,7 @@ classdef Builder < handle
                     rethrow(ME);
                 end
 
-                close(slreq.find('Type', 'ReqSet', 'Filename', reqFileName));
+                arrayfun(@close, slreq.find('Type', 'ReqSet', 'Filename', reqFileName));
                 this.ReqFile = slreq.new(reqFileName);
             end
 
