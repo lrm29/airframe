@@ -4,3 +4,6 @@
 [submodule "TestArchitectures/CubeSatSysML2TransitionModel"]
 	path = TestArchitectures/CubeSatSysML2TransitionModel
 	url = https://insidelabs-git.mathworks.com/joshkahn/cubesatsysml2transitionmodel.git
+[submodule "TestArchitectures/CatapultSysML2TransitionModel"]
+	path = TestArchitectures/CatapultSysML2TransitionModel
+	url = https://insidelabs-git.mathworks.com/joshkahn/catapultsysml2transitionmodel.git
