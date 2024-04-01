@@ -12,10 +12,7 @@ classdef CandidateArchitecture < XMIChecker.Validator.Default
             % call the super constructor
             obj@XMIChecker.Validator.Default(candidate,xmidb,foundElements);
             % override result if build is false
-            if ~candidate.Build
-                obj.fail = 0;
-                obj.warn = 1+obj.warn;
-            end
+            obj.processBuildableFlag(candidate.Build);
         end
         
     end

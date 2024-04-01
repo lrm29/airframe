@@ -11,5 +11,9 @@ classdef (Abstract) Validator
         % store candidate data
         candidate
     end
+
+    methods (Access = protected)
+        processBuildableFlag(obj,flag);
+    end
 end
 
