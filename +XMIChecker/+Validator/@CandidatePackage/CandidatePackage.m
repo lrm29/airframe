@@ -3,6 +3,7 @@ classdef CandidatePackage < XMIChecker.Validator.Validator
 
     properties (SetAccess=protected)
         implentedDirectory string = string.empty
+        validators cell
     end
 
     methods
@@ -41,16 +42,16 @@ classdef CandidatePackage < XMIChecker.Validator.Validator
                 childExplorer.explore(children);
                 % get the full set of candidates
                 children = childExplorer.dictionary.values;
-                validators = XMIChecker.Validator.build( ...
+                obj.validators = XMIChecker.Validator.build( ...
                     children,xmidb,foundElements);
                 % need to parse result for validators
                 % priority is fail, then warn, finally pass
                 % any of each sets the results
-                if any(cellfun(@(v) v.fail,validators))
+                if any(cellfun(@(v) v.fail,obj.validators))
                     obj.fail = 1;
-                elseif any(cellfun(@(v) v.warn,validators))
+                elseif any(cellfun(@(v) v.warn,obj.validators))
                     obj.warn = 1;
-                elseif any(cellfun(@(v) v.pass,validators))
+                elseif any(cellfun(@(v) v.pass,obj.validators))
                     obj.pass = 1;
                 else
                     % no result...
