@@ -11,7 +11,7 @@ classdef CandidateComponent < XMIChecker.Validator.Default
             end
             % call the super constructor
             obj@XMIChecker.Validator.Default(candidate,xmidb,foundElements);
-            % override result if build is false
+            % override result if Valid is false
             if ~candidate.Valid
                 obj.fail = 0;
                 obj.warn = 1+obj.warn;
