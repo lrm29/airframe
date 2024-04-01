@@ -38,22 +38,27 @@ classdef CandidatePackage < XMIChecker.Validator.Validator
                 @(fieldname) ~contains(fieldname,"Parent"));
             % explore again
             childExplorer.explore(children);
-            % get the full set of candidates
-            children = childExplorer.dictionary.values;
-            obj.validators = XMIChecker.Validator.build( ...
-                children,xmidb,foundElements);
-            % need to parse result for validators
-            % priority is fail, then warn, finally pass
-            % any of each sets the results
-            if any(cellfun(@(v) v.fail,obj.validators))
-                obj.fail = 1;
-            elseif any(cellfun(@(v) v.warn,obj.validators))
-                obj.warn = 1;
-            elseif any(cellfun(@(v) v.pass,obj.validators))
-                obj.pass = 1;
+            if childExplorer.dictionary.isConfigured
+                % get the full set of candidates
+                children = childExplorer.dictionary.values;
+                obj.validators = XMIChecker.Validator.build( ...
+                    children,xmidb,foundElements);
+                % need to parse result for validators
+                % priority is fail, then warn, finally pass
+                % any of each sets the results
+                if any(cellfun(@(v) v.fail,obj.validators))
+                    obj.fail = 1;
+                elseif any(cellfun(@(v) v.warn,obj.validators))
+                    obj.warn = 1;
+                elseif any(cellfun(@(v) v.pass,obj.validators))
+                    obj.pass = 1;
+                else
+                    % no result...
+                    error("No result was reported %s",candidate.Name);
+                end
             else
-                % no result...
-                error("No result was reported %s",candidate.Name);
+                % nothing to explore assume failure
+                obj.fail = 1;
             end
             % update results based on Build Flag
             obj.processBuildableFlag(candidate.Build);

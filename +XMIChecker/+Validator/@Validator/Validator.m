@@ -1,4 +1,4 @@
-classdef (Abstract) Validator
+classdef (Abstract) Validator < handle
     %VALIDATOR base class for all validators
     % Picks correct validator for the type if no specific validator is
     % available switches to the default

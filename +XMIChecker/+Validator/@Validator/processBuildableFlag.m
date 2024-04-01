@@ -4,7 +4,7 @@ function processBuildableFlag(obj,flag)
 % if an element is not buildable but is built this is a failure, just as a
 % missing buildable element is
 arguments
-    obj XMIChecker.Validator.Default
+    obj XMIChecker.Validator.Validator
     flag logical
 end
 if flag
