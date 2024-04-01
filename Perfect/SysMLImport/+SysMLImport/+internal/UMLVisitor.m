@@ -595,10 +595,19 @@ classdef UMLVisitor < m3i.Visitor
                 end
                 
                 rLinkID = this.getExtID(element);
-                SysMLImport.internal.CandidateReqLink(...
-                    rLinkID, className, supplierID, clientID, ...
-                    supplierMclass, clientMclass, ...
-                    supplierStype, clientStype);
+
+                if className == "SysML.Allocate"
+                    SysMLImport.internal.CandidateAllocation.Allocation(supplierID, clientID, Name='', ExternalID=rLinkID);
+                else
+                    % Requirement Link
+                    SysMLImport.internal.CandidateReqLink(...
+                        rLinkID, className, supplierID, clientID, ...
+                        supplierMclass, clientMclass, ...
+                        supplierStype, clientStype);
+                end
+            else
+                addNotImported(this, element, "Abstraction", ...
+                               "Not SysML.DeriveReqt, SysML.Trace, SysML.Allocate, or SysML.Satisfy");  
             end
             
             ret = [];
