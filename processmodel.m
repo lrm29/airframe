@@ -28,7 +28,7 @@ function processmodel(pm)
     importTask = pm.addTask(XMIImporterCI.task.ImportXMI( ...
         IterationQuery=exclusionQuery));
     checkTask = pm.addTask(XMIImporterCI.task.CheckXMIDB( ...
-        IterationQuery=exclusionQuery));
+        IterationQuery=exclusionQuery,Nice=true));
    
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
