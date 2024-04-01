@@ -16,30 +16,29 @@ classdef CandidatePackage < XMIChecker.Validator.Validator
             end
             % store the candidate
             obj.candidate = candidate;
-            % if build then something in the project should exist
-            if candidate.Build
-                % record directory if filled in
-                if candidate.ZCProjectFolder ~= ""
-                    obj.implentedDirectory = candidate.ZCProjectFolder;
-                end
-                % if build is set have to check that all items under it are
-                % built
-                explorer = XMIChecker.CandidateExplorer(...
-                    @(fieldname) startsWith(fieldname,"Build") ...
-                    && ~contains(fieldname,"Parent"));
-                % explore
-                explorer.explore(candidate);
-                % make a copy of the values
-                children = explorer.dictionary.values;
-                % remove the candidate as property filter
-                children = children(~strcmp(explorer.dictionary.keys, ...
-                    candidate.ExtElementID));
-                % that gives me the direct children based on "Build"
-                % attributes, but I need all the children
-                childExplorer = XMIChecker.CandidateExplorer(...
-                    @(fieldname) ~contains(fieldname,"Parent"));
-                % explore again
-                childExplorer.explore(children);
+            % record directory if filled in
+            if candidate.ZCProjectFolder ~= ""
+                obj.implentedDirectory = candidate.ZCProjectFolder;
+            end
+            % if build is set have to check that all items under it are
+            % built
+            explorer = XMIChecker.CandidateExplorer(...
+                @(fieldname) startsWith(fieldname,"Build") ...
+                && ~contains(fieldname,"Parent"));
+            % explore
+            explorer.explore(candidate);
+            % make a copy of the values
+            children = explorer.dictionary.values;
+            % remove the candidate as property filter
+            children = children(~strcmp(explorer.dictionary.keys, ...
+                candidate.ExtElementID));
+            % that gives me the direct children based on "Build"
+            % attributes, but I need all the children
+            childExplorer = XMIChecker.CandidateExplorer(...
+                @(fieldname) ~contains(fieldname,"Parent"));
+            % explore again
+            childExplorer.explore(children);
+            if childExplorer.dictionary.isConfigured
                 % get the full set of candidates
                 children = childExplorer.dictionary.values;
                 obj.validators = XMIChecker.Validator.build( ...
@@ -58,10 +57,11 @@ classdef CandidatePackage < XMIChecker.Validator.Validator
                     error("No result was reported %s",candidate.Name);
                 end
             else
-                % assume there will be no sign of this one
-                % mark it passed
-                obj.pass = 1;
+                % nothing to explore assume failure
+                obj.fail = 1;
             end
+            % update results based on Build Flag
+            obj.processBuildableFlag(candidate.Build);
         end
     end
 end
