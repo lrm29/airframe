@@ -1,4 +1,4 @@
-classdef (Abstract) Validator
+classdef (Abstract) Validator < handle
     %VALIDATOR base class for all validators
     % Picks correct validator for the type if no specific validator is
     % available switches to the default
@@ -10,6 +10,10 @@ classdef (Abstract) Validator
         fail {mustBeNumeric} = 0
         % store candidate data
         candidate
+    end
+
+    methods (Access = protected)
+        processBuildableFlag(obj,flag);
     end
 end
 

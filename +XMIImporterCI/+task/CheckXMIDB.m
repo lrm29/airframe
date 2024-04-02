@@ -4,6 +4,7 @@ classdef CheckXMIDB < padv.Task
     properties
         processedUUIDs = {}
         ExternalUIDs = {}
+        nice = false;
     end
 
     methods
@@ -26,6 +27,8 @@ classdef CheckXMIDB < padv.Task
                     '$DEFAULTOUTPUTDIR$','CheckXMI');
                 % dependencies just incase
                 options.InputDependencyQuery = padv.Query.empty();
+                % Nice makes the task not fail on error
+                options.Nice = false;
             end
             % add self to the dependency list
             options.InputDependencyQuery = XMIImporterCI.query.multiQuery(...
@@ -40,6 +43,7 @@ classdef CheckXMIDB < padv.Task
                 InputQueries=options.InputQueries,...
                 InputDependencyQuery=options.InputDependencyQuery);
             obj.OutputDirectory = options.OutputDirectory;
+            obj.nice = options.Nice;
         end
 
         function taskResult = run(obj,inputArtifacts)
@@ -52,6 +56,10 @@ classdef CheckXMIDB < padv.Task
             % setup the xmidb
             xmidb = SysMLImport.internal.CandidateAD.internal.XMIDatabase(readstruct( ...
                 xmiArtifact.ArtifactAddress.getFileAddress()));
+            % record starting point to restore later
+            startingPoint = pwd;
+            processProject = currentProject();
+            cd(processProject.RootFolder);
             % find and load the report data
             archiveFilePath = string.empty();
             for artifact = inputArtifacts{2}
@@ -126,6 +134,11 @@ classdef CheckXMIDB < padv.Task
             %% TODO: need to find all the escapes 
             % that is the elements imported but not repoted 
             % these are additional warnings
+            %% check for nice
+            if ~obj.nice && taskResult.ResultValues.Fail > 0
+                % not in nice mode and have failures
+                taskResult.Status = padv.TaskStatus.Fail;
+            end
             %% go back to the process project
             openProject(processProject.RootFolder);
             %% save important data
@@ -138,6 +151,8 @@ classdef CheckXMIDB < padv.Task
             taskResult.OutputPaths = outputFilePath;
             %% re-open process advisor window
             processAdvisorWindow();
+            % go back to starting point 
+            cd(startingPoint);
         end
 
         function elements = findElemetsWithExternalUID(obj,element)
