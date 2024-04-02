@@ -56,6 +56,10 @@ classdef CheckXMIDB < padv.Task
             % setup the xmidb
             xmidb = SysMLImport.internal.CandidateAD.internal.XMIDatabase(readstruct( ...
                 xmiArtifact.ArtifactAddress.getFileAddress()));
+            % record starting point to restore later
+            startingPoint = pwd;
+            processProject = currentProject();
+            cd(processProject.RootFolder);
             % find and load the report data
             archiveFilePath = string.empty();
             for artifact = inputArtifacts{2}
@@ -147,6 +151,8 @@ classdef CheckXMIDB < padv.Task
             taskResult.OutputPaths = outputFilePath;
             %% re-open process advisor window
             processAdvisorWindow();
+            % go back to starting point 
+            cd(startingPoint);
         end
 
         function elements = findElemetsWithExternalUID(obj,element)
