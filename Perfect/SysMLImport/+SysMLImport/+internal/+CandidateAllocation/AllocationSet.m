@@ -6,6 +6,7 @@ classdef AllocationSet < SysMLImport.internal.CandidateAllocation.Element
     properties % Build Artifacts
         ParentPackage
         ParentPackageExtElementID
+        Builder
         BuildName
         BuildSource
         BuildTarget
@@ -36,6 +37,10 @@ classdef AllocationSet < SysMLImport.internal.CandidateAllocation.Element
             modelName = this.BuildName;
 
             this.ZCElement = systemcomposer.allocation.createAllocationSet(modelName, this.BuildSource, this.BuildTarget);
+
+            % Immediately add it to the list so that it gets closed when
+            % the builder is deleted, even if the build fails.
+            this.Builder.AllocationSets = [this.Builder.AllocationSets this.ZCElement];
             
             % Delete the default scenario.
             destroy(this.ZCElement.Scenarios);
@@ -55,7 +60,12 @@ classdef AllocationSet < SysMLImport.internal.CandidateAllocation.Element
             if isempty(this.ParentPackageExtElementID)
                 % Derived allocation set. Set the package to match the
                 % source.
-                this.ParentPackageExtElementID = this.Scenarios(1).Allocations(1).Source.Model.ParentPackageExtElementID;
+                source = this.Scenarios(1).Allocations(1).Source;
+                if isa(source, 'SysMLImport.internal.CandidateArchitecture')
+                    this.ParentPackageExtElementID = source.ParentPackageExtElementID;
+                else
+                    this.ParentPackageExtElementID = source.Model.ParentPackageExtElementID;
+                end
             end
 
             compPkg = SysMLImport.internal.CandidateElement.idMap(...

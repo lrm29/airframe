@@ -1,11 +1,17 @@
 classdef Scenario < SysMLImport.internal.CandidateAllocation.Element
     properties
+        Builder
         Allocations
     end
 
     methods
         function scenarioObj = Scenario(varargin)
             scenarioObj@SysMLImport.internal.CandidateAllocation.Element(varargin{:});
+        end
+
+        function prePublish(this, varargin)
+            % propagate downward for build.
+            this.Builder = this.Parent.Builder;
         end
 
         function doPublish(this, varargin)

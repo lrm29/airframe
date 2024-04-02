@@ -31,6 +31,8 @@ classdef Builder < handle
         AllLinkSets = []
         
         Profiles = []
+
+        NotImported = []; % Stuff that failed to build should get added here.
         
         Stats 
     end
@@ -164,6 +166,47 @@ classdef Builder < handle
 
             this.ProjectSLDD.save;
             this.RootProject.close;
+        end
+
+        function addNotImported(this, element, type, reason)
+            % This function is intentionally written to be fault-tolerant.
+            
+            notImp.Type = type;
+            notImp.Reason = reason;
+            notImp.Stereotype = SysMLImport.internal.utils.getClassName(element);
+
+            try
+                % Try to let the get the path
+                notImp.Element = getFullPath(element);
+            catch ME
+                % do not break the build, just warn to let us know we
+                % missed a property assignment.
+                warning(ME.identifier, '%s', getReport(ME));
+
+                try
+                    % Every element should have this property
+                    notImp.Element = element.ExtElementID; 
+                catch ME
+                    % do not break the build, just warn to let us know we
+                    % missed a property assignment.
+                    warning(ME.identifier, '%s', getReport(ME));
+                    
+                    % Give up and just use the class name.
+                    notImp.Element = notImp.Stereotype; 
+                end
+                
+            end
+            
+            this.NotImported = [this.NotImported notImp];
+
+            try 
+                % Try to let the checker know this was not built
+                element.Build = false;
+            catch ME
+                % do not break the build, just warn to let us know we
+                % missed a property assignment.
+                warning(ME.identifier, '%s', getReport(ME));
+            end
         end
         
         function populateEnumerations(this)
@@ -660,6 +703,8 @@ classdef Builder < handle
             % At this point, the source and target should be valid. If
             % they are not, nothing can be done to fix it.
             candidateAllocations = candidateAllocations([candidateAllocations.IsValid]);
+            % Set the build flag to false for the checker.
+            arrayfun(@(invalidAllocation) set(invalidAllocation.Build, false), candidateAllocations(~[candidateAllocations.IsValid]));
             
             if isempty(candidateAllocations)
                 % Nothing to do.
@@ -709,7 +754,8 @@ classdef Builder < handle
                 candidateAllocationSet = candidateAllocationSets{k};
 
                 linkPackage(candidateAllocationSet);
-
+                
+                candidateAllocationSet.Builder = this;
                 candidateAllocationSet.BuildName = candidateAllocationSet.Name;
             
                 publish(candidateAllocationSet);
@@ -722,8 +768,6 @@ classdef Builder < handle
                 end
 
                 this.saveFileToPath(candidateAllocationSet.ZCElement, directoryPath);
-
-                this.AllocationSets = [this.AllocationSets candidateAllocationSet.ZCElement];
                 
                 allocationSetName  = [candidateAllocationSet.ZCElement.Name '.mldatx'];
                 allocationFilepath = which(allocationSetName);

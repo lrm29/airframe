@@ -606,8 +606,11 @@ classdef UMLVisitor < m3i.Visitor
                         supplierStype, clientStype);
                 end
             else
-                addNotImported(this, element, "Abstraction", ...
-                               "Not SysML.DeriveReqt, SysML.Trace, SysML.Allocate, or SysML.Satisfy");  
+                notImportedReason = sprintf('Import not supported for UML %s element, ''%s'', of SysML type ''%s''. Supported types: SysML.DeriveReqt, SysML.Trace, SysML.Allocate, or SysML.Satisfy', ...
+                                           SysMLImport.internal.utils.getClassName(element), ...
+                                           SysMLImport.internal.utils.getExtID(element), ...
+                                           className);
+                addNotImported(this, element, "Abstraction", notImportedReason);  
             end
             
             ret = [];

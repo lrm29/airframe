@@ -3,6 +3,7 @@ classdef Allocation < SysMLImport.internal.CandidateAllocation.Element
         SourceID
         TargetID
         PrintString
+        Builder
     end
 
     properties (Dependent)
@@ -45,17 +46,26 @@ classdef Allocation < SysMLImport.internal.CandidateAllocation.Element
             tf = ~isempty(this.Source)           && ~isempty(this.Target)                 ...
               && ~isempty(this.Source.ZCElement) && ~isempty(this.Target.ZCElement)       ...
               &&  isvalid(this.Source.ZCElement) &&  isvalid(this.Target.ZCElement);
-        end       
+        end    
+
+        function prePublish(this, varargin)
+            % propagate downward for build.
+            this.Builder = this.Parent.Builder;
+        end
 
         function doPublish(this, varargin)
-            sourceElement = this.getFinalElement(this.Source);
-            targetElement = this.getFinalElement(this.Target);
+            try
+                sourceElement = this.getFinalElement(this.Source);
+                targetElement = this.getFinalElement(this.Target);
 
-            this.Parent.ZCElement.allocate(sourceElement, targetElement);
-
-            % Cache the print string for later in case the model has been
-            % closed.
-            this.PrintString = sprintf('[Source: %s, Target: %s]', sourceElement.getQualifiedName, targetElement.getQualifiedName);
+                this.Parent.ZCElement.allocate(sourceElement, targetElement);
+    
+                % Cache the print string for later in case the model has been
+                % closed.
+                this.PrintString = sprintf('[Source: %s, Target: %s]', sourceElement.getQualifiedName, targetElement.getQualifiedName);
+            catch ME
+                addNotImported(this.Builder, this, this.ExtElementID, ME.message);
+            end
         end
 
         function finalElement = getFinalElement(~, element)
@@ -64,6 +74,13 @@ classdef Allocation < SysMLImport.internal.CandidateAllocation.Element
             finalElement = element.ZCElement;
             if isa(element, 'SysMLImport.internal.CandidateInteraction.Lifeline')
                 finalElement = finalElement.RelatedElements;
+            elseif startsWith(class(finalElement), 'systemcomposer.activitydiagram.model.')
+                finalElement = SysMLImport.internal.CandidateAD.internal.getArchitecturePeer(finalElement);
+            end
+
+            % Bubble up component architectures to components for allocation.
+            if isa(finalElement, 'systemcomposer.arch.Architecture') && ~isempty(finalElement.Parent) && isa(finalElement.Parent, 'systemcomposer.arch.Component')
+                finalElement = finalElement.Parent;
             end
         end
 
@@ -74,7 +91,9 @@ classdef Allocation < SysMLImport.internal.CandidateAllocation.Element
         end
 
         function doPrint(this, printer)
-            printer.print(this.PrintString);
+            if this.Build
+                printer.print(this.PrintString);
+            end
         end
     end
 end
