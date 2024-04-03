@@ -12,47 +12,31 @@ classdef Scenario < XMIChecker.Validator.Validator
             % store candidate
             obj.candidate = candidate;
             % validate an allocation set scenario
-            if candidate.Build
-                if obj.scenarioBuilt
-                    % I was built
-                    obj.pass = 1;
-                else
-                    % that's not good.. I am missing
+            % validate the parent and see from there
+            parentValidator = XMIChecker.Validator.build(...
+                candidate.Parent,xmidb,foundElements);
+            % if the parent exists then the scenario needs to be checked
+            if (parentValidator.pass > 0 && candidate.Parent.Build) || ...
+                    (parentValidator.fail > 0 && ~candidate.Parent.Build)
+                % this means that the parent exists
+                if xor(obj.isBuilt(),candidate.Build)
+                    % built or not, its not what was promissed
                     obj.fail = 1;
+                else
+                    % the expected result was observed
+                    obj.pass = 1;
                 end
             else
-                % wasn't built
-                % check if parent was built
-                if candidate.Parent.Build
-                    % this does make sense....
-                    % going to warn
-                    obj.warn = 1;
-                else
-                    % neither was built?
-                    % validate the parent and see from there
-                    parentValidator = XMIChecker.Validator.build(...
-                        candidate.Parent,xmidb,foundElements);
-                    if parentValidator.pass > 0
-                        % parent really wasn't built, good
-                        obj.pass = 1;
-                    elseif parentValidator.fail > 0
-                        % LIES!!!
-                        if obj.scenarioBuilt()
-                            % I am not built but exist????
-                            obj.fail = 1;
-                        else
-                            % I wasn't built, some lies but not directly me
-                            % call this a warn
-                            obj.warn = 1;
-                        end
-                    end
-                end
+                % parent does not exist
+                % cannot confirm the scenario exists, going to report warn
+                % to be safe
+                obj.warn = 1;
             end
         end
     end
 
     methods (Access=protected)
-        built = scenarioBuilt(obj);
+        built = isBuilt(obj);
     end
 end
 

@@ -1,0 +1,55 @@
+function built = isBuilt(obj)
+%SCENARIOBUILT deteremines if the allocation was built
+% does not check if any required files exist so be careful
+arguments
+    obj XMIChecker.Validator.Allocation
+end
+% set default return of false
+built = false;
+% load the allocation set and start digging
+allocationSet = systemcomposer.allocation.load(...
+    obj.candidate.Parent.Parent.BuildName);
+scenario = allocationSet.Scenarios(...
+    ismember({allocationSet.Scenarios.Name},obj.candidate.Parent.Name));
+if isempty(scenario)
+    return;
+else
+    % found the scenario
+    % if multiple scenarios have the same name... give up
+    assert(isscalar(scenario));
+    % need to find the allocation in the scenario that matches the
+    % allocation being looked for
+    for i = 1:numel(scenario.Allocations)
+        [sourceID,targetID] = getIDs(scenario.Allocations(i));
+        if startsWith(sourceID,obj.candidate.SourceID) && ...
+                startsWith(targetID,obj.candidate.TargetID)
+            % found the allocation!
+            built = true;
+            return;
+        end
+    end
+end
+end
+
+function [source,target] = getIDs(allocation)
+% gets IDs for an allocation
+arguments
+    allocation systemcomposer.allocation.Allocation
+end
+source = getID(allocation.Source);
+target = getID(allocation.Target);
+end
+
+function id = getID(endPoint)
+% gets ID from componet or architecture
+arguments
+    endPoint
+end
+if isa(endPoint,"systemcomposer.arch.Component")
+    % need to get its internal architecture
+    id = endPoint.Architecture.ExternalUID;
+else
+    % this is an architecture
+    id = endPoint.ExternalUID;
+end
+end
