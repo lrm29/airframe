@@ -84,11 +84,14 @@ classdef CheckXMIDB < padv.Task
                 return;
                 % pass with warning as nothing was imported
             end
+            % before anything else need to get the path to the imported
+            % project
+            [importedPath,~,~] = fileparts(archiveFilePath);
+            importedPath = fullfile(processProject.RootFolder,importedPath);
             % now that everything else is ready
             % open the generated project and start loading stuff
             % need to see if anything in the database got imported
             % need to keep track of the process running this task
-            processProject = currentProject;
             % add project path to path
             processPath = processProject.ProjectPath;
             % close porject and save off original path
@@ -96,7 +99,7 @@ classdef CheckXMIDB < padv.Task
             originalPath = path;
             arrayfun(@(f) addpath(f.File),processPath);
             % need to open the generated project
-            [importedPath,~,~] = fileparts(archiveFilePath);
+            
             importedProject = openProject(importedPath);
 
             % name save file for later 
@@ -140,6 +143,7 @@ classdef CheckXMIDB < padv.Task
             end
             %% go back to the process project
             % first restore the original path
+            importedProject.close();
             path(originalPath);
             openProject(processProject.RootFolder);
             %% save important data
