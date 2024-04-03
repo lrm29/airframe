@@ -1,6 +1,5 @@
 classdef AllocationSet < XMIChecker.Validator.Validator
-    %ALLOCATIONSET fake validator for allocation sets
-    % allocations aren't real yet
+    %ALLOCATIONSET validator for allocation sets
     
     methods
         function obj = AllocationSet(candidate,~,~)
@@ -31,10 +30,19 @@ classdef AllocationSet < XMIChecker.Validator.Validator
                 catch ME
                     % if validation fails assume failure
                     obj.fail = 1;
+                    % also set warn as this should not happen
+                    obj.warn = 1;
+                    warning(ME.message);
                 end
             else
-                % wasn't built?
-                % no result?
+                % wasn't built you say
+                % check if if that is a lie
+                if exist(string(candidate.BuildName)+".mldatx","file")
+                    % you lied
+                    obj.fail = 1;
+                else
+                    obj.pass = 1;
+                end
             end
         end
     end
