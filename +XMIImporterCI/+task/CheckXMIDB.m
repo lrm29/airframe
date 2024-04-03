@@ -89,6 +89,12 @@ classdef CheckXMIDB < padv.Task
             % need to see if anything in the database got imported
             % need to keep track of the process running this task
             processProject = currentProject;
+            % add project path to path
+            processPath = processProject.ProjectPath;
+            % close porject and save off original path
+            processProject.close();
+            originalPath = path;
+            arrayfun(@(f) addpath(f.File),processPath);
             % need to open the generated project
             [importedPath,~,~] = fileparts(archiveFilePath);
             importedProject = openProject(importedPath);
@@ -105,24 +111,17 @@ classdef CheckXMIDB < padv.Task
                 try
                     model = systemcomposer.loadModel( ...
                         importedArtifacts(i).ArtifactAddress.getFileAddress());
-                    % need to move back process project (hack to keep this file on
-                    % path)
-                    cd(processProject.RootFolder);
                     elements = obj.findElemetsWithExternalUID(model.Architecture);
                     elementDicitonary(...
                         string(...
                         cellfun(@(e) e.ExternalUID,elements,...
                         'UniformOutput',false))) ...
                         = elements;
-                    % move back to keep things working
-                    cd(importedProject.RootFolder);
                 catch ME
                     warning(ME.message);
                 end
             end
             %% need to analyse the collected data
-            % need a list of expected items
-            cd(processProject.RootFolder);
             explorer = XMIChecker.CandidateExplorer();
             explorer.explore(report.imported);
             %% Validate imported data
@@ -140,6 +139,8 @@ classdef CheckXMIDB < padv.Task
                 taskResult.Status = padv.TaskStatus.Fail;
             end
             %% go back to the process project
+            % first restore the original path
+            path(originalPath);
             openProject(processProject.RootFolder);
             %% save important data
             outputFilePath = fullfile(obj.resolvePath(obj.OutputDirectory),...
