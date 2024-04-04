@@ -1,6 +1,5 @@
 classdef AllocationSet < XMIChecker.Validator.Validator
-    %ALLOCATIONSET fake validator for allocation sets
-    % allocations aren't real yet
+    %ALLOCATIONSET validator for allocation sets
     
     methods
         function obj = AllocationSet(candidate,~,~)
@@ -12,7 +11,40 @@ classdef AllocationSet < XMIChecker.Validator.Validator
             end
             % store candidate
             obj.candidate = candidate;
-            % do nothing else
+            % now to validate an allocation set
+            % assumes that validation occurs in project that was imported
+            if candidate.Build
+                % assume it's built
+                try
+                    allocationSet = systemcomposer.allocation.load(...
+                        candidate.BuildName);
+                    cleanUp = onCleanup(@() allocationSet.close(true));
+                    if strcmp(allocationSet.SourceModel.Name, ...
+                            candidate.BuildSource) && ...
+                            strcmp(allocationSet.TargetModel.Name, ...
+                            candidate.BuildTarget)
+                        obj.pass = 1;
+                    else
+                        % set doesn't connect what it is supposed to
+                        obj.fail = 1;
+                    end
+                catch ME
+                    % if validation fails assume failure
+                    obj.fail = 1;
+                    % also set warn as this should not happen
+                    obj.warn = 1;
+                    warning(ME.message);
+                end
+            else
+                % wasn't built you say
+                % check if if that is a lie
+                if exist(string(candidate.BuildName)+".mldatx","file")
+                    % you lied
+                    obj.fail = 1;
+                else
+                    obj.pass = 1;
+                end
+            end
         end
     end
 end
