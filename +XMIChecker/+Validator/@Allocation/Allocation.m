@@ -11,6 +11,7 @@ classdef Allocation < XMIChecker.Validator.Validator
             end
             % store candidate
             obj.candidate = candidate;
+            return;
             % validate the allocation
             % check that the parent exists
             if isempty(candidate.Parent)

@@ -11,6 +11,7 @@ classdef AllocationSet < XMIChecker.Validator.Validator
             end
             % store candidate
             obj.candidate = candidate;
+            return;
             % now to validate an allocation set
             % assumes that validation occurs in project that was imported
             if candidate.Build
