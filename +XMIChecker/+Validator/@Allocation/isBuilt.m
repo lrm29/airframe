@@ -21,8 +21,8 @@ else
     % allocation being looked for
     for i = 1:numel(scenario.Allocations)
         [sourceID,targetID] = getIDs(scenario.Allocations(i));
-        if startsWith(sourceID,obj.candidate.SourceID) && ...
-                startsWith(targetID,obj.candidate.TargetID)
+        if any(startsWith(sourceID,obj.candidate.SourceID)) && ...
+                any(startsWith(targetID,obj.candidate.TargetID))
             % found the allocation!
             built = true;
             return;
@@ -45,11 +45,12 @@ function id = getID(endPoint)
 arguments
     endPoint
 end
-if isa(endPoint,"systemcomposer.arch.Component")
-    % need to get its internal architecture
-    id = endPoint.Architecture.ExternalUID;
-else
-    % this is an architecture
+if isa(endPoint,"systemcomposer.arch.Architecture")
     id = endPoint.ExternalUID;
+    if isa(endPoint.Parent,"systemcomposer.arch.Component")
+        id = {id,endPoint.Parent.ExternalUID};
+    end
+else
+    id = {endPoint.ExternalUID,endPoint.Architecture.ExternalUID};
 end
 end

@@ -11,7 +11,6 @@ classdef Scenario < XMIChecker.Validator.Validator
             end
             % store candidate
             obj.candidate = candidate;
-            return;
             % validate an allocation set scenario
             % validate the parent and see from there
             parentValidator = XMIChecker.Validator.build(...
