@@ -9,6 +9,7 @@ built = false;
 % load the allocation set and start digging
 allocationSet = systemcomposer.allocation.load(...
     obj.candidate.Parent.Parent.BuildName);
+cleanUp = onCleanup(@() allocationSet.close(true));
 scenario = allocationSet.Scenarios(...
     ismember({allocationSet.Scenarios.Name},obj.candidate.Parent.Name));
 if isempty(scenario)

@@ -3,6 +3,7 @@ function built = isBuilt(obj)
 % does not check if any required files exist so be careful
 allocationSet = systemcomposer.allocation.load(...
     obj.candidate.Parent.BuildName);
+cleanUp = onCleanup(@() allocationSet.close(true));
 built = ismember(obj.candidate.Name,{allocationSet.Scenarios.Name});
 end
 
