@@ -1,12 +1,12 @@
 [submodule "TestArctitectures/skyzersysml2transitionmodel"]
 	path = TestArchitectures/skyzersysml2transitionmodel
-	url = ../../../joshkahn/skyzersysml2transitionmodel.git
+	url = https://insidelabs-git.mathworks.com/joshkahn/skyzersysml2transitionmodel.git
 [submodule "TestArchitectures/CubeSatSysML2TransitionModel"]
 	path = TestArchitectures/CubeSatSysML2TransitionModel
-	url = ../../../joshkahn/cubesatsysml2transitionmodel.git
+	url = https://insidelabs-git.mathworks.com/joshkahn/cubesatsysml2transitionmodel.git
 [submodule "TestArchitectures/CatapultSysML2TransitionModel"]
 	path = TestArchitectures/CatapultSysML2TransitionModel
-	url = ../../../joshkahn/catapultsysml2transitionmodel.git
+	url = https://insidelabs-git.mathworks.com/joshkahn/catapultsysml2transitionmodel.git
 [submodule "Dependencies/CI Tools"]
 	path = Dependencies/CI Tools
-	url = ../../../kburns/ci-tools.git
+	url = https://insidelabs-git.mathworks.com/kburns/ci-tools.git
