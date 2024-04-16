@@ -99,7 +99,7 @@ classdef CheckXMIDB < padv.Task
             % close porject and save off original path
             processProject.close();
             originalPath = path;
-            arrayfun(@(f) addpath(f.File),processPath);
+            %arrayfun(@(f) addpath(f.File),processPath);
             % need to open the generated project
             %% debug
             disp("updated path")
