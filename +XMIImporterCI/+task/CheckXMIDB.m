@@ -101,9 +101,11 @@ classdef CheckXMIDB < padv.Task
             originalPath = path;
             arrayfun(@(f) addpath(f.File),processPath);
             % need to open the generated project
-            
+            %% debug
+            disp("updated path")
             importedProject = openProject(importedPath);
-
+            %% debug
+            disp("Opened imported project")
             % name save file for later 
             outputFileName = importedProject.Name+"_checkData.mat";
 
@@ -114,6 +116,8 @@ classdef CheckXMIDB < padv.Task
             elementDicitonary = dictionary;
             for i = 1:numel(importedArtifacts)
                 try
+                    fprintf("loading %s\n", ...
+                        importedArtifacts(i).ArtifactAddress.getFileAddress());
                     model = systemcomposer.loadModel( ...
                         importedArtifacts(i).ArtifactAddress.getFileAddress());
                     elements = obj.findElemetsWithExternalUID(model.Architecture);
