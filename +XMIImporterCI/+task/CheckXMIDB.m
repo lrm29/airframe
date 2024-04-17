@@ -110,8 +110,6 @@ classdef CheckXMIDB < padv.Task
             elementDicitonary = dictionary;
             for i = 1:numel(importedArtifacts)
                 try
-                    fprintf("Inspecting: %s\n", ...
-                        importedArtifacts(i).ArtifactAddress.getFileAddress());
                     model = systemcomposer.loadModel( ...
                         importedArtifacts(i).ArtifactAddress.getFileAddress());
                     elements = obj.findElemetsWithExternalUID(model.Architecture);
@@ -141,6 +139,8 @@ classdef CheckXMIDB < padv.Task
                 % not in nice mode and have failures
                 taskResult.Status = padv.TaskStatus.Fail;
             end
+            %% print the results 
+            cellfun(@(v) v.report,validators);
             %% go back to the process project
             % first restore the original path
             importedProject.close();
