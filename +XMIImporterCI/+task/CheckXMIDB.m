@@ -96,12 +96,12 @@ classdef CheckXMIDB < padv.Task
             processPath = path;
             %% debug
             disp("Switching to imported Project")
-            fprintf("Path before closing %s",path);
+            fprintf("Path before closing");
             % close project and save off original path
             processProject.close();
-            fprintf("Path after closing %s",path);
+            fprintf("Path after closing");
             originalPath = path(processPath);            
-            fprintf("Path after updates %s",path);
+            fprintf("Path after updates");
             % need to open the generated project
             %% debug
             disp("updated path")
@@ -173,7 +173,7 @@ classdef CheckXMIDB < padv.Task
             %% debug 
             disp("resetting window");
             %% re-open process advisor window
-            processAdvisorWindow();
+            % processAdvisorWindow();
             % go back to starting point 
             cd(startingPoint);
         end
