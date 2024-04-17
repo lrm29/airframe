@@ -93,21 +93,13 @@ classdef CheckXMIDB < padv.Task
             % need to see if anything in the database got imported
             % need to keep track of the process running this task
             % add project path to path
-            processPath = path;
-            %% debug
-            disp("Switching to imported Project")
-            fprintf("Path before closing");
-            % close project and save off original path
+            processPath = processProject.ProjectPath;
+            % close porject and save off original path
             processProject.close();
-            fprintf("Path after closing");
-            originalPath = path(processPath);            
-            fprintf("Path after updates");
+            originalPath = path;
+            arrayfun(@(f) addpath(f.File),processPath);
             % need to open the generated project
-            %% debug
-            disp("updated path")
             importedProject = openProject(importedPath);
-            %% debug
-            disp("Opened imported project")
             % name save file for later 
             outputFileName = importedProject.Name+"_checkData.mat";
 
@@ -118,7 +110,7 @@ classdef CheckXMIDB < padv.Task
             elementDicitonary = dictionary;
             for i = 1:numel(importedArtifacts)
                 try
-                    fprintf("loading %s\n", ...
+                    fprintf("Inspecting: %s\n", ...
                         importedArtifacts(i).ArtifactAddress.getFileAddress());
                     model = systemcomposer.loadModel( ...
                         importedArtifacts(i).ArtifactAddress.getFileAddress());
@@ -132,21 +124,15 @@ classdef CheckXMIDB < padv.Task
                     warning(ME.message);
                 end
             end
-            %% debug
-            disp("File search complete");
             %% need to analyse the collected data
             explorer = XMIChecker.CandidateExplorer();
             explorer.explore(report.imported);
-            %% debug
-            disp("explore complete");
             %% Validate imported data
             candidates = explorer.dictionary.values;
             validators = XMIChecker.Validator.build(candidates,xmidb,elementDicitonary);
             taskResult.ResultValues.Pass = sum(cellfun(@(v) v.pass,validators));
             taskResult.ResultValues.Warn = sum(cellfun(@(v) v.warn,validators));
             taskResult.ResultValues.Fail = sum(cellfun(@(v) v.fail,validators));
-            %% debug
-            disp("validation complete")
             %% TODO: need to find all the escapes 
             % that is the elements imported but not repoted 
             % these are additional warnings
@@ -155,8 +141,6 @@ classdef CheckXMIDB < padv.Task
                 % not in nice mode and have failures
                 taskResult.Status = padv.TaskStatus.Fail;
             end
-            %% debug 
-            disp("back to starting project");
             %% go back to the process project
             % first restore the original path
             importedProject.close();
@@ -170,11 +154,7 @@ classdef CheckXMIDB < padv.Task
             end
             save(outputFilePath,"validators","xmidb","elementDicitonary");
             taskResult.OutputPaths = outputFilePath;
-            %% debug 
-            disp("resetting window");
-            %% re-open process advisor window
-            % processAdvisorWindow();
-            % go back to starting point 
+            %% go back to starting point 
             cd(startingPoint);
         end
 
