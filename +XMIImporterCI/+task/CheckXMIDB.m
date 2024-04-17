@@ -93,15 +93,14 @@ classdef CheckXMIDB < padv.Task
             % need to see if anything in the database got imported
             % need to keep track of the process running this task
             % add project path to path
-            processPath = processProject.ProjectPath;
+            processPath = path;
             %% debug
             disp("Switching to imported Project")
             fprintf("Path before closing %s",path);
             % close project and save off original path
             processProject.close();
-            originalPath = path;
             fprintf("Path after closing %s",path);
-            arrayfun(@(f) addpath(f.File),processPath);
+            originalPath = path(processPath);            
             fprintf("Path after updates %s",path);
             % need to open the generated project
             %% debug
