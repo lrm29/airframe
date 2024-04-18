@@ -60,8 +60,6 @@ classdef CheckXMIDB < padv.Task
                 % record starting point to restore later
                 startingPoint = pwd;
                 processProject = currentProject();
-                %% setup clean up
-                cleanup = onCleanup(@() obj.cleanup(startingPoint,processProject));
                 %% back to checking
                 cd(processProject.RootFolder);
                 % find and load the report data
@@ -158,6 +156,8 @@ classdef CheckXMIDB < padv.Task
                 end
                 save(outputFilePath,"validators","xmidb","elementDicitonary");
                 taskResult.OutputPaths = outputFilePath;
+                %% back to starting location   
+                cd(startingPoint);
             catch ME
                 dsip(ME.message);
                 disp(ME.getReport());
@@ -240,17 +240,6 @@ classdef CheckXMIDB < padv.Task
                 elements = [elements{cellfun(@iscell,elements)},...
                     elements(~cellfun(@iscell,elements))];
             end
-        end
-    end
-
-    methods (Static)
-        function cleanup(startingPoint,processProject)
-            arguments
-                startingPoint string
-                processProject matlab.project.Project
-            end
-            openProject(processProject.RootFolder);
-            cd(startingPoint);
         end
     end
 end
