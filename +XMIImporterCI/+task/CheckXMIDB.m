@@ -5,6 +5,7 @@ classdef CheckXMIDB < padv.Task
         processedUUIDs = {}
         ExternalUIDs = {}
         nice = false;
+        report = true;
     end
 
     methods
@@ -29,6 +30,8 @@ classdef CheckXMIDB < padv.Task
                 options.InputDependencyQuery = padv.Query.empty();
                 % Nice makes the task not fail on error
                 options.Nice = false;
+                % reporting on by default
+                options.report = true;
             end
             % add self to the dependency list
             options.InputDependencyQuery = XMIImporterCI.query.multiQuery(...
@@ -44,6 +47,7 @@ classdef CheckXMIDB < padv.Task
                 InputDependencyQuery=options.InputDependencyQuery);
             obj.OutputDirectory = options.OutputDirectory;
             obj.nice = options.Nice;
+            obj.report = options.report;
         end
 
         function taskResult = run(obj,inputArtifacts)
@@ -142,7 +146,9 @@ classdef CheckXMIDB < padv.Task
                     taskResult.Status = padv.TaskStatus.Fail;
                 end
                 %% print the results
-                cellfun(@(v) v.report,validators);
+                if obj.report
+                    cellfun(@(v) v.report,validators);
+                end
                 %% go back to the process project
                 % first restore the original path
                 importedProject.close();
