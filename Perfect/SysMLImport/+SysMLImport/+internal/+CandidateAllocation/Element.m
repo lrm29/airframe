@@ -6,6 +6,7 @@ classdef Element < SysMLImport.internal.CandidateElement & matlab.mixin.SetGetEx
     end
 
     properties
+        Build (1,1) logical = true % build all allocations unless the build of it fails.
         ZCElement
     end
 
@@ -29,7 +30,7 @@ classdef Element < SysMLImport.internal.CandidateElement & matlab.mixin.SetGetEx
         end
 
         function elementType = get.ElementType(this)
-            elementType = SysMLImport.internal.CandidateAD.internal.getClassName(this);
+            elementType = SysMLImport.internal.utils.getClassName(this);
         end
 
         function doPublish(this, target) %#ok<INUSD>
@@ -92,6 +93,18 @@ classdef Element < SysMLImport.internal.CandidateElement & matlab.mixin.SetGetEx
             applyExternalUID(this);
 
             postPublish(this, target);
+        end
+
+        function fullPath = getFullPath(this)
+            if isempty(this.Parent)
+                if ~isempty(this.Name)
+                    fullPath = this.Name;
+                else
+                    fullPath = this.ExtElementID;
+                end
+            else
+                fullPath = [getFullPath(this.Parent) '<:>' this.Name];
+            end
         end
     end
 end
