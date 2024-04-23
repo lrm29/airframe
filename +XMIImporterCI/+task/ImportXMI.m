@@ -123,12 +123,7 @@ classdef ImportXMI < padv.Task
                 taskResult.OutputPaths = ...
                     outputFiles(arrayfun(@(x) exist(x,"file"),outputFiles) == 2);
             end
-            processAdvisorWindow();
         end
-    end
-
-    methods (Static)
-
     end
 end
 

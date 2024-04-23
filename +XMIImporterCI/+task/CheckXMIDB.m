@@ -5,6 +5,7 @@ classdef CheckXMIDB < padv.Task
         processedUUIDs = {}
         ExternalUIDs = {}
         nice = false;
+        report = true;
     end
 
     methods
@@ -29,6 +30,8 @@ classdef CheckXMIDB < padv.Task
                 options.InputDependencyQuery = padv.Query.empty();
                 % Nice makes the task not fail on error
                 options.Nice = false;
+                % reporting on by default
+                options.report = true;
             end
             % add self to the dependency list
             options.InputDependencyQuery = XMIImporterCI.query.multiQuery(...
@@ -44,115 +47,130 @@ classdef CheckXMIDB < padv.Task
                 InputDependencyQuery=options.InputDependencyQuery);
             obj.OutputDirectory = options.OutputDirectory;
             obj.nice = options.Nice;
+            obj.report = options.report;
         end
 
         function taskResult = run(obj,inputArtifacts)
             % run checks how the import worked
             taskResult = padv.TaskResult;
             taskResult.Status = padv.TaskStatus.Pass;
-            % get working artifact
-            xmiArtifact = XMIImporterCI.utilities.rerunQuery( ...
-                obj.IterationQuery,inputArtifacts{1});
-            % setup the xmidb
-            xmidb = SysMLImport.internal.CandidateAD.internal.XMIDatabase(readstruct( ...
-                xmiArtifact.ArtifactAddress.getFileAddress()));
-            % record starting point to restore later
-            startingPoint = pwd;
-            processProject = currentProject();
-            cd(processProject.RootFolder);
-            % find and load the report data
-            archiveFilePath = string.empty();
-            for artifact = inputArtifacts{2}
-                if endsWith(artifact.ArtifactAddress.getFileAddress,".mat")
-                    load(artifact.ArtifactAddress.getFileAddress)
-                elseif endsWith(artifact.ArtifactAddress.getFileAddress,".mlproj")
-                    % this is the project archive, but it should be in the
-                    % same place as the project generated
-                    archiveFilePath = artifact.ArtifactAddress.getFileAddress();
+            try
+                % get working artifact
+                xmiArtifact = XMIImporterCI.utilities.rerunQuery( ...
+                    obj.IterationQuery,inputArtifacts{1});
+                % setup the xmidb
+                xmidb = SysMLImport.internal.CandidateAD.internal.XMIDatabase(readstruct( ...
+                    xmiArtifact.ArtifactAddress.getFileAddress()));
+                % record starting point to restore later
+                startingPoint = pwd;
+                processProject = currentProject();
+                %% back to checking
+                cd(processProject.RootFolder);
+                % find and load the report data
+                archiveFilePath = string.empty();
+                for artifact = inputArtifacts{2}
+                    if endsWith(artifact.ArtifactAddress.getFileAddress,".mat")
+                        load(artifact.ArtifactAddress.getFileAddress)
+                    elseif endsWith(artifact.ArtifactAddress.getFileAddress,".mlproj")
+                        % this is the project archive, but it should be in the
+                        % same place as the project generated
+                        archiveFilePath = artifact.ArtifactAddress.getFileAddress();
+                    end
+                end
+                % make sure we got the report
+                if ~exist("report","var")
+                    taskResult.Status = padv.TaskStatus.Error;
+                    return;
+                end
+                % check that we found an archive in the output
+                if isempty(archiveFilePath)
+                    % if not this means nothing was imported
+                    taskResult.Status = padv.TaskStatus.Pass;
+                    taskResult.ResultValues.Warn = 1;
+                    return;
+                    % pass with warning as nothing was imported
+                end
+                % before anything else need to get the path to the imported
+                % project
+                [importedPath,~,~] = fileparts(archiveFilePath);
+                importedPath = fullfile(processProject.RootFolder,importedPath);
+                % now that everything else is ready
+                % open the generated project and start loading stuff
+                % need to see if anything in the database got imported
+                % need to keep track of the process running this task
+                % add project path to path
+                processPath = processProject.ProjectPath;
+                % close porject and save off original path
+                processProject.close();
+                originalPath = path;
+                arrayfun(@(f) addpath(f.File),processPath);
+                % need to open the generated project
+                importedProject = openProject(importedPath);
+                % name save file for later
+                outputFileName = importedProject.Name+"_checkData.mat";
+
+                % need to find all the architectures (including activity
+                % diagrams)
+                importQuery = padv.builtin.query.FindModels;
+                importedArtifacts = importQuery.run();
+                elementDicitonary = dictionary;
+                for i = 1:numel(importedArtifacts)
+                    try
+                        model = systemcomposer.loadModel( ...
+                            importedArtifacts(i).ArtifactAddress.getFileAddress());
+                        elements = obj.findElemetsWithExternalUID(model.Architecture);
+                        elementDicitonary(...
+                            string(...
+                            cellfun(@(e) e.ExternalUID,elements,...
+                            'UniformOutput',false))) ...
+                            = elements;
+                    catch ME
+                        warning(ME.message);
+                    end
+                end
+                %% need to analyse the collected data
+                explorer = XMIChecker.CandidateExplorer();
+                explorer.explore(report.imported);
+                %% Validate imported data
+                candidates = explorer.dictionary.values;
+                validators = XMIChecker.Validator.build(candidates,xmidb,elementDicitonary);
+                taskResult.ResultValues.Pass = sum(cellfun(@(v) v.pass,validators));
+                taskResult.ResultValues.Warn = sum(cellfun(@(v) v.warn,validators));
+                taskResult.ResultValues.Fail = sum(cellfun(@(v) v.fail,validators));
+                %% TODO: need to find all the escapes
+                % that is the elements imported but not repoted
+                % these are additional warnings
+                %% check for nice
+                if ~obj.nice && taskResult.ResultValues.Fail > 0
+                    % not in nice mode and have failures
+                    taskResult.Status = padv.TaskStatus.Fail;
+                end
+                %% print the results
+                if obj.report
+                    cellfun(@(v) v.report,validators);
+                end
+                %% go back to the process project
+                % first restore the original path
+                importedProject.close();
+                path(originalPath);
+                openProject(processProject.RootFolder);
+                %% save important data
+                outputFilePath = fullfile(obj.resolvePath(obj.OutputDirectory),...
+                    outputFileName);
+                if ~exist(obj.resolvePath(obj.OutputDirectory),"dir")
+                    mkdir(obj.resolvePath(obj.OutputDirectory));
+                end
+                save(outputFilePath,"validators","xmidb","elementDicitonary");
+                taskResult.OutputPaths = outputFilePath;
+                %% back to starting location   
+                cd(startingPoint);
+            catch ME
+                dsip(ME.message);
+                disp(ME.getReport());
+                for i = 1:numel(ME.stack)
+                    disp(ME.stack(i));
                 end
             end
-            % make sure we got the report
-            if ~exist("report","var")
-                taskResult.Status = padv.TaskStatus.Error;
-                return;
-            end
-            % check that we found an archive in the output
-            if isempty(archiveFilePath)
-                % if not this means nothing was imported
-                taskResult.Status = padv.TaskStatus.Pass;
-                taskResult.ResultValues.Warn = 1;
-                return;
-                % pass with warning as nothing was imported
-            end
-            % now that everything else is ready
-            % open the generated project and start loading stuff
-            % need to see if anything in the database got imported
-            % need to keep track of the process running this task
-            processProject = currentProject;
-            % need to open the generated project
-            [importedPath,~,~] = fileparts(archiveFilePath);
-            importedProject = openProject(importedPath);
-
-            % name save file for later 
-            outputFileName = importedProject.Name+"_checkData.mat";
-
-            % need to find all the architectures (including activity
-            % diagrams)
-            importQuery = padv.builtin.query.FindModels;
-            importedArtifacts = importQuery.run();
-            elementDicitonary = dictionary;
-            for i = 1:numel(importedArtifacts)
-                try
-                    model = systemcomposer.loadModel( ...
-                        importedArtifacts(i).ArtifactAddress.getFileAddress());
-                    % need to move back process project (hack to keep this file on
-                    % path)
-                    cd(processProject.RootFolder);
-                    elements = obj.findElemetsWithExternalUID(model.Architecture);
-                    elementDicitonary(...
-                        string(...
-                        cellfun(@(e) e.ExternalUID,elements,...
-                        'UniformOutput',false))) ...
-                        = elements;
-                    % move back to keep things working
-                    cd(importedProject.RootFolder);
-                catch ME
-                    warning(ME.message);
-                end
-            end
-            %% need to analyse the collected data
-            % need a list of expected items
-            cd(processProject.RootFolder);
-            explorer = XMIChecker.CandidateExplorer();
-            explorer.explore(report.imported);
-            %% Validate imported data
-            candidates = explorer.dictionary.values;
-            validators = XMIChecker.Validator.build(candidates,xmidb,elementDicitonary);
-            taskResult.ResultValues.Pass = sum(cellfun(@(v) v.pass,validators));
-            taskResult.ResultValues.Warn = sum(cellfun(@(v) v.warn,validators));
-            taskResult.ResultValues.Fail = sum(cellfun(@(v) v.fail,validators));
-            %% TODO: need to find all the escapes 
-            % that is the elements imported but not repoted 
-            % these are additional warnings
-            %% check for nice
-            if ~obj.nice && taskResult.ResultValues.Fail > 0
-                % not in nice mode and have failures
-                taskResult.Status = padv.TaskStatus.Fail;
-            end
-            %% go back to the process project
-            openProject(processProject.RootFolder);
-            %% save important data
-            outputFilePath = fullfile(obj.resolvePath(obj.OutputDirectory),...
-                outputFileName);
-            if ~exist(obj.resolvePath(obj.OutputDirectory),"dir")
-                mkdir(obj.resolvePath(obj.OutputDirectory));
-            end
-            save(outputFilePath,"validators","xmidb","elementDicitonary");
-            taskResult.OutputPaths = outputFilePath;
-            %% re-open process advisor window
-            processAdvisorWindow();
-            % go back to starting point 
-            cd(startingPoint);
         end
 
         function elements = findElemetsWithExternalUID(obj,element)

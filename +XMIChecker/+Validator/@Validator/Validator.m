@@ -15,5 +15,9 @@ classdef (Abstract) Validator < handle
     methods (Access = protected)
         processBuildableFlag(obj,flag);
     end
+
+    methods (Access = public)
+        report(obj);
+    end
 end
 

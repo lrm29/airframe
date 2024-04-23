@@ -29,12 +29,16 @@ function processmodel(pm)
         IterationQuery=exclusionQuery));
     checkTask = pm.addTask(XMIImporterCI.task.CheckXMIDB( ...
         IterationQuery=exclusionQuery,Nice=true));
+    psptTask = pm.addTask(citools.task.PackagePSP( ...
+        AccessToken="eupHXNYdZ6oouy2piVsP", pspDirectory="Perfect", ...
+        Nice=true));
    
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %% Set Task relationships
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     checkTask.dependsOn(importTask);
+    psptTask.dependsOn(checkTask);
 
     % !PROCESSMODEL_EDITOR_MARKER! %
     % Do not remove. Process Advisor uses the comment above to automatically add tasks. %

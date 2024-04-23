@@ -7,3 +7,6 @@
 [submodule "TestArchitectures/CatapultSysML2TransitionModel"]
 	path = TestArchitectures/CatapultSysML2TransitionModel
 	url = https://insidelabs-git.mathworks.com/joshkahn/catapultsysml2transitionmodel.git
+[submodule "Dependencies/CI Tools"]
+	path = Dependencies/CI Tools
+	url = https://insidelabs-git.mathworks.com/kburns/ci-tools.git
