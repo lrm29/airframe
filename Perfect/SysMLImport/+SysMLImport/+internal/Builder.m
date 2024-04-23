@@ -32,6 +32,7 @@ classdef Builder < handle
         
         Profiles = []
         
+        NotImported = []
         Stats 
     end
  
@@ -47,6 +48,16 @@ classdef Builder < handle
             if eN > 0 && eN ~= 7
                 vName = vName + "_1";
             end
+        end
+
+        function addNotImported(this, element, type, reason)
+            notImp.Type = type;
+            notImp.Element = element.ExtElementID;
+            notImp.Reason = reason;
+            classParts = strsplit(class(element), '.');
+            notImp.Stereotype = classParts{end};
+            
+            this.NotImported = [this.NotImported notImp];
         end
     
         function this = Builder(buildDir, buildProj, dtypeMapping, vNameStyle)
@@ -781,39 +792,42 @@ classdef Builder < handle
                 thisLink = candReqLinks{k};
                 
                 if ~thisLink.Valid
+                    addNotImported(this, thisLink, 'Requirement Link', 'Link not valid during build.');
                     continue;
                 end
                     
                 supp = thisLink.Supplier;
                 client = thisLink.Client;
                 
-                if isa(supp,'SysMLImport.internal.CandidateRequirement') && ...
-                        isa(client,'SysMLImport.internal.CandidateRequirement')
-                        
-                    lnk = slreq.createLink(supp.ZCElement, client.ZCElement);
-                    if thisLink.LinkType == "SysML.DeriveReqt"
-                        lnk.Type = 'Derive';
-                    end
-                    
-                    thisLink.ZCElement = lnk;
-                    this.Stats.NumReqLinks = this.Stats.NumReqLinks + 1;
-                elseif isa(supp,'SysMLImport.internal.CandidateRequirement')
-                    if ~isempty(client.ZCElement)
-                        lnk = slreq.createLink(client.ZCElement.SimulinkHandle, supp.ZCElement);
+                lnk = [];
+                try
+                    if isa(supp,'SysMLImport.internal.CandidateRequirement') ...
+                       && isa(client,'SysMLImport.internal.CandidateRequirement')  
+    
+                        lnk = slreq.createLink(supp.LinkTarget, client.LinkTarget);
+    
+                        if thisLink.LinkType == "SysML.DeriveReqt"
+                            lnk.Type = 'Derive';
+                        end
+                    elseif isa(supp,'SysMLImport.internal.CandidateRequirement')
+                        lnk = slreq.createLink(client.LinkTarget, supp.LinkTarget);
+    
                         lnk.Type = 'Implement';
+                    elseif isa(client,'SysMLImport.internal.CandidateRequirement')
+                        lnk = slreq.createLink(supp.LinkTarget, client.LinkTarget);
+    
+                        lnk.Type = 'Implement';
+                    elseif ~isempty(client.LinkTarget) && ~isempty(supp.LinkTarget)
+                        lnk = slreq.createLink(supp.LinkTarget, client.LinkTarget);
+                    end
+    
+                    if ~isempty(lnk)
+                        thisLink.ZCElement = lnk;
                         this.Stats.NumReqLinks = this.Stats.NumReqLinks + 1;
                     end
-                elseif isa(client,'SysMLImport.internal.CandidateRequirement')
-                    if ~isempty(supp.ZCElement)
-                        lnk = slreq.createLink(supp.ZCElement.SimulinkHandle, client.ZCElement);
-                        lnk.Type = 'Implement';
-                        this.Stats.NumReqLinks = this.Stats.NumReqLinks + 1;                    
-                    end
-                else
-                    if ~isempty(client.ZCElement) && ~isempty(supp.ZCElement)
-                        slreq.createLink(supp.ZCElement.SimulinkHandle, ...
-                                         client.ZCElement.SimulinkHandle);
-                    end
+                catch ME
+                    warning('SysMLImport:internal:Builder:ErrorCreatingLink', 'Unable to create link from ''%s'' of type ''%s'' to ''%s'' of type ''%s''. Error: %s', supp.ExtElementID, class(supp), client.ExtElementID, class(client), ME.identifier);
+                    addNotImported(this, thisLink, 'Requirement Link', 'Build error.');
                 end
             end
 

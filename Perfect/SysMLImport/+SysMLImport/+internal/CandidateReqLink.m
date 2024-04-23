@@ -45,55 +45,51 @@ classdef CandidateReqLink < SysMLImport.internal.CandidateElement
             this.Client = SysMLImport.internal.CandidateElement.idMap(...
                 "lookup", this.ClientExtElementID);
             
-            isValid = true; % assume
+            this.Valid = false;
+
             
-            if isa(this.Supplier, "SysMLImport.internal.CandidateArchitecture")
-                % If client is a requirement, make sure links to specializations
-                if isa(this.Client, "SysMLImport.internal.CandidateRequirement")
-                    for k = 1:length(this.Supplier.Specializations)
-                        newLink = SysMLImport.internal.CandidateReqLink(...
-                            this.ExtElementID + this.DerivedID, ...
-                            this.LinkType, ...                            
-                            this.Supplier.Specializations(k).ExtElementID, ...
-                            this.ClientExtElementID, ...
-                            this.SupplierMetaClass, this.ClientMetaClass, ...
-                            this.SupplierStereotype, this.ClientStereotype);
-                        newLink.link();
-                        this.DerivedID = this.DerivedID + 1;
-                    end
-                end
-            elseif ~isa(this.Supplier, "SysMLImport.internal.CandidateRequirement")
-                isValid = false;
+
+            try
+                this.Valid = this.Client.ValidRequirementLinkTarget && this.Supplier.ValidRequirementLinkTarget;
+            catch ME
+                warning('SysMLImport:internal:CandidateReqLink:ValidityError', '%s:%s\n%s', this.ExtElementID, ME.identifier, getReport(ME));
             end
-            
-            if isa(this.Client, "SysMLImport.internal.CandidateArchitecture")
-                % If supp is a requirement, make sure links to specializations
-                if isa(this.Supplier, "SysMLImport.internal.CandidateRequirement")
+
+            if this.Valid
+                try
+                    % Link to specializations
                     for k = 1:length(this.Client.Specializations)
-                        newLink = SysMLImport.internal.CandidateReqLink(...
-                            this.ExtElementID + this.DerivedID, ...
-                            this.LinkType, ...
-                            this.SupplierExtElementID, ...
-                            this.Client.Specializations(k).ExtElementID, ...
-                            this.SupplierMetaClass, this.ClientMetaClass, ...
-                            this.SupplierStereotype, this.ClientStereotype);
-                        newLink.link();
-                        this.DerivedID = this.DerivedID + 1;
+                        addDerivedLink(this.SupplierExtElementID, this.Client.Specializations(k).ExtElementID);
                     end
+                catch ME
+                    warning('SysMLImport:internal:CandidateReqLink:ClientSpecializationLinkError', '%s:%s\n%s', this.ExtElementID, ME.identifier, getReport(ME));
                 end
-                
-                
-            elseif ~isa(this.Client, "SysMLImport.internal.CandidateRequirement")
-                isValid = false;
-            end
-            
-            if ~isValid
-                this.Valid = false;
+
+                try
+                    for k = 1:length(this.Supplier.Specializations)
+                        addDerivedLink(this.Supplier.Specializations(k).ExtElementID, this.ClientExtElementID);
+                    end
+                catch ME
+                    warning('SysMLImport:internal:CandidateReqLink:SupplierSpecializationLinkError', '%s:%s\n%s', this.ExtElementID, ME.identifier, getReport(ME));
+                end
+            else
                 this.InvalidReason = ...
                     "Link between elements that are not in model or are unlinkable";
-            else
-                this.Valid = true;
             end
+        end
+
+        function newLink = addDerivedLink(this, supplierID, clientID)
+            % Create a link for the specialization and increment the
+            % derived counter.
+            newLink = SysMLImport.internal.CandidateReqLink(...
+                this.ExtElementID + this.DerivedID, ...
+                this.LinkType, ...                            
+                supplierID, ...
+                clientID, ...
+                this.SupplierMetaClass, this.ClientMetaClass, ...
+                this.SupplierStereotype, this.ClientStereotype);
+            newLink.link();
+            this.DerivedID = this.DerivedID + 1;
         end
                 
         function print(this, printer)

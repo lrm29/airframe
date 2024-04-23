@@ -43,6 +43,10 @@ classdef Element < SysMLImport.internal.CandidateElement & matlab.mixin.SetGetEx
             end
         end
 
+        function linkTarget = getLinkTarget(this)
+            linkTarget = SysMLImport.internal.CandidateAD.internal.getSimulinkPeer(this.ZCElement);
+        end
+
         function doPublish(this, target) %#ok<INUSD>
 
         end

@@ -26,11 +26,11 @@ classdef CandidateInterface < SysMLImport.internal.CandidateElement
             this@SysMLImport.internal.CandidateElement(extID);
             this.Name = name;
             this.CreatedFrom = createdFrom;
+            this.ValidRequirementLinkTarget = true;
         end
         
         function addElement(this, elemName, extID, elemDir, elemTypeName, elemType, elemDim)
-            thisElem.Name = elemName;
-            thisElem.ExtElementID = extID;
+            thisElem = SysMLImport.internal.CandidateInterfaceElement(this, elemName, extID);
             thisElem.Direction = elemDir;
             thisElem.TypeName = elemTypeName;
             thisElem.Type = elemType;
@@ -44,6 +44,10 @@ classdef CandidateInterface < SysMLImport.internal.CandidateElement
         
         function b = doBuild(this)
             b = this.Valid && isempty(this.DerivedInInterface);
+        end
+
+        function linkTarget = getLinkTarget(this)
+            linkTarget = SysMLImport.internal.utils.getInterfaceLinkTarget(this);            
         end
         
         function setDirectionAndSplitBidirectional(this, doSplit)

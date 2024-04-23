@@ -21,6 +21,7 @@ classdef CandidateRequirement < SysMLImport.internal.CandidateElement
             this.Text = txt;
             
             this.ReqOwnerExtElementID = ownID;
+            this.ValidRequirementLinkTarget = true;
         end
         
         function link(this)

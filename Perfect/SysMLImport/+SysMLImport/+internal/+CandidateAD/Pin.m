@@ -23,6 +23,7 @@ classdef Pin < SysMLImport.internal.CandidateAD.Element
             end
 
             pinObj@SysMLImport.internal.CandidateAD.Element(Name=name, ExternalID=externalID, Parent=parent);
+            pinObj.ValidRequirementLinkTarget = true;
             pinObj.TokenType = type;
             pinObj.Direction = direction;
         end

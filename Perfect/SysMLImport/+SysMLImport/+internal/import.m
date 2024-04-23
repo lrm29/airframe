@@ -525,6 +525,7 @@ function impReport = import(xmiFileName, outputDirectory, varargin)
            builder.createReqLinks(candReqLinks);
         end
         
+        impReport.NotImported = [impReport.NotImported builder.NotImported];
         impReport.ImportedTotals = builder.Stats;       
         
         delete(builder);
@@ -544,11 +545,13 @@ function impReport = import(xmiFileName, outputDirectory, varargin)
         printer = SysMLImport.internal.Printer(repFileName, verboseImport, tryOnly);
         
         printer.startSection('NOT IMPORTED FROM XML');
-        for k = 1:length(umlmmV.NotImported)
-            printer.print(umlmmV.NotImported(k).Type    + sprintf('\t') + ...
-                          umlmmV.NotImported(k).Element + sprintf('\t') + ...
-                          umlmmV.NotImported(k).Reason  + sprintf('\t') + ...        
-                          umlmmV.NotImported(k).Stereotype);
+        for k = 1:length(impReport.NotImported)
+            printString = sprintf('%s\t%s\t%s\t%s',                 ...
+                                  impReport.NotImported(k).Type,    ...
+                                  impReport.NotImported(k).Element, ...
+                                  impReport.NotImported(k).Reason,  ...
+                                  impReport.NotImported(k).Stereotype);
+            printer.print(printString);
         end
         printer.endSection('NOT IMPORTED FROM XML');
         

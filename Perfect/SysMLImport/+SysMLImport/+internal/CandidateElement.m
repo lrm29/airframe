@@ -3,8 +3,17 @@ classdef CandidateElement < handle
     properties
         ExtElementID
 
+        Generalizations = [];
+        Specializations = [];
+
         StereotypesExtIDs = [];
-        StereotypePropVals = []
+        StereotypePropVals = [];
+
+        ValidRequirementLinkTarget = false; % This should be set to true by any constructs that support requirement linking.
+    end
+    
+    properties (Dependent)
+        LinkTarget
     end
     
     methods (Static)
@@ -54,12 +63,35 @@ classdef CandidateElement < handle
     end
     
     methods
-        function this = CandidateElement(extElemID)
+        function this = CandidateElement(extElemID, options)
+            arguments
+                extElemID
+                options.ValidRequirementLinkTarget = false
+            end
             this.ExtElementID = extElemID;
+            this.ValidRequirementLinkTarget = options.ValidRequirementLinkTarget;
             SysMLImport.internal.CandidateElement.idMap(...
                 "add", extElemID, this);
         end
+
+        function linkTarget = get.LinkTarget(this)
+            linkTarget = getLinkTarget(this);
+        end
         
+        function linkTarget = getLinkTarget(this)
+            % Stub to be populated by the candidates for their own link
+            % targets.
+            try
+                linkTarget = this.ZCElement.SimulinkHandle; %#ok<MCNPN>
+            catch
+                try
+                    linkTarget = this.ZCElement; %#ok<MCNPN>
+                catch
+                    error('SysMLImport:internal:CandidateElement:InvalidLinkTarget', 'Missing link target for ''%s'' with ID ''%s''.', class(this), this.ExtElementID);
+                end
+            end
+        end
+
         function st = addStereotype(this, st)
             this.StereotypesExtIDs = [this.StereotypesExtIDs st];
         end
