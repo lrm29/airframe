@@ -30,7 +30,7 @@ classdef CandidateRequirement < SysMLImport.internal.CandidateElement
         function addAdditionalProperty(this, propName, propVal)
             if isempty(propVal)
                 propVal = "";
-            else
+            elseif ~ischar(propVal)
                 propVal = propVal.toString;
             end
             

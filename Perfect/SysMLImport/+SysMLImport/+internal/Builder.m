@@ -175,7 +175,7 @@ classdef Builder < handle
             notImp.Stereotype = SysMLImport.internal.utils.getClassName(element);
 
             try
-                % Try to let the get the path
+                % Try to get the path
                 notImp.Element = getFullPath(element);
             catch ME
                 % do not break the build, just warn to let us know we
@@ -650,12 +650,22 @@ classdef Builder < handle
                     prmName = string([originalPrmName(1:diffIdx-1) newPrmName(diffIdx:finalLength)]);
                 end
 
-                options = {};
+                options = [];
+
+                multiDimensional = false;
+                paramValueArray = "NaN";
                 if ~strcmp(thisPrm.Dim, "1")
-                    options{end+1} = "Dimensions"; %#ok<AGROW>
-                    options{end+1} = thisPrm.Dim; %#ok<AGROW>
+                    options.Dimensions = thisPrm.Dim;
+                    multiDimensional = true;
+                    try %#ok<TRYNC> Basic Heuristic with no recovery
+                        % Try creating an array to hold the values based on
+                        % the dimensions.
+                        paramValueArray(1:eval(thisPrm.Dim)) = "NaN";
+                    end
                 end
-                tName = 'double';
+
+                
+                tName = "string";
                 if thisPrm.TypeName ~= ""
                     ptName = thisPrm.TypeName;
                     if contains(ptName, "Enumeration")
@@ -677,26 +687,49 @@ classdef Builder < handle
                             end
                         end
                     end
-                    options{end+1} = "Type"; %#ok<AGROW>
-                    options{end+1} = string(tName); %#ok<AGROW>
                 end
+
                 if thisPrm.DefaultValue ~= ""
+                    paramValue = string(thisPrm.DefaultValue);
+
                     if string(tName) ~= "string"
                         % Needs to be evaluatable
-                        try %#ok<TRYNC>
-                            eval(string(thisPrm.DefaultValue) + ";");
-                            options{end+1} = "Value"; %#ok<AGROW>
-                            options{end+1} = thisPrm.DefaultValue; %#ok<AGROW>
+                        try
+                            if multiDimensional
+                                paramValues = split(paramValue, ',');
+
+                                for valueIdx = 1:numel(paramValues)
+                                    paramValue = paramValues(valueIdx);
+                                    if isempty(paramValue) || strcmp(paramValue, '')
+                                        paramValue = "NaN";
+                                    end
+                                    paramValueArray(valueIdx) = paramValue;
+                                end
+
+                                paramValue = "[" + strjoin(paramValueArray, ",") + "]";
+                            end
+
+                            evalc(paramValue);
+                        catch
+                            warning('xmi:Builder:createParameters:InvalidValue', 'Unable to evaluate value ''%s'' for parameter ''%s'' in architecture ''%s''. Setting type to string to preserve value.', paramValue, prmName, getQualifiedName(arch));
+                            tName = "string";
+                            paramValue = string(thisPrm.DefaultValue);
                         end
+                    end
+
+                    if strcmpi(tName, "string")
+                        options.Value = sprintf('"%s"', paramValue);
                     else
-                        options{end+1} = "Value"; %#ok<AGROW>
-                        options{end+1} = thisPrm.DefaultValue; %#ok<AGROW>
+                        options.Value = paramValue;
                     end
                 end
 
+                options.Type = string(tName);
+
                 if ~isempty(options)
                     try
-                        arch.addParameter(prmName,options{:});
+                        optionArgs = namedargs2cell(options);
+                        arch.addParameter(prmName,optionArgs{:});
                     catch ME
                         arch.addParameter(prmName);
                         warning('xmi:Builder:createParameters:InvalidOptions', 'Unable to add options for parameter ''%s'' in architecture ''%s''.\nOptions:\n%s', prmName, getQualifiedName(arch), formattedDisplayText(options));

@@ -14,6 +14,7 @@ classdef CandidateReqLink < SysMLImport.internal.CandidateElement
         Supplier = []
         Client = []
         
+        Build = true; % assume it will be built by default.
         Valid = true;
         InvalidReason = "";
         
@@ -37,6 +38,24 @@ classdef CandidateReqLink < SysMLImport.internal.CandidateElement
             
             this.SupplierStereotype = suppStype;
             this.ClientStereotype = clientStype;
+        end
+
+        function newLink = addDerivedLink(this, supplierID, clientID)
+            % Create a link for the specialization and increment the
+            % derived counter.
+            newLink = SysMLImport.internal.CandidateReqLink(...
+                this.ExtElementID + this.DerivedID, ...
+                this.LinkType, ...                            
+                supplierID, ...
+                clientID, ...
+                this.SupplierMetaClass, this.ClientMetaClass, ...
+                this.SupplierStereotype, this.ClientStereotype);
+            newLink.link();
+            this.DerivedID = this.DerivedID + 1;
+        end
+
+        function fullPath = getFullPath(this)
+            fullPath = this.ExtElementID;
         end
         
         function link(this)
@@ -76,19 +95,6 @@ classdef CandidateReqLink < SysMLImport.internal.CandidateElement
             end
         end
 
-        function newLink = addDerivedLink(this, supplierID, clientID)
-            % Create a link for the specialization and increment the
-            % derived counter.
-            newLink = SysMLImport.internal.CandidateReqLink(...
-                this.ExtElementID + this.DerivedID, ...
-                this.LinkType, ...                            
-                supplierID, ...
-                clientID, ...
-                this.SupplierMetaClass, this.ClientMetaClass, ...
-                this.SupplierStereotype, this.ClientStereotype);
-            newLink.link();
-            this.DerivedID = this.DerivedID + 1;
-        end
                 
         function print(this, printer)
             sName = ""; 

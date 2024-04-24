@@ -211,7 +211,25 @@ classdef UMLVisitor < m3i.Visitor
                         elseif isa(property.type, 'umlmm.DataType')
                             elTypeName = "Dtype:" + string(property.type.name);
                         end
+                    else
+                        try %#ok<TRYNC> basic heuristic with no recovery
+                            % Try to recover using regex
+                            elType = SysMLImport.internal.utils.getBlockPropertyType(property);
+
+                            if endsWith(elType,        'SysML_dataType.String')
+                                elTypeName = 'Dtype:string';
+                            elseif endsWith(elType,    'SysML_dataType.Number')     ...
+                                   || endsWith(elType, 'SysML_dataType.Real')    ...
+                                   || endsWith(elType, 'SysML_dataType.Complex')
+                                elTypeName = 'Dtype:real';
+                            elseif endsWith(elType,    'SysML_dataType.Boolean')
+                                elTypeName = 'Dtype:boolean';
+                            elseif endsWith(elType,    'SysML_dataType.Integer')
+                                elTypeName = 'Dtype:integer';
+                            end
+                        end
                     end
+
                     elDim = inf;
                     if ~isempty(property.upperValue)
                         [pD, isOk] = str2num(property.upperValue.value);
