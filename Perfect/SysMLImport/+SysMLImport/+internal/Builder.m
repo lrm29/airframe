@@ -33,8 +33,6 @@ classdef Builder < handle
         Profiles = []
 
         NotImported = []; % Stuff that failed to build should get added here.
-        
-        NotImported = []
         Stats 
     end
  
@@ -50,16 +48,6 @@ classdef Builder < handle
             if eN > 0 && eN ~= 7
                 vName = vName + "_1";
             end
-        end
-
-        function addNotImported(this, element, type, reason)
-            notImp.Type = type;
-            notImp.Element = element.ExtElementID;
-            notImp.Reason = reason;
-            classParts = strsplit(class(element), '.');
-            notImp.Stereotype = classParts{end};
-            
-            this.NotImported = [this.NotImported notImp];
         end
     
         function this = Builder(buildDir, buildProj, dtypeMapping, vNameStyle)
