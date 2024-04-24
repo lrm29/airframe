@@ -45,12 +45,10 @@ classdef CandidateReqLink < SysMLImport.internal.CandidateElement
             this.Client = SysMLImport.internal.CandidateElement.idMap(...
                 "lookup", this.ClientExtElementID);
             
-            this.Valid = false;
-
-            
+            this.Valid = false;            
 
             try
-                this.Valid = this.Client.ValidRequirementLinkTarget && this.Supplier.ValidRequirementLinkTarget;
+                this.Valid = ~isempty(this.Client) && ~isempty(this.Supplier) && this.Client.ValidRequirementLinkTarget && this.Supplier.ValidRequirementLinkTarget;
             catch ME
                 warning('SysMLImport:internal:CandidateReqLink:ValidityError', '%s:%s\n%s', this.ExtElementID, ME.identifier, getReport(ME));
             end

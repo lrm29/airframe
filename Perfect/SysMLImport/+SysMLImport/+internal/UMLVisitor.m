@@ -265,7 +265,7 @@ classdef UMLVisitor < m3i.Visitor
 
             if isa(elemOwner, 'umlmm.Class')
                 oStypeStr = this.getSysMLStereotype(elemOwner);
-                if oStypeStr == "SysML.Requirement"
+                if contains(oStypeStr, "Requirement")
                     reqOwner = this.getExtID(elemOwner);
                 end
             end
@@ -287,9 +287,18 @@ classdef UMLVisitor < m3i.Visitor
                reqTextString = "";
             end
 
-            SysMLImport.internal.CandidateRequirement(...
+            reqType = extractAfter(class(cStype), "SysML.");
+
+            req = SysMLImport.internal.CandidateRequirement(...
                 reqXMIID, string(element.name), reqIDString, ...
-                reqTextString, reqOwner);
+                reqTextString, reqOwner, reqType);
+
+            additionalProperties = properties(cStype)';
+            additionalProperties = string(setdiff(additionalProperties, {'base_Class', 'base_ClassObject', 'Id', 'Text'}));
+            
+            for additionalProperty = additionalProperties
+                addAdditionalProperty(req, additionalProperty, cStype.(additionalProperty));
+            end
             
             % Process nested classes (requirements)
             for i=1:element.nestedClassifier.size
@@ -620,7 +629,7 @@ classdef UMLVisitor < m3i.Visitor
             cStypeStr = this.getSysMLStereotype(element);
             if cStypeStr == "SysML.InterfaceBlock"
                 this.visitInterface(element);
-            elseif cStypeStr == "SysML.Requirement"
+            elseif contains(cStypeStr, "Requirement")
                 this.visitRequirement(element);
             elseif this.isBlock(cStypeStr)
                 this.visitBlock(element);

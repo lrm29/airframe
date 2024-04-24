@@ -462,6 +462,18 @@ classdef Builder < handle
                                     Summary=req.Name, ...
                                     Description=req.Text);
             req.ZCElement = thisReq;
+
+            setAttribute(thisReq, 'ExternalID',   req.ExtElementID);
+            setAttribute(thisReq, 'ExternalType', req.Type);
+
+            % Check for additional properties on the requirement
+            if ~isempty(req.AdditionalProperties)
+                additionalProperties = fieldnames(req.AdditionalProperties);
+                newProperties = setdiff(additionalProperties, this.ReqFile.CustomAttributeNames);
+                arrayfun(@(propName) addAttribute(this.ReqFile, string(propName), 'Edit'), newProperties);
+                arrayfun(@(propName) setAttribute(thisReq, string(propName), req.AdditionalProperties.(string(propName))), additionalProperties);
+            end
+
             this.Stats.NumRequirements = this.Stats.NumRequirements + 1;
             for k = 1:length(req.ChildRequirements)
                 recAddRequirementToSet(...
@@ -799,8 +811,11 @@ classdef Builder < handle
                 this.ReqFile = slreq.new(reqFileName);
             end
 
+            addAttribute(this.ReqFile, 'ExternalType', 'Edit');
+            addAttribute(this.ReqFile, 'ExternalID', 'Edit');
+
             this.RootProject.addFile(reqFileName);
-            
+
             for k = 1:length(candReqs)
                 thisReq = candReqs{k};
                 if isempty(thisReq.ParentRequirement)
@@ -813,6 +828,8 @@ classdef Builder < handle
         function createReqLinks(this, candReqLinks)
             
             allMdls = this.ArchModelExtIDMap.values;
+            originalWarnState = warning('off', 'Slvnv:oslc:LinkExists');
+            cleanup = onCleanup(@() warning(originalWarnState));
             
             for k = 1:length(allMdls)
                 save_system(allMdls{k}, '', ...
@@ -831,30 +848,48 @@ classdef Builder < handle
                 supp = thisLink.Supplier;
                 client = thisLink.Client;
                 
-                lnk = [];
+                link = [];
                 try
                     if isa(supp,'SysMLImport.internal.CandidateRequirement') ...
                        && isa(client,'SysMLImport.internal.CandidateRequirement')  
     
-                        lnk = slreq.createLink(supp.LinkTarget, client.LinkTarget);
+                        link = slreq.createLink(supp.LinkTarget, client.LinkTarget);
     
                         if thisLink.LinkType == "SysML.DeriveReqt"
-                            lnk.Type = 'Derive';
+                            link.Type = 'Derive';
                         end
                     elseif isa(supp,'SysMLImport.internal.CandidateRequirement')
-                        lnk = slreq.createLink(client.LinkTarget, supp.LinkTarget);
+                        link = slreq.createLink(client.LinkTarget, supp.LinkTarget);
     
-                        lnk.Type = 'Implement';
+                        link.Type = 'Implement';
                     elseif isa(client,'SysMLImport.internal.CandidateRequirement')
-                        lnk = slreq.createLink(supp.LinkTarget, client.LinkTarget);
+                        link = slreq.createLink(supp.LinkTarget, client.LinkTarget);
     
-                        lnk.Type = 'Implement';
+                        link.Type = 'Implement';
                     elseif ~isempty(client.LinkTarget) && ~isempty(supp.LinkTarget)
-                        lnk = slreq.createLink(supp.LinkTarget, client.LinkTarget);
+                        link = slreq.createLink(supp.LinkTarget, client.LinkTarget);
                     end
     
-                    if ~isempty(lnk)
-                        thisLink.ZCElement = lnk;
+                    if ~isempty(link)
+                        % try catch is faster than checking the attribute
+                        % list every time.
+                        linkID   = thisLink.ExtElementID;
+                        linkType = extractAfter(thisLink.LinkType, 'SysML.');
+                        try
+                            setAttribute(link, 'ExternalID',   linkID);
+                            setAttribute(link, 'ExternalType', linkType);
+                        catch ME
+                            if strcmp(ME.identifier, 'Slvnv:slreq:NoSuchAttribute')
+                                addAttribute(link.linkSet, 'ExternalID',   'Edit');
+                                addAttribute(link.linkSet, 'ExternalType', 'Edit');
+
+                                setAttribute(link, 'ExternalID',   linkID);
+                                setAttribute(link, 'ExternalType', linkType);
+                            else
+                                rethrow(ME)
+                            end
+                        end
+                        thisLink.ZCElement = link;
                         this.Stats.NumReqLinks = this.Stats.NumReqLinks + 1;
                     end
                 catch ME
@@ -878,6 +913,12 @@ classdef Builder < handle
                     this.AllLinkSets = [this.AllLinkSets string(ls.Filename)];
                     ls.save;
                 end
+            end
+
+            ls = slreq.find('Type', 'LinkSet', 'Artifact', this.ProjectSLDDPath);
+            if ~isempty(ls)
+                this.AllLinkSets = [this.AllLinkSets string(ls.Filename)];
+                ls.save;
             end
         end
         
