@@ -29,7 +29,8 @@ classdef CandidateReqLink < SysMLImport.internal.CandidateElement
         function this = CandidateReqLink(extElemID, lType, ...
                                          suppID, clientID, ...
                                          suppMclass, clientMclass, ...
-                                         suppStype, clientStype)
+                                         suppStype, clientStype, ...
+                                         fullPath)
             this@SysMLImport.internal.CandidateElement(extElemID);
             this.LinkType = lType;
             this.SupplierExtElementID = suppID;
@@ -40,6 +41,8 @@ classdef CandidateReqLink < SysMLImport.internal.CandidateElement
             
             this.SupplierStereotype = suppStype;
             this.ClientStereotype = clientStype;
+
+            this.fullPath = fullPath;
         end
 
         function newLink = addDerivedLink(this, supplierID, clientID)
