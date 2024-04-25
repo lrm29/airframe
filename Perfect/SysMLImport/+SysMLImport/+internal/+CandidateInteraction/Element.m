@@ -41,7 +41,7 @@ classdef Element < SysMLImport.internal.CandidateElement & matlab.mixin.SetGetEx
         end
 
         function elementType = get.ElementType(this)
-            elementType = SysMLImport.internal.CandidateAD.internal.getClassName(this);
+            elementType = SysMLImport.internal.utils.getClassName(this);
         end
 
         function qualifiedName = get.QualifiedName(this)

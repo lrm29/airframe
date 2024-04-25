@@ -223,7 +223,7 @@ function [candidateAD, notImported] = buildCandidateAD(adStruct, candidateAD)
             connect(sourcePin, destinationPin, guard, SysMLImport.internal.utils.getExtID(edgeStruct));
 
         catch ME
-            notImp.Type = SysMLImport.internal.CandidateAD.internal.getClassName(edgeStruct);
+            notImp.Type = SysMLImport.internal.utils.getClassName(edgeStruct);
             notImp.Element = SysMLImport.internal.UMLVisitor.getFullPath(edgeStruct);
             notImp.Reason = ME.message;
             scName = SysMLImport.internal.UMLVisitor.getSysMLStereotype(edgeStruct);

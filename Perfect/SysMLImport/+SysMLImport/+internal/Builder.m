@@ -31,8 +31,8 @@ classdef Builder < handle
         AllLinkSets = []
         
         Profiles = []
-        
-        NotImported = []
+
+        NotImported = []; % Stuff that failed to build should get added here.
         Stats 
     end
  
@@ -48,16 +48,6 @@ classdef Builder < handle
             if eN > 0 && eN ~= 7
                 vName = vName + "_1";
             end
-        end
-
-        function addNotImported(this, element, type, reason)
-            notImp.Type = type;
-            notImp.Element = element.ExtElementID;
-            notImp.Reason = reason;
-            classParts = strsplit(class(element), '.');
-            notImp.Stereotype = classParts{end};
-            
-            this.NotImported = [this.NotImported notImp];
         end
     
         function this = Builder(buildDir, buildProj, dtypeMapping, vNameStyle)
@@ -175,6 +165,50 @@ classdef Builder < handle
 
             this.ProjectSLDD.save;
             this.RootProject.close;
+        end
+
+        function addNotImported(this, element, type, reason)
+            % This function is intentionally written to be fault-tolerant.
+            
+            notImp.Type = type;
+            notImp.Reason = reason;
+            notImp.Stereotype = SysMLImport.internal.utils.getClassName(element);
+
+            try
+                notImp.ElementID = element.ExtElementID;
+            catch ME
+                warning(ME.identifier, '%s', getReport(ME));
+                notImp.ElementID = "";
+            end
+
+            try
+                % Try to get the path
+                notImp.Element = getFullPath(element);
+            catch ME
+                % do not break the build, just warn to let us know we
+                % missed a property assignment.
+                warning(ME.identifier, '%s', getReport(ME));
+
+                if ~strcmp(notImp.ElementID, "")
+                    % Every element should have this property
+                    notImp.Element = notImp.ElementID; 
+                else
+                    % Give up and just use the class name.
+                    notImp.Element = notImp.Stereotype; 
+                end
+                
+            end
+            
+            this.NotImported = [this.NotImported notImp];
+
+            try 
+                % Try to let the checker know this was not built
+                element.Build = false;
+            catch ME
+                % do not break the build, just warn to let us know we
+                % missed a property assignment.
+                warning(ME.identifier, '%s', getReport(ME));
+            end
         end
         
         function populateEnumerations(this)
@@ -431,6 +465,18 @@ classdef Builder < handle
                                     Summary=req.Name, ...
                                     Description=req.Text);
             req.ZCElement = thisReq;
+
+            setAttribute(thisReq, 'ExternalID',   req.ExtElementID);
+            setAttribute(thisReq, 'ExternalType', req.Type);
+
+            % Check for additional properties on the requirement
+            if ~isempty(req.AdditionalProperties)
+                additionalProperties = fieldnames(req.AdditionalProperties);
+                newProperties = setdiff(additionalProperties, this.ReqFile.CustomAttributeNames);
+                arrayfun(@(propName) addAttribute(this.ReqFile, string(propName), 'Edit'), newProperties);
+                arrayfun(@(propName) setAttribute(thisReq, string(propName), req.AdditionalProperties.(string(propName))), additionalProperties);
+            end
+
             this.Stats.NumRequirements = this.Stats.NumRequirements + 1;
             for k = 1:length(req.ChildRequirements)
                 recAddRequirementToSet(...
@@ -607,12 +653,22 @@ classdef Builder < handle
                     prmName = string([originalPrmName(1:diffIdx-1) newPrmName(diffIdx:finalLength)]);
                 end
 
-                options = {};
+                options = [];
+
+                multiDimensional = false;
+                paramValueArray = "NaN";
                 if ~strcmp(thisPrm.Dim, "1")
-                    options{end+1} = "Dimensions"; %#ok<AGROW>
-                    options{end+1} = thisPrm.Dim; %#ok<AGROW>
+                    options.Dimensions = thisPrm.Dim;
+                    multiDimensional = true;
+                    try %#ok<TRYNC> Basic Heuristic with no recovery
+                        % Try creating an array to hold the values based on
+                        % the dimensions.
+                        paramValueArray(1:eval(thisPrm.Dim)) = "NaN";
+                    end
                 end
-                tName = 'double';
+
+                
+                tName = "string";
                 if thisPrm.TypeName ~= ""
                     ptName = thisPrm.TypeName;
                     if contains(ptName, "Enumeration")
@@ -634,26 +690,49 @@ classdef Builder < handle
                             end
                         end
                     end
-                    options{end+1} = "Type"; %#ok<AGROW>
-                    options{end+1} = string(tName); %#ok<AGROW>
                 end
+
                 if thisPrm.DefaultValue ~= ""
+                    paramValue = string(thisPrm.DefaultValue);
+
                     if string(tName) ~= "string"
                         % Needs to be evaluatable
-                        try %#ok<TRYNC>
-                            eval(string(thisPrm.DefaultValue) + ";");
-                            options{end+1} = "Value"; %#ok<AGROW>
-                            options{end+1} = thisPrm.DefaultValue; %#ok<AGROW>
+                        try
+                            if multiDimensional
+                                paramValues = split(paramValue, ',');
+
+                                for valueIdx = 1:numel(paramValues)
+                                    paramValue = paramValues(valueIdx);
+                                    if isempty(paramValue) || strcmp(paramValue, '')
+                                        paramValue = "NaN";
+                                    end
+                                    paramValueArray(valueIdx) = paramValue;
+                                end
+
+                                paramValue = "[" + strjoin(paramValueArray, ",") + "]";
+                            end
+
+                            evalc(paramValue);
+                        catch
+                            warning('xmi:Builder:createParameters:InvalidValue', 'Unable to evaluate value ''%s'' for parameter ''%s'' in architecture ''%s''. Setting type to string to preserve value.', paramValue, prmName, getQualifiedName(arch));
+                            tName = "string";
+                            paramValue = string(thisPrm.DefaultValue);
                         end
+                    end
+
+                    if strcmpi(tName, "string")
+                        options.Value = sprintf('"%s"', paramValue);
                     else
-                        options{end+1} = "Value"; %#ok<AGROW>
-                        options{end+1} = thisPrm.DefaultValue; %#ok<AGROW>
+                        options.Value = paramValue;
                     end
                 end
 
+                options.Type = string(tName);
+
                 if ~isempty(options)
                     try
-                        arch.addParameter(prmName,options{:});
+                        optionArgs = namedargs2cell(options);
+                        arch.addParameter(prmName,optionArgs{:});
                     catch ME
                         arch.addParameter(prmName);
                         warning('xmi:Builder:createParameters:InvalidOptions', 'Unable to add options for parameter ''%s'' in architecture ''%s''.\nOptions:\n%s', prmName, getQualifiedName(arch), formattedDisplayText(options));
@@ -671,6 +750,8 @@ classdef Builder < handle
             % At this point, the source and target should be valid. If
             % they are not, nothing can be done to fix it.
             candidateAllocations = candidateAllocations([candidateAllocations.IsValid]);
+            % Set the build flag to false for the checker.
+            arrayfun(@(invalidAllocation) set(invalidAllocation.Build, false), candidateAllocations(~[candidateAllocations.IsValid]));
             
             if isempty(candidateAllocations)
                 % Nothing to do.
@@ -720,7 +801,8 @@ classdef Builder < handle
                 candidateAllocationSet = candidateAllocationSets{k};
 
                 linkPackage(candidateAllocationSet);
-
+                
+                candidateAllocationSet.Builder = this;
                 candidateAllocationSet.BuildName = candidateAllocationSet.Name;
             
                 publish(candidateAllocationSet);
@@ -733,8 +815,6 @@ classdef Builder < handle
                 end
 
                 this.saveFileToPath(candidateAllocationSet.ZCElement, directoryPath);
-
-                this.AllocationSets = [this.AllocationSets candidateAllocationSet.ZCElement];
                 
                 allocationSetName  = [candidateAllocationSet.ZCElement.Name '.mldatx'];
                 allocationFilepath = which(allocationSetName);
@@ -767,8 +847,11 @@ classdef Builder < handle
                 this.ReqFile = slreq.new(reqFileName);
             end
 
+            addAttribute(this.ReqFile, 'ExternalType', 'Edit');
+            addAttribute(this.ReqFile, 'ExternalID', 'Edit');
+
             this.RootProject.addFile(reqFileName);
-            
+
             for k = 1:length(candReqs)
                 thisReq = candReqs{k};
                 if isempty(thisReq.ParentRequirement)
@@ -781,6 +864,8 @@ classdef Builder < handle
         function createReqLinks(this, candReqLinks)
             
             allMdls = this.ArchModelExtIDMap.values;
+            originalWarnState = warning('off', 'Slvnv:oslc:LinkExists');
+            cleanup = onCleanup(@() warning(originalWarnState));
             
             for k = 1:length(allMdls)
                 save_system(allMdls{k}, '', ...
@@ -791,38 +876,56 @@ classdef Builder < handle
             for k = 1:length(candReqLinks)
                 thisLink = candReqLinks{k};
                 
-                if ~thisLink.Valid
-                    addNotImported(this, thisLink, 'Requirement Link', 'Link not valid during build.');
+                if ~thisLink.Valid || isempty(thisLink.Client.LinkTarget) || isempty(thisLink.Supplier.LinkTarget)
+                    addNotImported(this, thisLink, 'Requirement Link', 'Link not valid during build. Probably due to a missing link end or a link between elements that are not linkable.');
                     continue;
                 end
                     
                 supp = thisLink.Supplier;
                 client = thisLink.Client;
                 
-                lnk = [];
+                link = [];
                 try
                     if isa(supp,'SysMLImport.internal.CandidateRequirement') ...
                        && isa(client,'SysMLImport.internal.CandidateRequirement')  
     
-                        lnk = slreq.createLink(supp.LinkTarget, client.LinkTarget);
+                        link = slreq.createLink(supp.LinkTarget, client.LinkTarget);
     
                         if thisLink.LinkType == "SysML.DeriveReqt"
-                            lnk.Type = 'Derive';
+                            link.Type = 'Derive';
                         end
                     elseif isa(supp,'SysMLImport.internal.CandidateRequirement')
-                        lnk = slreq.createLink(client.LinkTarget, supp.LinkTarget);
+                        link = slreq.createLink(client.LinkTarget, supp.LinkTarget);
     
-                        lnk.Type = 'Implement';
+                        link.Type = 'Implement';
                     elseif isa(client,'SysMLImport.internal.CandidateRequirement')
-                        lnk = slreq.createLink(supp.LinkTarget, client.LinkTarget);
+                        link = slreq.createLink(supp.LinkTarget, client.LinkTarget);
     
-                        lnk.Type = 'Implement';
+                        link.Type = 'Implement';
                     elseif ~isempty(client.LinkTarget) && ~isempty(supp.LinkTarget)
-                        lnk = slreq.createLink(supp.LinkTarget, client.LinkTarget);
+                        link = slreq.createLink(supp.LinkTarget, client.LinkTarget);
                     end
     
-                    if ~isempty(lnk)
-                        thisLink.ZCElement = lnk;
+                    if ~isempty(link)
+                        % try catch is faster than checking the attribute
+                        % list every time.
+                        linkID   = thisLink.ExtElementID;
+                        linkType = extractAfter(thisLink.LinkType, 'SysML.');
+                        try
+                            setAttribute(link, 'ExternalID',   linkID);
+                            setAttribute(link, 'ExternalType', linkType);
+                        catch ME
+                            if strcmp(ME.identifier, 'Slvnv:slreq:NoSuchAttribute')
+                                addAttribute(link.linkSet, 'ExternalID',   'Edit');
+                                addAttribute(link.linkSet, 'ExternalType', 'Edit');
+
+                                setAttribute(link, 'ExternalID',   linkID);
+                                setAttribute(link, 'ExternalType', linkType);
+                            else
+                                rethrow(ME)
+                            end
+                        end
+                        thisLink.ZCElement = link;
                         this.Stats.NumReqLinks = this.Stats.NumReqLinks + 1;
                     end
                 catch ME
@@ -846,6 +949,12 @@ classdef Builder < handle
                     this.AllLinkSets = [this.AllLinkSets string(ls.Filename)];
                     ls.save;
                 end
+            end
+
+            ls = slreq.find('Type', 'LinkSet', 'Artifact', this.ProjectSLDDPath);
+            if ~isempty(ls)
+                this.AllLinkSets = [this.AllLinkSets string(ls.Filename)];
+                ls.save;
             end
         end
         

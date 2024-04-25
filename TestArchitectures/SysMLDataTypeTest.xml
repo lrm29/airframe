@@ -1,0 +1,36 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<xmi:XMI xmlns:uml='http://www.omg.org/spec/UML/20131001' xmlns:xmi='http://www.omg.org/spec/XMI/20131001' xmlns:StandardProfile='http://www.omg.org/spec/UML/20131001/StandardProfile' xmlns:sysml='http://www.omg.org/spec/SysML/20181001/SysML'>
+	<uml:Model xmi:type='uml:Model' xmi:id='Model_1' name='Model'>
+		<packagedElement xmi:type='uml:Class' xmi:id='MyArch' name='MyArch'>
+			<ownedAttribute xmi:type='uml:Property' xmi:id='Component_MyComponentWithoutValue' name='MyComponentWithoutValue' visibility='public' aggregation='composite' type='MyComponentWithoutValue' association='Association1'/>
+			<ownedAttribute xmi:type='uml:Property' xmi:id='Component_MyComponentWithValue' name='myComponentWithValue' visibility='public' aggregation='composite' type='MyComponentWithValue' association='Association2'/>
+			<nestedClassifier xmi:type='uml:Class' xmi:id='MyComponentWithoutValue' name='MyComponentWithoutValue'>
+				<ownedAttribute xmi:type='uml:Property' xmi:id='Property_MyStringWithoutValue' name='MyString' visibility='public' aggregation='composite'>
+					<type href='http://www.omg.org/spec/SysML/20181001/SysML.xmi#SysML_dataType.String' />
+				</ownedAttribute>
+			</nestedClassifier>
+			<nestedClassifier xmi:type='uml:Class' xmi:id='MyComponentWithValue' name='MyComponentWithValue'>
+				<ownedAttribute xmi:type='uml:Property' xmi:id='Property_MyStringWithValue' name='MyString' visibility='public' aggregation='composite'>
+					<type href='http://www.omg.org/spec/SysML/20181001/SysML.xmi#SysML_dataType.String' />
+					<defaultValue xmi:type='uml:LiteralString' xmi:id='DefaultValue_hello' value='hello'/>
+				</ownedAttribute>
+			</nestedClassifier>
+		</packagedElement>
+		<packagedElement xmi:type='uml:Association' xmi:id='Association1'>
+			<memberEnd xmi:idref='Component_MyComponentWithoutValue'/>
+			<memberEnd xmi:idref='OwnedEnd1'/>
+			<ownedEnd xmi:type='uml:Property' xmi:id='OwnedEnd1' visibility='public' type='MyArch' association='Association1'/>
+		</packagedElement>
+		<packagedElement xmi:type='uml:Association' xmi:id='Association2'>
+			<memberEnd xmi:idref='Component_MyComponentWithValue'/>
+			<memberEnd xmi:idref='OwnedEnd2'/>
+			<ownedEnd xmi:type='uml:Property' xmi:id='OwnedEnd2' visibility='public' type='MyArch' association='Association2'/>
+		</packagedElement>
+		<profileApplication xmi:type='uml:ProfileApplication' xmi:id='ProfileApplication'>
+			<appliedProfile href='http://www.omg.org/spec/SysML/20181001/SysML.xmi#SysML' />
+		</profileApplication>
+	</uml:Model>
+	<sysml:Block xmi:id='MyArch_application' base_Class='MyArch'/>
+	<sysml:Block xmi:id='MyComponentWithValue_application' base_Class='MyComponentWithValue'/>
+	<sysml:Block xmi:id='MyComponentWithoutValue_application' base_Class='MyComponentWithoutValue'/>
+</xmi:XMI>

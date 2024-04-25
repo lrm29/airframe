@@ -18,5 +18,13 @@ classdef Lifeline < SysMLImport.internal.CandidateInteraction.Element
         function doPublish(this, varargin)
             this.ZCElement = SysMLImport.internal.CandidateInteraction.internal.addLifeline(this.Parent.ZCElement, this.Name);
         end
+
+        function linkTarget = getLinkTarget(this)
+            linkTarget = [];
+            
+            if ~isempty(this.ZCElement)
+                linkTarget = this.ZCElement.RelatedElements.SimulinkHandle;
+            end
+        end
     end
 end
