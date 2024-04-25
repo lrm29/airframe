@@ -876,7 +876,7 @@ classdef Builder < handle
             for k = 1:length(candReqLinks)
                 thisLink = candReqLinks{k};
                 
-                if ~thisLink.Valid
+                if ~thisLink.Valid || isempty(thisLink.Client.LinkTarget) || isempty(thisLink.Supplier.LinkTarget)
                     addNotImported(this, thisLink, 'Requirement Link', 'Link not valid during build. Probably due to a missing link end or a link between elements that are not linkable.');
                     continue;
                 end
