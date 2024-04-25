@@ -658,7 +658,8 @@ classdef UMLVisitor < m3i.Visitor
                 else
                     % Requirement Link
                     try
-                        fullPath = this.getFullPath(element);
+                        classParts = split(className, '.');
+                        fullPath = this.getFullPath(element) + string(classParts(end));
                     catch
                         fullPath = "";
                     end
