@@ -68,6 +68,7 @@ classdef CandidateElement < handle
                 extElemID
                 options.ValidRequirementLinkTarget = false
             end
+
             this.ExtElementID = extElemID;
             this.ValidRequirementLinkTarget = options.ValidRequirementLinkTarget;
             SysMLImport.internal.CandidateElement.idMap(...

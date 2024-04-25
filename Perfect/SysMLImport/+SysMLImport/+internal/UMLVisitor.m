@@ -149,11 +149,20 @@ classdef UMLVisitor < m3i.Visitor
 
         function addNotImported(this, element, type, reason)
             notImp.Type = type;
-            notImp.Element = this.getFullPath(element);
+
+            if ~isstring(element)
+                notImp.Element = this.getFullPath(element);
+                notImp.ElementID = SysMLImport.internal.utils.getExtID(element);
+                scName = this.getSysMLStereotype(element);
+                notImp.Stereotype = scName;
+            else
+                notImp.Element = element;
+                notImp.ElementID = element;
+                notImp.Stereotype = type;
+            end
+
             notImp.Reason = reason;
-            scName = this.getSysMLStereotype(element);
-            notImp.Stereotype = scName;
-            
+
             this.NotImported = [this.NotImported notImp];
         end
 
@@ -312,10 +321,31 @@ classdef UMLVisitor < m3i.Visitor
                 reqTextString, reqOwner, reqType);
 
             additionalProperties = properties(cStype)';
-            additionalProperties = string(setdiff(additionalProperties, {'base_Class', 'base_ClassObject', 'Id', 'Text'}));
+            additionalProperties = string(setdiff(additionalProperties, {'base_Class', 'base_ClassObject', 'Id', 'Text', 'propertyName', 'propertyValue'}));
             
+            elementPath = this.getFullPath(element);
             for additionalProperty = additionalProperties
-                addAdditionalProperty(req, additionalProperty, cStype.(additionalProperty));
+                try
+                    addAdditionalProperty(req, additionalProperty, cStype.(additionalProperty));
+                catch ME
+                    addNotImported(this, elementPath + ":" + additionalProperty, ...
+                                         "RequirementProperty", ...
+                                         "Error:" + string(ME.identifier));
+                end
+            end
+
+            % Check for stereotype properties
+            if ismember('propertyName', additionalProperties) && ismember('propertyValue', additionalProperties)
+                for stereotypePropertyIdx = 1:cStype.propertyName.size
+                    propertyName = cStype.propertyName.at(stereotypePropertyIdx);
+                    try
+                        addAdditionalProperty(req, propertyName, cStype.propertyValue.at(stereotypePropertyIdx));
+                    catch ME
+                        addNotImported(this, elementPath + ":" + propertyName, ...
+                                             "RequirementStereotypeProperty", ...
+                                             "Error:" + string(ME.identifier));
+                    end
+                end
             end
             
             % Process nested classes (requirements)
@@ -627,10 +657,16 @@ classdef UMLVisitor < m3i.Visitor
                     SysMLImport.internal.CandidateAllocation.Allocation(supplierID, clientID, Name='', ExternalID=rLinkID);
                 else
                     % Requirement Link
+                    try
+                        fullPath = this.getFullPath(element);
+                    catch
+                        fullPath = "";
+                    end
+
                     SysMLImport.internal.CandidateReqLink(...
                         rLinkID, className, supplierID, clientID, ...
                         supplierMclass, clientMclass, ...
-                        supplierStype, clientStype);
+                        supplierStype, clientStype, fullPath);
                 end
             else
                 notImportedReason = sprintf('Import not supported for UML %s element, ''%s'', of SysML type ''%s''. Supported types: SysML.DeriveReqt, SysML.Trace, SysML.Allocate, or SysML.Satisfy', ...

@@ -175,6 +175,13 @@ classdef Builder < handle
             notImp.Stereotype = SysMLImport.internal.utils.getClassName(element);
 
             try
+                notImp.ElementID = element.ExtElementID;
+            catch ME
+                warning(ME.identifier, '%s', getReport(ME));
+                notImp.ElementID = "";
+            end
+
+            try
                 % Try to get the path
                 notImp.Element = getFullPath(element);
             catch ME
@@ -182,14 +189,10 @@ classdef Builder < handle
                 % missed a property assignment.
                 warning(ME.identifier, '%s', getReport(ME));
 
-                try
+                if ~strcmp(notImp.ElementID, "")
                     % Every element should have this property
-                    notImp.Element = element.ExtElementID; 
-                catch ME
-                    % do not break the build, just warn to let us know we
-                    % missed a property assignment.
-                    warning(ME.identifier, '%s', getReport(ME));
-                    
+                    notImp.Element = notImp.ElementID; 
+                else
                     % Give up and just use the class name.
                     notImp.Element = notImp.Stereotype; 
                 end
@@ -874,7 +877,7 @@ classdef Builder < handle
                 thisLink = candReqLinks{k};
                 
                 if ~thisLink.Valid
-                    addNotImported(this, thisLink, 'Requirement Link', 'Link not valid during build.');
+                    addNotImported(this, thisLink, 'Requirement Link', 'Link not valid during build. Probably due to a missing link end or a link between elements that are not linkable.');
                     continue;
                 end
                     
