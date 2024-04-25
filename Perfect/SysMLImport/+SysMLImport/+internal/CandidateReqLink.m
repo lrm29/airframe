@@ -42,7 +42,7 @@ classdef CandidateReqLink < SysMLImport.internal.CandidateElement
             this.SupplierStereotype = suppStype;
             this.ClientStereotype = clientStype;
 
-            this.fullPath = fullPath;
+            this.FullPath = fullPath;
         end
 
         function newLink = addDerivedLink(this, supplierID, clientID)
