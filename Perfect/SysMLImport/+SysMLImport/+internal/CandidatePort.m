@@ -34,6 +34,7 @@ classdef CandidatePort < SysMLImport.internal.CandidateElement
             this.InterfaceExtElementID = intfID;
             this.Interface = intf;
             this.Derived = isDerived;
+            this.ValidRequirementLinkTarget = true;
         end
         
         function addConnector(this, conn)

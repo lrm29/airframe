@@ -9,6 +9,7 @@ classdef Node < SysMLImport.internal.CandidateAD.Element & matlab.mixin.Heteroge
     methods
         function nodeObj = Node(varargin)
             nodeObj@SysMLImport.internal.CandidateAD.Element(varargin{:});
+            nodeObj.ValidRequirementLinkTarget = true;
         end
 
         function node = addNode(modelObj, nodeName, nodeType, nodeID)

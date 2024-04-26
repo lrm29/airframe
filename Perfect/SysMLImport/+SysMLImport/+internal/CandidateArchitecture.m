@@ -21,9 +21,6 @@ classdef CandidateArchitecture < SysMLImport.internal.CandidateElement
         GenMerged = false;
         Build = true;
         
-        Generalizations = []
-        Specializations = []
-        
         ZCElement = []
         
         IsInlined = false;
@@ -392,7 +389,7 @@ classdef CandidateArchitecture < SysMLImport.internal.CandidateElement
     methods
         function this = CandidateArchitecture(name, extID, ...
                                               parPackageExtID, genIDs)
-            this@SysMLImport.internal.CandidateElement(extID);
+            this@SysMLImport.internal.CandidateElement(extID, ValidRequirementLinkTarget=true);
 
             this.Name = name;
             this.ParentPackageExtElementID = parPackageExtID;

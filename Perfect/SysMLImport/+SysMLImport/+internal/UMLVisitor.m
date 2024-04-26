@@ -149,11 +149,20 @@ classdef UMLVisitor < m3i.Visitor
 
         function addNotImported(this, element, type, reason)
             notImp.Type = type;
-            notImp.Element = this.getFullPath(element);
+
+            if ~isstring(element)
+                notImp.Element = this.getFullPath(element);
+                notImp.ElementID = SysMLImport.internal.utils.getExtID(element);
+                scName = this.getSysMLStereotype(element);
+                notImp.Stereotype = scName;
+            else
+                notImp.Element = element;
+                notImp.ElementID = element;
+                notImp.Stereotype = type;
+            end
+
             notImp.Reason = reason;
-            scName = this.getSysMLStereotype(element);
-            notImp.Stereotype = scName;
-            
+
             this.NotImported = [this.NotImported notImp];
         end
 
@@ -211,7 +220,25 @@ classdef UMLVisitor < m3i.Visitor
                         elseif isa(property.type, 'umlmm.DataType')
                             elTypeName = "Dtype:" + string(property.type.name);
                         end
+                    else
+                        try %#ok<TRYNC> basic heuristic with no recovery
+                            % Try to recover using regex
+                            elType = SysMLImport.internal.utils.getBlockPropertyType(property);
+
+                            if endsWith(elType,        'SysML_dataType.String')
+                                elTypeName = 'Dtype:string';
+                            elseif endsWith(elType,    'SysML_dataType.Number')     ...
+                                   || endsWith(elType, 'SysML_dataType.Real')    ...
+                                   || endsWith(elType, 'SysML_dataType.Complex')
+                                elTypeName = 'Dtype:real';
+                            elseif endsWith(elType,    'SysML_dataType.Boolean')
+                                elTypeName = 'Dtype:boolean';
+                            elseif endsWith(elType,    'SysML_dataType.Integer')
+                                elTypeName = 'Dtype:integer';
+                            end
+                        end
                     end
+
                     elDim = inf;
                     if ~isempty(property.upperValue)
                         [pD, isOk] = str2num(property.upperValue.value);
@@ -265,7 +292,7 @@ classdef UMLVisitor < m3i.Visitor
 
             if isa(elemOwner, 'umlmm.Class')
                 oStypeStr = this.getSysMLStereotype(elemOwner);
-                if oStypeStr == "SysML.Requirement"
+                if contains(oStypeStr, "Requirement")
                     reqOwner = this.getExtID(elemOwner);
                 end
             end
@@ -287,9 +314,39 @@ classdef UMLVisitor < m3i.Visitor
                reqTextString = "";
             end
 
-            SysMLImport.internal.CandidateRequirement(...
+            reqType = extractAfter(class(cStype), "SysML.");
+
+            req = SysMLImport.internal.CandidateRequirement(...
                 reqXMIID, string(element.name), reqIDString, ...
-                reqTextString, reqOwner);
+                reqTextString, reqOwner, reqType);
+
+            additionalProperties = properties(cStype)';
+            additionalProperties = string(setdiff(additionalProperties, {'base_Class', 'base_ClassObject', 'Id', 'Text', 'propertyName', 'propertyValue'}));
+            
+            elementPath = this.getFullPath(element);
+            for additionalProperty = additionalProperties
+                try
+                    addAdditionalProperty(req, additionalProperty, cStype.(additionalProperty));
+                catch ME
+                    addNotImported(this, elementPath + ":" + additionalProperty, ...
+                                         "RequirementProperty", ...
+                                         "Error:" + string(ME.identifier));
+                end
+            end
+
+            % Check for stereotype properties
+            if ismember('propertyName', additionalProperties) && ismember('propertyValue', additionalProperties)
+                for stereotypePropertyIdx = 1:cStype.propertyName.size
+                    propertyName = cStype.propertyName.at(stereotypePropertyIdx);
+                    try
+                        addAdditionalProperty(req, propertyName, cStype.propertyValue.at(stereotypePropertyIdx));
+                    catch ME
+                        addNotImported(this, elementPath + ":" + propertyName, ...
+                                             "RequirementStereotypeProperty", ...
+                                             "Error:" + string(ME.identifier));
+                    end
+                end
+            end
             
             % Process nested classes (requirements)
             for i=1:element.nestedClassifier.size
@@ -600,10 +657,17 @@ classdef UMLVisitor < m3i.Visitor
                     SysMLImport.internal.CandidateAllocation.Allocation(supplierID, clientID, Name='', ExternalID=rLinkID);
                 else
                     % Requirement Link
+                    try
+                        classParts = split(className, '.');
+                        fullPath = this.getFullPath(element) + string(classParts(end));
+                    catch
+                        fullPath = "";
+                    end
+
                     SysMLImport.internal.CandidateReqLink(...
                         rLinkID, className, supplierID, clientID, ...
                         supplierMclass, clientMclass, ...
-                        supplierStype, clientStype);
+                        supplierStype, clientStype, fullPath);
                 end
             else
                 notImportedReason = sprintf('Import not supported for UML %s element, ''%s'', of SysML type ''%s''. Supported types: SysML.DeriveReqt, SysML.Trace, SysML.Allocate, or SysML.Satisfy', ...
@@ -620,7 +684,7 @@ classdef UMLVisitor < m3i.Visitor
             cStypeStr = this.getSysMLStereotype(element);
             if cStypeStr == "SysML.InterfaceBlock"
                 this.visitInterface(element);
-            elseif cStypeStr == "SysML.Requirement"
+            elseif contains(cStypeStr, "Requirement")
                 this.visitRequirement(element);
             elseif this.isBlock(cStypeStr)
                 this.visitBlock(element);

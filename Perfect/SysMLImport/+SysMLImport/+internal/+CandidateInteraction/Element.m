@@ -27,6 +27,7 @@ classdef Element < SysMLImport.internal.CandidateElement & matlab.mixin.SetGetEx
 
             elementObj.Name = NameValueArgs.Name;
             elementObj.Parent = NameValueArgs.Parent;
+            elementObj.ValidRequirementLinkTarget = true;
 
             setModel(elementObj);
         end

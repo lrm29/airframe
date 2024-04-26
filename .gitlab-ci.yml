@@ -3,6 +3,7 @@
 variables:
   FORCE: "false"
   MATLAB_LOG_FILE: "MATLAB_Log_Output.txt"
+  GIT_SUBMODULE_STRATEGY: recursive
 
 stages:
   - SimulinkPipelineGeneration

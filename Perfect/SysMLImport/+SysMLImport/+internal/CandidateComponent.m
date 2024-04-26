@@ -23,6 +23,7 @@ classdef CandidateComponent < SysMLImport.internal.CandidateElement
             this.Name = name;
             this.ReferenceArchExtElementID = refCompID;
             this.ParentArchitecture = parArch;
+            this.ValidRequirementLinkTarget = true;
         end
         
         function addConnector(this, refArchPort, conn)

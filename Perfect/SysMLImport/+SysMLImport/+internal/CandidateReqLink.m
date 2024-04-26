@@ -14,19 +14,23 @@ classdef CandidateReqLink < SysMLImport.internal.CandidateElement
         Supplier = []
         Client = []
         
+        Build = true; % assume it will be built by default.
         Valid = true;
         InvalidReason = "";
         
         ZCElement = [];
         
         DerivedID = 1;
+
+        FullPath = "" % Cached XMI path for error reporting.
     end
     
     methods
         function this = CandidateReqLink(extElemID, lType, ...
                                          suppID, clientID, ...
                                          suppMclass, clientMclass, ...
-                                         suppStype, clientStype)
+                                         suppStype, clientStype, ...
+                                         fullPath)
             this@SysMLImport.internal.CandidateElement(extElemID);
             this.LinkType = lType;
             this.SupplierExtElementID = suppID;
@@ -37,64 +41,96 @@ classdef CandidateReqLink < SysMLImport.internal.CandidateElement
             
             this.SupplierStereotype = suppStype;
             this.ClientStereotype = clientStype;
+
+            this.FullPath = fullPath;
+        end
+
+        function newLink = addDerivedLink(this, supplierID, clientID)
+            % Create a link for the specialization and increment the
+            % derived counter.
+            newLink = SysMLImport.internal.CandidateReqLink(...
+                this.ExtElementID + "_derived" + this.DerivedID, ...
+                this.LinkType, ...                            
+                supplierID, ...
+                clientID, ...
+                this.SupplierMetaClass, this.ClientMetaClass, ...
+                this.SupplierStereotype, this.ClientStereotype, ...
+                this.FullPath);
+            newLink.link();
+            this.DerivedID = this.DerivedID + 1;
+        end
+
+        function fullPath = getFullPath(this)
+            if strcmp(this.FullPath, "")
+                fullPath = this.ExtElementID;
+            else
+                fullPath = this.FullPath;
+            end
+        end
+
+        function resolvedElement = resolveMultipleElements(~, elementID)
+            resolvedElement = SysMLImport.internal.CandidateElement.idMap(...
+                "lookup", elementID);   
+
+            % Add heuristic to figure out the correct link target since the
+            % map look-up can return multiple elements after
+            % generalizations have been merged in.
+            if numel(resolvedElement) > 1
+                if isa(resolvedElement, 'SysMLImport.internal.CandidateComponent') && isscalar(unique([resolvedElement.ReferenceArchExtElementID]))
+                    % If it resolves to an array of components and they all
+                    % reference the same architecture, then return the
+                    % architecture as the resolved element.
+                    resolvedElement = resolvedElement(1).ReferenceArch;
+                else
+                    error('SysMLImport:internal:CandidateReqLink:UnableToResolveElement', 'Unable to resolve element ''%s'' of type ''%s''.', elementID, class(resolvedElement));
+                end
+            end
         end
         
         function link(this)
-            this.Supplier = SysMLImport.internal.CandidateElement.idMap(...
-                "lookup", this.SupplierExtElementID);
-            this.Client = SysMLImport.internal.CandidateElement.idMap(...
-                "lookup", this.ClientExtElementID);
-            
-            isValid = true; % assume
-            
-            if isa(this.Supplier, "SysMLImport.internal.CandidateArchitecture")
-                % If client is a requirement, make sure links to specializations
-                if isa(this.Client, "SysMLImport.internal.CandidateRequirement")
-                    for k = 1:length(this.Supplier.Specializations)
-                        newLink = SysMLImport.internal.CandidateReqLink(...
-                            this.ExtElementID + this.DerivedID, ...
-                            this.LinkType, ...                            
-                            this.Supplier.Specializations(k).ExtElementID, ...
-                            this.ClientExtElementID, ...
-                            this.SupplierMetaClass, this.ClientMetaClass, ...
-                            this.SupplierStereotype, this.ClientStereotype);
-                        newLink.link();
-                        this.DerivedID = this.DerivedID + 1;
-                    end
-                end
-            elseif ~isa(this.Supplier, "SysMLImport.internal.CandidateRequirement")
-                isValid = false;
+            this.Valid = false; 
+
+            try
+                this.Supplier = resolveMultipleElements(this, this.SupplierExtElementID);         
+            catch 
+                warning('SysMLImport:internal:CandidateReqLink:UnableToResolveSupplier', 'Unable to resolve supplier ''%s'' for link ''%s''.', this.SupplierExtElementID, this.ExtElementID);
             end
-            
-            if isa(this.Client, "SysMLImport.internal.CandidateArchitecture")
-                % If supp is a requirement, make sure links to specializations
-                if isa(this.Supplier, "SysMLImport.internal.CandidateRequirement")
+
+            try
+                this.Client   = resolveMultipleElements(this, this.ClientExtElementID);         
+            catch 
+                warning('SysMLImport:internal:CandidateReqLink:UnableToResolveClient', 'Unable to resolve client ''%s'' for link ''%s''.', this.ClientExtElementID, this.ExtElementID);
+            end          
+
+            try
+                this.Valid = ~isempty(this.Client) && ~isempty(this.Supplier) && this.Client.ValidRequirementLinkTarget && this.Supplier.ValidRequirementLinkTarget;
+            catch ME
+                warning('SysMLImport:internal:CandidateReqLink:ValidityError', '%s:%s\n%s', this.ExtElementID, ME.identifier, getReport(ME));
+            end
+
+            if this.Valid
+                try
+                    % Link to specializations
                     for k = 1:length(this.Client.Specializations)
-                        newLink = SysMLImport.internal.CandidateReqLink(...
-                            this.ExtElementID + this.DerivedID, ...
-                            this.LinkType, ...
-                            this.SupplierExtElementID, ...
-                            this.Client.Specializations(k).ExtElementID, ...
-                            this.SupplierMetaClass, this.ClientMetaClass, ...
-                            this.SupplierStereotype, this.ClientStereotype);
-                        newLink.link();
-                        this.DerivedID = this.DerivedID + 1;
+                        addDerivedLink(this.SupplierExtElementID, this.Client.Specializations(k).ExtElementID);
                     end
+                catch ME
+                    warning('SysMLImport:internal:CandidateReqLink:ClientSpecializationLinkError', '%s:%s\n%s', this.ExtElementID, ME.identifier, getReport(ME));
                 end
-                
-                
-            elseif ~isa(this.Client, "SysMLImport.internal.CandidateRequirement")
-                isValid = false;
-            end
-            
-            if ~isValid
-                this.Valid = false;
+
+                try
+                    for k = 1:length(this.Supplier.Specializations)
+                        addDerivedLink(this.Supplier.Specializations(k).ExtElementID, this.ClientExtElementID);
+                    end
+                catch ME
+                    warning('SysMLImport:internal:CandidateReqLink:SupplierSpecializationLinkError', '%s:%s\n%s', this.ExtElementID, ME.identifier, getReport(ME));
+                end
+            else
                 this.InvalidReason = ...
                     "Link between elements that are not in model or are unlinkable";
-            else
-                this.Valid = true;
             end
         end
+
                 
         function print(this, printer)
             sName = ""; 

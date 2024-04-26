@@ -21,6 +21,14 @@ classdef Interaction < SysMLImport.internal.CandidateInteraction.Element
             this.Model = this;
         end
 
+        function linkTarget = getLinkTarget(this)
+            linkTarget = [];
+            
+            if ~isempty(this.ModelZCElement)
+                linkTarget = this.ModelZCElement.SimulinkHandle;
+            end
+        end
+
         function applyExternalUID(this)
             if ~isempty(this.ZCElement) && ~isempty(this.ExtElementID)
                 % For now, one sequence diagram per arch model.
