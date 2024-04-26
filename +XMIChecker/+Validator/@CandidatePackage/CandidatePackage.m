@@ -5,7 +5,7 @@ classdef CandidatePackage < XMIChecker.Validator.Validator
         function obj = CandidatePackage(candidate,~,~)
             %PACKAGE Construct an instance of this class
             arguments
-                candidate SysMLImport.internal.CandidatePackage
+                candidate SysMLConnector.internal.CandidatePackage
                 ~
                 ~
             end

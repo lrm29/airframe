@@ -1,7 +1,7 @@
 clear, clc
 
 RepositoryType = "Folder";                 % (1,1) string  : Repository Type {"Folder","Svn","Git"}.
-RepositoryURL  = "../Perfect/SysMLImport"; % (1,1) string  : Repository URL.
+RepositoryURL  = "../Perfect/SysMLConnector"; % (1,1) string  : Repository URL.
 BuildDir       = "../Build";               % (1,1) string  : Build directory.
 OutputDir      = "../Release/Latest";      % (1,1) string  : Output directory.
 

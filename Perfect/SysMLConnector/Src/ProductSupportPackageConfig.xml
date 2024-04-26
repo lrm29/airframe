@@ -1,0 +1,29 @@
+<ProductSupportPackage>
+	<!-- Required Tags -->
+	<Name>System Composer SysML Connector</Name>
+	<Image>+SysMLConnector/+internal/icons/ico-sysml-import.png</Image>
+	<Author>MathWorks SysML Team</Author>
+	<Email>sysml@mathworks.com</Email>
+	<Company>MathWorks</Company>
+	<Package>SysMLConnector</Package>
+	<Platform>Windows</Platform>
+	<Dependency>MATLAB</Dependency>
+	<Dependency>Simulink</Dependency>
+    <Dependency>Requirements Toolbox</Dependency>
+	<Dependency>System Composer</Dependency>
+    <!--Opt-->
+    <PreRemoveFcn>PreRemoveFcn</PreRemoveFcn>
+    <Remove>DocSrc</Remove>
+    <Remove>Src</Remove>
+    <Word>enums</Word>
+    <Word>etc</Word>
+    <Word>evaluatable</Word>
+    <Word>fqn</Word>
+    <Word>Inlines</Word>
+    <Word>Inlining</Word>
+    <Word>sequencediagram</Word>
+    <Word>SingleUseArchitectureInlining</Word>
+    <Word>superclasses</Word>
+    <Word>xmiFilename</Word>
+    <Word>zcMdl</Word>
+</ProductSupportPackage>

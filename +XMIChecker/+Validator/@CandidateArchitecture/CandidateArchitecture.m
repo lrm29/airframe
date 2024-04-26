@@ -5,8 +5,8 @@ classdef CandidateArchitecture < XMIChecker.Validator.Default
         function obj = CandidateArchitecture(candidate,xmidb,foundElements)
             %CANDIDATEARCHITECTURE Construct an instance of this class
             arguments
-                candidate SysMLImport.internal.CandidateArchitecture
-                xmidb SysMLImport.internal.CandidateAD.internal.XMIDatabase
+                candidate SysMLConnector.internal.CandidateArchitecture
+                xmidb SysMLConnector.internal.CandidateAD.internal.XMIDatabase
                 foundElements dictionary
             end
             % call the super constructor

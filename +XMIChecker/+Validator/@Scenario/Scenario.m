@@ -5,8 +5,8 @@ classdef Scenario < XMIChecker.Validator.Validator
         function obj = Scenario(candidate,xmidb,foundElements)
             %SCENARIO Construct an instance of this class
             arguments
-                candidate (1,1) SysMLImport.internal.CandidateAllocation.Scenario
-                xmidb SysMLImport.internal.CandidateAD.internal.XMIDatabase
+                candidate (1,1) SysMLConnector.internal.CandidateAllocation.Scenario
+                xmidb SysMLConnector.internal.CandidateAD.internal.XMIDatabase
                 foundElements dictionary
             end
             % store candidate
