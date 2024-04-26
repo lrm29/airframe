@@ -3,7 +3,7 @@ function obj = build(candidate,xmidb,foundElements)
 % uses candidate type to build validators
 arguments
     candidate 
-    xmidb SysMLImport.internal.CandidateAD.internal.XMIDatabase
+    xmidb SysMLConnector.internal.CandidateAD.internal.XMIDatabase
     foundElements dictionary
 end
 if iscell(candidate)

@@ -5,8 +5,8 @@ classdef Allocation < XMIChecker.Validator.Validator
         function obj = Allocation(candidate,xmidb,foundElements)
             %ALLOCATION Construct an instance of this class
             arguments
-                candidate (1,1) SysMLImport.internal.CandidateAllocation.Allocation
-                xmidb SysMLImport.internal.CandidateAD.internal.XMIDatabase
+                candidate (1,1) SysMLConnector.internal.CandidateAllocation.Allocation
+                xmidb SysMLConnector.internal.CandidateAD.internal.XMIDatabase
                 foundElements dictionary
             end
             % store candidate

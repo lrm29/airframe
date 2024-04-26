@@ -6,7 +6,7 @@ classdef CandidateRequirement < XMIChecker.Validator.Validator
             %CANDIDATEREQUIREMENT Construct an instance of this class
             % process requirement on arrival
             arguments
-                candidate (1,1) SysMLImport.internal.CandidateRequirement
+                candidate (1,1) SysMLConnector.internal.CandidateRequirement
                 ~
                 ~
             end

@@ -5,7 +5,7 @@ classdef AllocationSet < XMIChecker.Validator.Validator
         function obj = AllocationSet(candidate,~,~)
             %ALLOCATIONSET Construct an instance of this class
             arguments
-                candidate (1,1) SysMLImport.internal.CandidateAllocation.AllocationSet
+                candidate (1,1) SysMLConnector.internal.CandidateAllocation.AllocationSet
                 ~ 
                 ~ 
             end
