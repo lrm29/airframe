@@ -1,13 +1,14 @@
-function report = import(xmiFilename, outputDirectory, options)
+function report = import(modelFilename, outputDirectory, options)
 %% import - Import SysML model into System Composer as a MATLAB Project
 %
-%    report = importSysML(xmiFilename, outputDirectory, NameValueArgs) creates a
-%    MATLAB project with a set of Architecture models and associated
-%    artifacts. 
+%    report = importSysML(modelFilename, outputDirectory, NameValueArgs)
+%    creates a MATLAB project with a set of System Composer architecture
+%    models and associated artifacts. The generated project has the same
+%    name as the input file. 
 %
-%    The project's name is the same as the specified XMI file. The function
-%    returns a MATLAB structure summarizing imported element totals and
-%    information on elements that were ignored during the import.
+%    The function returns a MATLAB structure summarizing imported element
+%    totals and information on elements that were ignored during the
+%    import.
 % 
 %    The output directory must be specified even in the trial only mode
 %    because the directory is used during import as a work area.
@@ -16,7 +17,8 @@ function report = import(xmiFilename, outputDirectory, options)
 %    a non-trial import.
 %
 %    REQUIRED INPUTS:
-%       model (1,:) char - Full XMI file path
+%       modelFilename (1,:) char - Full SysML file path. 
+%               Supported extensions: '.xml', '.xmi', or '.mdzip'
 %    
 %    OPTIONAL INPUTS:
 %       outputDirectory (1,:) char = pwd
@@ -72,11 +74,11 @@ function report = import(xmiFilename, outputDirectory, options)
 %          corresponding short name, and file location.
 % 
 %    USAGE:
-%       SysMLConnector.import('myXMIFile.xml');
+%       SysMLConnector.import('MySysMLFile.xml');
 %
 
     arguments
-        xmiFilename (1,:) char {mustBeNonempty}
+        modelFilename (1,:) char {mustBeNonempty}
         outputDirectory (1,:) char = pwd
         options.Verbose (1,1) logical = false
         options.SingleUseArchitectureInlining (1,:) char {mustBeMember(options.SingleUseArchitectureInlining, {'basic', 'aggressive'})} = 'aggressive'
@@ -92,5 +94,5 @@ function report = import(xmiFilename, outputDirectory, options)
 
     optionArgs = namedargs2cell(options);
 
-    report = SysMLConnector.internal.import(xmiFilename, outputDirectory, optionArgs{:});
+    report = SysMLConnector.internal.import(modelFilename, outputDirectory, optionArgs{:});
 end

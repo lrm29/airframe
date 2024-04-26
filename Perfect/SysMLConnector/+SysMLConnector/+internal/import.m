@@ -1,12 +1,17 @@
-function report = import(xmiFilename, outputDirectory, options)
+function report = import(modelFilename, outputDirectory, options)
 % IMPORT Creates a project with a set of System Composer models from an XMI file
 %
-%    report = SysMLConnector.internal.import(XMIFILENAME, OUTPUTDIR, NameValueArgs) creates a MATLAB project with a
-%    set of Architecture models and associated artifacts. The project's name is the same as the
-%    specified XMI file. The function returns a MATLAB structure summarizing imported element totals
-%    and information on elements that were ignored during the import. The output directory must be
-%    specified even in the trial only mode because the directory is used during import as a work
-%    area. A report text file is produced in the output directory as well during a non-trial import.
+%    report = SysMLConnector.internal.import(modelFilename, outputDirectory, NameValueArgs)
+%    creates a MATLAB project with a set of Architecture models and
+%    associated artifacts. The generated project has the same name as the 
+%    input file. 
+% 
+%    The function returns a MATLAB structure summarizing imported element
+%    totals and information on elements that were ignored during the
+%    import. The output directory must be specified even in the trial only
+%    mode because the directory is used during import as a work area. A
+%    report text file is produced in the output directory as well during a
+%    non-trial import.
 %
 %    Optional input parameters that may be specified as comma separated 
 %    name-value pairs are:
@@ -53,7 +58,7 @@ function report = import(xmiFilename, outputDirectory, options)
 %          especially useful for interface elements.
 % 
     arguments
-        xmiFilename (1,:) char {mustBeNonempty}
+        modelFilename (1,:) char {mustBeNonempty}
         outputDirectory (1,:) char = pwd
         options.Verbose (1,1) logical = false
         options.SingleUseArchitectureInlining (1,:) char {mustBeMember(options.SingleUseArchitectureInlining, {'basic', 'aggressive'})} = 'aggressive'
@@ -106,32 +111,47 @@ function report = import(xmiFilename, outputDirectory, options)
     end
 
     % Tolerate missing extension on file name.
-    [fpath, fname, fext] = fileparts(xmiFilename);
+    originalModelFilename = modelFilename;
+    [fpath, fname, fext] = fileparts(which(modelFilename));
     if isempty(fext)
+        % Check for xml first
         fext = '.xml';
-    end
-    xmiFilename = fullfile(fpath, [fname fext]);
+        modelFilename = fullfile(fpath, [fname fext]);
 
-    if ~exist(xmiFilename, 'file')
-        error('Input file not found.');
+        if ~isfile(modelFilename)
+            % Check for mdzip file
+            fext = '.mdzip';
+            modelFilename = fullfile(fpath, [fname fext]);
+        end
     end
+
+    assert(isfile(modelFilename), 'SysMLConnector:internal:import:InputFileNotFound', 'Input file ''%s'' not found.', originalModelFilename);
+
     if ~exist(outputDirectory, 'dir')
         error('Output directory does not exist.');
     end
     
-    [~,outputProjName] = fileparts(xmiFilename);
-    outputProjName = string(outputProjName);
+    outputProjName = string(fname);
     
-    xmiFid = fopen(xmiFilename, "r");
     xmiTmpDir = outputDirectory + filesep + outputProjName + "_tmp";
     xmiTmpFname = outputProjName + "_tmp.xml";
 
     mkdir(xmiTmpDir);
 
+    % Check if the file is an mdzip archive and if so, retrieve the model
+    % file.
+    if strcmp(fext, '.mdzip')
+        modelFilename = SysMLConnector.internal.utils.getModelFile(modelFilename, xmiTmpDir);
+    end
+
+    xmiFid = fopen(modelFilename, "r");
+    modelFileCleanup = onCleanup(@() fclose(xmiFid));
+
     if patchMDZipSysMLBlockURIs
         xmiTmpFid = fopen(xmiTmpFname, "w");
+        cleanupTempFile = onCleanup(@() fclose(xmiTmpFid));
     else
-        copyfile(xmiFilename, xmiTmpDir + filesep + xmiTmpFname);
+        copyfile(modelFilename, fullfile(xmiTmpDir, xmiTmpFname));
     end
         
     umlTok = [];
@@ -171,9 +191,10 @@ function report = import(xmiFilename, outputDirectory, options)
         end
         
     end
-    fclose(xmiFid);
+    delete(modelFileCleanup);
+
     if patchMDZipSysMLBlockURIs
-        fclose(xmiTmpFid);
+        delete(cleanupTempFile);
     end
     
     xmiLoc = string(fileparts(mfilename('fullpath'))); 
@@ -235,14 +256,17 @@ function report = import(xmiFilename, outputDirectory, options)
 
     rdr = f.createXmiReader(s);
     m3imod = rdr.read(xmiTmpFname);
-    mod = m3imod.content.at(1);
     
     %% Survey the model and build up a projection into ZC
     
     % Process the UML Model
     umlmmV = SysMLConnector.internal.UMLVisitor();
     umlmmV.PackagesToIgnore = string(pkgsToIgnore);
-    umlmmV.apply(mod);
+
+    for contentIdx = 1:m3imod.content.size
+        nextItem = m3imod.content.at(contentIdx);
+        umlmmV.apply(nextItem);
+    end
 
     % Extract profiles and stereotypes
     m3iprofs = umlmmV.ProfilesFound;
@@ -366,15 +390,29 @@ function report = import(xmiFilename, outputDirectory, options)
     end    
     
     % Link packages in parent-child relationships
-    rootPkg  = [];
+    rootPackages  = SysMLConnector.internal.CandidatePackage.empty(0, length(candPkgs));
+    rootPackageIdx = 0;
     for k = 1:length(candPkgs)
         % Link pkg to owner
         thisPkg = candPkgs{k};
         thisPkg.link();
         if thisPkg.OwnerExtElementID == ""
-            assert(isempty(rootPkg));
-            rootPkg = thisPkg;
+            rootPackageIdx = rootPackageIdx + 1;
+            rootPackages(rootPackageIdx) = thisPkg;
         end
+    end
+
+    if rootPackageIdx > 1
+        % There were multiple packages at the root so create a new package
+        % to contain them.
+        rootModel = SysMLConnector.internal.CandidatePackage(outputProjName, outputProjName, "");
+        
+        for rootPackage = rootPackages
+            rootPackage.OwnerExtElementID = rootModel.ExtElementID;
+            link(rootPackage);
+        end
+    else
+        rootModel = rootPackages;
     end
 
     % Link Activities to Packages
@@ -444,13 +482,13 @@ function report = import(xmiFilename, outputDirectory, options)
         "getElems", "SysMLConnector.internal.CandidateReqLink");
     
     %% Prune pkg tree
-    buildRootPkg = rootPkg.visitAndPrunePackageBuildTree(...
+    buildRootModel = rootModel.visitAndPrunePackageBuildTree(...
         inlineSingleUseArchsAcrossPackages, ...
         pruneEmptyArchsWithNoRefAndNoChildren, ...
         simulinkLeaf);
 
     report.NotImported = umlmmV.NotImported;
-    if isempty(buildRootPkg)
+    if isempty(buildRootModel)
         warning('No suitable model found in XMI');
     end
     
@@ -463,14 +501,14 @@ function report = import(xmiFilename, outputDirectory, options)
         repFileName = outputDirectory + filesep + outputProjName + "_report.txt";
     end
 
-     if ~tryOnly && (~isempty(buildRootPkg) || ~isempty(candReqs))
+     if ~tryOnly && (~isempty(buildRootModel) || ~isempty(candReqs))
         builder = SysMLConnector.internal.Builder(...
             outputDirectory, outputProjName, dtypeMapping, validNameStyle);
         builder.createProfiles(candProfiles);
         
-        if ~isempty(buildRootPkg)
-            buildRootPkg.prelimBuild(builder);
-            buildRootPkg.finishBuild(builder);
+        if ~isempty(buildRootModel)
+            buildRootModel.prelimBuild(builder);
+            buildRootModel.finishBuild(builder);
         end
 
         if ~isempty(candAllocs)
@@ -517,8 +555,8 @@ function report = import(xmiFilename, outputDirectory, options)
         printer.endSection('NOT IMPORTED FROM XML');
         
         printer.startSection('MODEL STRUCTURE');
-        if ~isempty(buildRootPkg)
-            buildRootPkg.print(printer);
+        if ~isempty(buildRootModel)
+            buildRootModel.print(printer);
         end
         printer.endSection('MODEL STRUCTURE');
     

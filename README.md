@@ -1,19 +1,29 @@
-# SysML XMI Importer
-## Import SysML 1.6 Models into MathWorks Tools
+# SysML Connector
+## Import SysML 1.x Models into MathWorks Tools
 
 This PSP is a replacement of the XMI PSP that ships with R2024a and earlier releases of MATLAB.
 
-This PSP imports:
-- Architectures (SysML:Block), Ports, Connectors, Interfaces
-- Requirements
+### This PSP imports:
+- Architectures (SysML:Block), Ports, Connectors, Interfaces, Parameters, Stereotypes Property Values
+- Profiles, Stereotypes, Stereotype Properties
+- Requirements (No stereotypes for now)
 - Activity Diagrams (No stereotypes or Swimlanes for now)
 - Sequence Diagrams (Lifelines only for now)
 
-To-Do:
+**To-Do:**
 - State Diagrams
 - Use Case Diagrams
 
-To import:
-importSysML('my_sysml_file.xml');
+### This PSP exports:
+- Architectures, Ports, Connectors, Interfaces
 
-## R2024A Pre-Release
+### Usage
+**To import:**
+SysMLConnector.import('my_sysml_file.mdzip');
+SysMLConnector.import('my_sysml_file.xml');
+
+**To export:**
+SysMLConnector.export(systemcomposer.loadModel('MyModel'), 'my_sysml_file');
+
+
+## Requires R2024A Update 2
