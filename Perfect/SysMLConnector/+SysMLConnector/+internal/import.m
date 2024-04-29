@@ -112,7 +112,15 @@ function report = import(modelFilename, outputDirectory, options)
 
     % Tolerate missing extension on file name.
     originalModelFilename = modelFilename;
-    [fpath, fname, fext] = fileparts(which(modelFilename));
+
+    fullFilePath = which(modelFilename);
+
+    if ~isempty(fullFilePath) % if which() resolves, use it instead.
+       modelFilename = fullFilePath; 
+    end
+
+    [fpath, fname, fext] = fileparts(modelFilename);
+    
     if isempty(fext)
         % Check for xml first
         fext = '.xml';
