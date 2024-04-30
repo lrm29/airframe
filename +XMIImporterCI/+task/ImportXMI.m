@@ -12,7 +12,7 @@ classdef ImportXMI < padv.Task
                 options.Name = "Import XMI";
                 % artifacts the task iterates over
                 options.IterationQuery = ...
-                    XMIImporterCI.query.findXMI();
+                    XMIImporterCI.query.findByExtension(extension=".xml");
                 % input artifacts for the task
                 options.InputQueries = ...
                     padv.builtin.query.GetIterationArtifact;
