@@ -45,6 +45,8 @@ function processmodel(pm)
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     importTask.runsAfter(importMDZIPTask);
     checkTask.dependsOn(importTask);
+    % make sure pspt is last
+    psptTask.dependsOn(importMDZIPTask); % replace when second check task is added
     psptTask.dependsOn(checkTask);
 
     % !PROCESSMODEL_EDITOR_MARKER! %
