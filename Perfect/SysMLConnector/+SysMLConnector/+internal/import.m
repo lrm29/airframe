@@ -70,10 +70,16 @@ function report = import(modelFilename, outputDirectory, options)
         options.DatatypeMapping (:,2) string = string.empty
         options.AdditionalURIs (:,3) string = string.empty
         options.UseRealSysMLURIs (1,1) logical = false
+        options.DebugMode (1,1) logical = false
     end
     
     % Reset cached functions
     SysMLConnector.internal.utils.reset;
+
+    if ~options.DebugMode
+        warnState = warning('off', 'backtrace');
+        cleanupWarning = onCleanup(@() warning(warnState));
+    end
 
     % Gather input arguments:
     verboseImport = options.Verbose;
