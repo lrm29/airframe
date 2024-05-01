@@ -7,10 +7,10 @@ variables:
 
 workflow:
   rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       variables:
         RUNFULL: "true" 
-    - if: '$CI_PIPELINE_SOURCE == "parent_pipeline"
+    - if: '$CI_PIPELINE_SOURCE == "parent_pipeline"'
 
 stages:
   - SimulinkPipelineGeneration
