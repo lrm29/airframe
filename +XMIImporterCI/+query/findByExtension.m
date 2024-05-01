@@ -4,6 +4,7 @@ classdef findByExtension < padv.Query
     properties (Access=protected)
         exclusions
         extension
+        inclusions
     end
     
     methods
@@ -14,10 +15,12 @@ classdef findByExtension < padv.Query
             arguments
                 options.exclusions = "";
                 options.extension = ".xml";
+                options.inclusions = string.empty()
             end
             obj@padv.Query(string.empty);
             obj.exclusions = options.exclusions;
             obj.extension = options.extension;
+            obj.inclusions = options.inclusions;
         end
 
         function artifacts = run(obj,~)        
@@ -45,6 +48,14 @@ classdef findByExtension < padv.Query
             artifactFiles = project.Files(xmlFileIndx);
             for file = artifactFiles
                 [~,filename,~] = fileparts(file.Path);
+                %% check inculsion filter
+                if ~isempty(obj.inclusions) && ...
+                        ~ismember(filename,obj.inclusions)
+                    % if there are inclusions and this file is not included
+                    % skip this file
+                    continue;
+                end
+                %% check exculsion filter
                 if ~ismember(filename,obj.exclusions)
                     % if not excluded add to artifacts
                     artifacts = [artifacts,padv.Artifact("other_file", ...
