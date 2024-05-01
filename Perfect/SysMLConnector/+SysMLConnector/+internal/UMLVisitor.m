@@ -493,10 +493,6 @@ classdef UMLVisitor < m3i.Visitor
                         propTypeName = "";
                         if ~isempty(prop.type)
                             if isa(prop.type, 'umlmm.Signal')
-                                % Equivalent to "Simulink.ValueType"
-                                % In 2021a, this will get dissolved but will be
-                                % ValueType in future release.
-                                % Plus, we only support non-struct value types
                                 [propType, propTypeName] = this.visitSignal(prop.type);
                             elseif isa(prop.type, 'umlmm.Enumeration')
                                 propType = this.visitEnumeration(prop.type);

@@ -657,13 +657,20 @@ classdef Builder < handle
 
                 multiDimensional = false;
                 paramValueArray = "NaN";
-                if ~strcmp(thisPrm.Dim, "1")
-                    options.Dimensions = thisPrm.Dim;
+
+                dimensions = thisPrm.Dim;
+                
+                if strcmp(dimensions, "0")
+                    dimensions = "1";
+                end
+
+                if ~strcmp(dimensions, "1")
+                    options.Dimensions = dimensions;
                     multiDimensional = true;
                     try %#ok<TRYNC> Basic Heuristic with no recovery
                         % Try creating an array to hold the values based on
                         % the dimensions.
-                        paramValueArray(1:eval(thisPrm.Dim)) = "NaN";
+                        paramValueArray(1:eval(dimensions)) = "NaN";
                     end
                 end
 

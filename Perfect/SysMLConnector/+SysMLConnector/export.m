@@ -1,5 +1,5 @@
 function export(models, xmiFilename, options)
-% EXPORT Export a System Composer model into a XMI file
+%% export - Export a System Composer model into a XMI file
 %     SysMLConnector.export(models, xmiFilename) creates an XMI
 %     export for a set of System Composer input models. Only "root" architecture
 %     models need to be specified and any associated referenced models are also

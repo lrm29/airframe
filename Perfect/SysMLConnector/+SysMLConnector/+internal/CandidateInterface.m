@@ -163,9 +163,14 @@ classdef CandidateInterface < SysMLConnector.internal.CandidateElement
                             dVal = thisElem.Dim;
                         end
                     
+                        dimensions = int2str(dVal);
+                        if strcmp(dimensions, '0')
+                            % heuristic to help catch user modeling errors
+                            dimensions = '1';
+                        end
                         iElem = intf.addElement(...
                             char(builder.makeValidName(thisElem.Name)), ...
-                            'Type', tName, 'Dimensions', int2str(dVal));
+                            'Type', tName, 'Dimensions', dimensions);
                         iElem.ExternalUID = thisElem.ExtElementID;
                     end
                 end
