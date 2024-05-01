@@ -57,4 +57,4 @@ SimulinkPipelineExecution:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       variables:
         RUNFULL: "true" 
-      when: always
+    - when: always
