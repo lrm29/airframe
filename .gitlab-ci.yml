@@ -5,6 +5,7 @@ variables:
   MATLAB_LOG_FILE: "MATLAB_Log_Output.txt"
   GIT_SUBMODULE_STRATEGY: recursive
   TOP_TRIGGER: $CI_PIPELINE_SOURCE
+  RUNALL: ""
 
 stages:
   - SimulinkPipelineGeneration
