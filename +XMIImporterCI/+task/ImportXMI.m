@@ -1,6 +1,9 @@
 classdef ImportXMI < padv.Task
     %IMPORTXMI runs the updated XMI importer of XMI files
 
+    properties (SetAccess=protected)
+        Nice
+    end
 
     methods
         function obj = ImportXMI(options)
@@ -24,6 +27,8 @@ classdef ImportXMI < padv.Task
                 options.InputDependencyQuery = ...
                     padv.builtin.query.FindArtifacts(ArtifactType="m_file",...
                     IncludePath="Perfect");
+                % nice option to supress failures during development
+                options.Nice = false;
             end
             % add self to the dependency list
             options.InputDependencyQuery = XMIImporterCI.query.multiQuery(...
@@ -36,6 +41,7 @@ classdef ImportXMI < padv.Task
                 InputQueries=options.InputQueries, ...
                 InputDependencyQuery=options.InputDependencyQuery);
             obj.OutputDirectory = options.OutputDirectory;
+            obj.Nice = options.Nice;
         end
 
         function taskResult = run(obj,inputArtifacts)
@@ -110,7 +116,9 @@ classdef ImportXMI < padv.Task
                 end
             catch ME
                 taskResult.Details = ME;
-                taskResult.Status = padv.TaskStatus.Fail;
+                if ~obj.Nice
+                    taskResult.Status = padv.TaskStatus.Fail;
+                end
                 fprintf('Error: ''%s''\n%s\n', ME.identifier, getReport(ME));
                 fprintf('***Import failed for ''%s''.\n', ...
                     artifactToUse.ArtifactAddress.getFileAddress);
