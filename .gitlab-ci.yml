@@ -49,11 +49,11 @@ SimulinkPipelineExecution:
         
     strategy: depend
 
+  # Do not change the name of this variable
+  variables:
+    PADV_ROOT_PIPELINE_ID: $CI_PIPELINE_ID 
+
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       variables:
         RUNFULL: "true"
-
-  # Do not change the name of this variable
-  variables:
-    PADV_ROOT_PIPELINE_ID: $CI_PIPELINE_ID 
