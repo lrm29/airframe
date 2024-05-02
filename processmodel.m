@@ -24,7 +24,7 @@ defaultResultPath = fullfile( ...
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 xmlExclusions = ["Skyzer Contractor System Model",...
     "ProductSupportPackageConfig"];
-triggerEnv = getenv("$CI_PIPELINE_SOURCE");
+triggerEnv = getenv("CI_PIPELINE_SOURCE");
 runAll = getenv("RUNALL");
 fprintf("Env value seen: %s\n",triggerEnv);
 fprintf("Runall value seen: %s\n",runAll);
