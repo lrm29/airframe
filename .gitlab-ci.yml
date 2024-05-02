@@ -6,6 +6,15 @@ variables:
   GIT_SUBMODULE_STRATEGY: recursive
   RUNALL: ""
 
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      variables:
+        RUNALL: "yes" # Attempt to set a global variable (Note: this is illustrative and not supported directly by GitLab CI as of my last update)
+    - if: '$CI_PIPELINE_SOURCE != "merge_request_event"'
+      variables:
+        RUNALL: "" # This is illustrative and not directly supported
+
 stages:
   - SimulinkPipelineGeneration
   - SimulinkPipelineExecution
@@ -21,10 +30,6 @@ SimulinkPipelineGeneration:
     script:
     # Open the project and generate the pipeline using
     # appropriate options in project root
-        - echo "$CI_PIPELINE_SOURCE"
-        - echo "$env:CI_PIPELINE_SOURCE"
-        - echo "$CI_MERGE_REQUEST_EVENT_TYPE"
-        - echo "$env:CI_MERGE_REQUEST_EVENT_TYPE"
         - >
             mw -using BR2024ad matlab
             -nodesktop
