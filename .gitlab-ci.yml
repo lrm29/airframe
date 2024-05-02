@@ -17,12 +17,6 @@ SimulinkPipelineGeneration:
   tags:
     - long-jobs
 
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      variables:
-        RUNALL: "yes"
-    - when: always
-
   script:
     # Open the project and generate the pipeline using
     # appropriate options in project root
@@ -44,12 +38,6 @@ SimulinkPipelineGeneration:
 
 SimulinkPipelineExecution:
   stage: SimulinkPipelineExecution
-
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      variables:
-        RUNALL: "yes"
-    - when: always
 
   trigger:
     include:
