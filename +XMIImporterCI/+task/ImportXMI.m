@@ -116,9 +116,7 @@ classdef ImportXMI < padv.Task
                 end
             catch ME
                 taskResult.Details = ME;
-                if ~obj.Nice
-                    taskResult.Status = padv.TaskStatus.Fail;
-                end
+                taskResult.Status = padv.TaskStatus.Fail;
                 fprintf('Error: ''%s''\n%s\n', ME.identifier, getReport(ME));
                 fprintf('***Import failed for ''%s''.\n', ...
                     artifactToUse.ArtifactAddress.getFileAddress);
@@ -130,6 +128,11 @@ classdef ImportXMI < padv.Task
             if taskResult.Status == padv.TaskStatus.Pass
                 taskResult.OutputPaths = ...
                     outputFiles(arrayfun(@(x) exist(x,"file"),outputFiles) == 2);
+            end
+            %% make Nice correction
+            if obj.Nice
+                % force result to be pass
+                taskResult.Status = padv.TaskStatus.Pass;
             end
         end
     end
