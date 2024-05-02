@@ -21,6 +21,7 @@ SimulinkPipelineGeneration:
     script:
     # Open the project and generate the pipeline using
     # appropriate options in project root
+        - echo "$env:CI_MERGE_REQUEST_EVENT_TYPE"
         - >
             mw -using BR2024ad matlab
             -nodesktop
