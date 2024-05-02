@@ -6,59 +6,58 @@ variables:
   GIT_SUBMODULE_STRATEGY: recursive
   RUNALL: ""
 
-workflow:
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      variables:
-        RUNALL: "yes" # Attempt to set a global variable (Note: this is illustrative and not supported directly by GitLab CI as of my last update)
-    - if: '$CI_PIPELINE_SOURCE != "merge_request_event"'
-      variables:
-        RUNALL: "" # This is illustrative and not directly supported
-
 stages:
   - SimulinkPipelineGeneration
   - SimulinkPipelineExecution
 
 # Do not change the name of the jobs in this pipeline
 SimulinkPipelineGeneration:
-    
-    stage: SimulinkPipelineGeneration
+  stage: SimulinkPipelineGeneration
 
-    tags:
-        - long-jobs
+  tags:
+    - long-jobs
 
-    script:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      variables:
+        RUNALL: "yes"
+    - when: always
+
+  script:
     # Open the project and generate the pipeline using
     # appropriate options in project root
-        - >
-            mw -using BR2024ad matlab
-            -nodesktop
-            -logfile "$MATLAB_LOG_FILE"
-            -batch "
-            cp = openProject(pwd);
-            XMIImporterCI.generateYaml(force=$FORCE);
-            "
-  
-    artifacts:
-        
-        paths:
-        # This file is generated automatically by 
-        # padv.pipeline.generatePipeline. Update this field if the 
-        # name or location of the generated pipeline file is changed
-            - derived/pipeline
+    - >
+      mw -using BR2024ad matlab
+      -nodesktop
+      -logfile "$MATLAB_LOG_FILE"
+      -batch "
+      cp = openProject(pwd);
+      XMIImporterCI.generateYaml(force=$FORCE);
+      "
+
+  artifacts:
+    paths:
+      # This file is generated automatically by
+      # padv.pipeline.generatePipeline. Update this field if the
+      # name or location of the generated pipeline file is changed
+      - derived/pipeline
 
 SimulinkPipelineExecution:
-
   stage: SimulinkPipelineExecution
 
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      variables:
+        RUNALL: "yes"
+    - when: always
+
   trigger:
-        
-    include: 
+    include:
       - artifact: derived/pipeline/simulink_pipeline.yml
         job: SimulinkPipelineGeneration
-        
+
     strategy: depend
 
   # Do not change the name of this variable
   variables:
-    PADV_ROOT_PIPELINE_ID: $CI_PIPELINE_ID 
+    PADV_ROOT_PIPELINE_ID: $CI_PIPELINE_ID
