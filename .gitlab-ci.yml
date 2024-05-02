@@ -10,10 +10,12 @@ workflow:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       variables:
-        RUNALL: "yes" # Attempt to set a global variable (Note: this is illustrative and not supported directly by GitLab CI as of my last update)
+        RUNALL: "yes" 
+    - if: '$CI_PIPELINE_SOURCE != "merge_request_event" && $CI_OPEN_MERGE_REQUESTS'
+      when: never
     - if: '$CI_PIPELINE_SOURCE != "merge_request_event"'
       variables:
-        RUNALL: "" # This is illustrative and not directly supported
+        RUNALL: "" 
 
 stages:
   - SimulinkPipelineGeneration
