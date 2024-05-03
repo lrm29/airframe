@@ -1,7 +1,6 @@
-function syncElementID = getSyncElementID(fileName, elementID, options)
+function syncElementID = getSyncElementID(pinElement, options)
     arguments
-        fileName char = ''
-        elementID char = ''
+        pinElement = []
         options.Reset logical = false
     end
 
@@ -16,25 +15,58 @@ function syncElementID = getSyncElementID(fileName, elementID, options)
         end
     end
 
-    if ~isKey(fileData, fileName)
-        fData.Contents = fileread(fileName);
-        fData.FoundKeys = containers.Map;
-        fileData(fileName) = fData;
-    else
-        fData = fileData(fileName);
+    fileName = pinElement.modelM3I.uri;
+    elementID = SysMLConnector.internal.utils.getExtID(pinElement);
+
+    useBackup = false;
+    try
+        xmiGraph = SysMLConnector.internal.XMIGraph.Graph.getGraph(fileName);
+        if ~isempty(xmiGraph)    
+            pinNode = xmiGraph.lookup(elementID);
+            if ~isempty(pinNode) && hasProperty(pinNode, 'xmi_Extension') 
+                xmiExtProp = pinNode.getProperty('xmi_Extension');
+                
+                if ~ismissing(xmiExtProp) && hasProperty(xmiExtProp, 'modelExtension')
+                    mdlExtAttr = xmiExtProp.getProperty('modelExtension');
+
+                    if ~ismissing(mdlExtAttr) && hasProperty(mdlExtAttr, 'syncElementIDAttibute')
+                        syncElementID = getProperty(mdlExtAttr, 'syncElementIDAttibute');
+
+                        if ismissing(syncElementID)
+                            syncElementID = '';
+                        end
+                    end
+                end
+            end
+        else
+            useBackup = true;
+        end
+    catch ME
+        warning('SysMLConnector:internal:utils:getSyncElementID:UnexpectedError', 'Unexpected error ''%s'' when trying to retrieve sync element ID.', ME.identifier);
+        useBackup = true;
     end
 
-    if ~isKey(fData.FoundKeys, elementID)
-        matchData = regexp(fData.Contents, "<(?<tagName>\w+)[^>]*xmi:id='"+string(elementID)+"'[^>]*>.*?<xmi:Extension[^>]*>.*?<modelExtension[^>]*syncElement='(?<syncElementID>.*?)'[^>]*>.*?<\/xmi:Extension>.*?<\/\k<tagName>>", 'names');
-    
-        if ~isempty(matchData) && ~isempty(matchData.syncElementID)
-            syncElementID = matchData.syncElementID;
+    if useBackup
+        if ~isKey(fileData, fileName)
+            fData.Contents = fileread(fileName);
+            fData.FoundKeys = containers.Map;
+            fileData(fileName) = fData;
+        else
+            fData = fileData(fileName);
         end
-
-        % Cache for faster indexing on subsequent calls.
-        fData.FoundKeys(elementID) = syncElementID;
-        fileData(fileName) = fData;
-    else
-        syncElementID = fData.FoundKeys(elementID);
+    
+        if ~isKey(fData.FoundKeys, elementID)
+            matchData = regexp(fData.Contents, "<(?<tagName>\w+)[^>]*xmi:id='"+string(elementID)+"'[^>]*>.*?<xmi:Extension[^>]*>.*?<modelExtension[^>]*syncElement='(?<syncElementID>.*?)'[^>]*>.*?<\/xmi:Extension>.*?<\/\k<tagName>>", 'names');
+        
+            if ~isempty(matchData) && ~isempty(matchData.syncElementID)
+                syncElementID = matchData.syncElementID;
+            end
+    
+            % Cache for faster indexing on subsequent calls.
+            fData.FoundKeys(elementID) = syncElementID;
+            fileData(fileName) = fData;
+        else
+            syncElementID = fData.FoundKeys(elementID);
+        end
     end
 end

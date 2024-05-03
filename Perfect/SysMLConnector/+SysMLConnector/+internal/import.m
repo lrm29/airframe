@@ -268,6 +268,10 @@ function report = import(modelFilename, outputDirectory, options)
         end
     end
 
+    % Create a back-up graph.
+    SysMLConnector.internal.XMIGraph.Graph.getGraph(xmiTmpFname, Refresh=true);
+
+    % Load the XMI file
     rdr = f.createXmiReader(s);
     m3imod = rdr.read(xmiTmpFname);
     
@@ -299,7 +303,7 @@ function report = import(modelFilename, outputDirectory, options)
                 if pType.superClass.size > 0
                     sc = pType.superClass.at(1);
                     if ~strncmp(sc.qualifiedName, 'SysML.', 6)
-                        scExtID = SysMLConnector.internal.UMLVisitor.getExtID(sc);
+                        scExtID = SysMLConnector.internal.utils.getExtID(sc);
                     end
                 end
                 
@@ -318,7 +322,7 @@ function report = import(modelFilename, outputDirectory, options)
 
                         if isempty(pElemType)
                             % Try to resolve one more time using regex
-                            typeID = SysMLConnector.internal.utils.getStereotypePropertyTypeID(pElem);
+                            typeID = SysMLConnector.internal.utils.getBlockPropertyType(pElem);
                             if ~isempty(typeID)
                                 elType = SysMLConnector.internal.CandidateElement.idMap("lookup", typeID);
                             end
@@ -388,6 +392,8 @@ function report = import(modelFilename, outputDirectory, options)
         "getElems", "SysMLConnector.internal.CandidateInteraction.Interaction");
     candPkgs = SysMLConnector.internal.CandidateElement.idMap(...
         "getElems", "SysMLConnector.internal.CandidatePackage");
+    candidateValueTypes = SysMLConnector.internal.CandidateElement.idMap(...
+        "getElems", "SysMLConnector.internal.CandidateValueType");
     candIntfs = SysMLConnector.internal.CandidateElement.idMap(...
         "getElems", "SysMLConnector.internal.CandidateInterface");
     candAllocs = SysMLConnector.internal.CandidateElement.idMap(...
@@ -550,7 +556,7 @@ function report = import(modelFilename, outputDirectory, options)
     % need to add a mechanism for not imported
     % impReport.imported = SysMLConnector.internal.CandidateElement.idMap("getAll");
     report.imported = [candPkgs, candArchs, candActivities, ...
-        candInteractions,candIntfs, candAllocs, candReqs];
+        candInteractions, candidateValueTypes, candIntfs, candAllocs, candReqs];
 
     %% Print for reporting
     if ~strcmp(repFileName, "")

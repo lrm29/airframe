@@ -37,7 +37,7 @@ function createPins(node, pinStruct, options)
                      pinID);
 
         if options.CallBehaviorAction
-            pin.ReferenceID = SysMLConnector.internal.utils.getSyncElementID(pinStruct.modelM3I.uri, pinID);
+            pin.ReferenceID = SysMLConnector.internal.utils.getSyncElementID(pinStruct);
         end
     end
 end

@@ -219,8 +219,15 @@ classdef Builder < handle
         end
         
         function populateInterfaces(this)
-            intfTypes = SysMLConnector.internal.CandidateElement.idMap(...
+            valueTypes = SysMLConnector.internal.CandidateElement.idMap(...
+                "getElems", "SysMLConnector.internal.CandidateValueType"); 
+
+            intfTypes =  SysMLConnector.internal.CandidateElement.idMap(...
                 "getElems", "SysMLConnector.internal.CandidateInterface");
+
+            % Build value types first in case the interfaces use them.
+            intfTypes = [valueTypes intfTypes];
+
             allIntfNames = [];
             for k = 1:length(intfTypes)
                 thisIntf = intfTypes{k};
@@ -228,6 +235,7 @@ classdef Builder < handle
                     allIntfNames = [allIntfNames this.makeValidName(thisIntf.Name)]; %#ok<AGROW>
                 end
             end
+
             if ~isempty(allIntfNames)
                 allNamesMerged = [this.AllEnumNames allIntfNames];
                 allNamesMerged1 = matlab.lang.makeUniqueStrings(...
@@ -242,6 +250,7 @@ classdef Builder < handle
                         intfIdx = intfIdx + 1;
                     end
                 end
+                
                 for k = 1:length(intfTypes)
                     thisIntf = intfTypes{k};
                     if thisIntf.doBuild()
@@ -442,6 +451,90 @@ classdef Builder < handle
             intf = this.ProjectSLDD.addInterface(char(intfName));
             this.IntfExtIDMap(intfExtID) = intf;
             this.Stats.NumInterfaces = this.Stats.NumInterfaces + 1;            
+        end
+
+        function valueType = createValueType(this, intfExtID, intfName)
+            assert(~this.IntfExtIDMap.isKey(intfExtID));
+            valueType = this.ProjectSLDD.addValueType(char(intfName));
+            this.IntfExtIDMap(intfExtID) = valueType;
+            this.Stats.NumInterfaces = this.Stats.NumInterfaces + 1;            
+        end
+
+        function valueType = setDataType(builder, valueType, interface)
+            arguments
+                builder
+                valueType
+                interface = []
+            end
+            
+            baseType = valueType;
+
+            if isempty(interface) 
+                % Value Types cannot be typed by other value types so they
+                % must be boiled down to their base types.
+                recursionIdx = 1;
+                recursionLimit = 30;
+                while isa(baseType.Type, 'SysMLConnector.internal.CandidateValueType') || recursionIdx > recursionLimit
+                    baseType = baseType.Type;
+                    recursionIdx = recursionIdx + 1;
+                end
+            end
+
+            tName = 'double'; % assume
+
+            isBus = false;
+            if contains(valueType.TypeName, "Bus:") 
+                tName = char("Bus: " + valueType.Type.BuildName);
+                isBus = true;
+            elseif contains(valueType.TypeName, "Enumeration")
+                tName = ['Enum:' char(valueType.Type.BuildName)]; 
+            elseif isa(baseType.Type, "SysMLConnector.internal.CandidateValueType")
+                % Assume it is a value type name
+                tName = baseType.Type.BuildName;
+            elseif contains(baseType.TypeName, "Dtype:")
+                dtypeName = extractAfter(baseType.TypeName, "Dtype:");
+                if isKey(builder.DatatypeMapping, dtypeName)
+                    tName = char(builder.DatatypeMapping(dtypeName));
+                else
+                    if contains(dtypeName, 'Bool', 'IgnoreCase', true)
+                        tName = 'boolean';
+                    elseif contains(dtypeName, 'Int', 'IgnoreCase', true) || ...
+                            contains(dtypeName, 'Natural', 'IgnoreCase', true)
+                        tName = 'int32';
+                    elseif contains(dtypeName, 'Real', 'IgnoreCase', true)
+                        tName = 'double';
+                    elseif contains(dtypeName, 'string', 'IgnoreCase', true)
+                        tName = 'string';
+                    end
+                end
+            end
+
+            if isBus
+                % Interface Element with a Bus Data Type
+                zcElem = interface.addElement(...
+                    char(builder.makeValidName(valueType.Name)), ...
+                    'Type', tName);
+            else
+                dVal = 1; % assume
+                if ~isempty(valueType.Dim) && ~isinf(valueType.Dim) && valueType.Dim > 0
+                    dVal = valueType.Dim;
+                end
+                dimensions = int2str(dVal);
+
+                if ~isempty(interface)
+                    % Interface Element without a Bus Data Type
+                    zcElem = interface.addElement(...
+                        char(builder.makeValidName(valueType.Name)), ...
+                        'Type', tName, 'Dimensions', dimensions);
+                else
+                    % Standalone Value Type Interface
+                    zcElem = valueType.ZCElement;
+                    setDataType(zcElem, tName);
+                    setDimensions(zcElem, dimensions);
+                end
+            end
+
+            zcElem.ExternalUID = valueType.ExtElementID;
         end
         
         function intf = lookupInterfaceFromExtID(this, intfExtID)
