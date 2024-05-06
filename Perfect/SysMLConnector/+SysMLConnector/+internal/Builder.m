@@ -466,7 +466,7 @@ classdef Builder < handle
                                     Description=req.Text);
             req.ZCElement = thisReq;
 
-            setAttribute(thisReq, 'ExternalID',   req.ExtElementID);
+            setAttribute(thisReq, 'ExternalUID',   req.ExtElementID);
             setAttribute(thisReq, 'ExternalType', req.Type);
 
             % Check for additional properties on the requirement
@@ -855,7 +855,7 @@ classdef Builder < handle
             end
 
             addAttribute(this.ReqFile, 'ExternalType', 'Edit');
-            addAttribute(this.ReqFile, 'ExternalID', 'Edit');
+            addAttribute(this.ReqFile, 'ExternalUID', 'Edit');
 
             this.RootProject.addFile(reqFileName);
 
@@ -919,14 +919,14 @@ classdef Builder < handle
                         linkID   = thisLink.ExtElementID;
                         linkType = extractAfter(thisLink.LinkType, 'SysML.');
                         try
-                            setAttribute(link, 'ExternalID',   linkID);
+                            setAttribute(link, 'ExternalUID',   linkID);
                             setAttribute(link, 'ExternalType', linkType);
                         catch ME
                             if strcmp(ME.identifier, 'Slvnv:slreq:NoSuchAttribute')
-                                addAttribute(link.linkSet, 'ExternalID',   'Edit');
+                                addAttribute(link.linkSet, 'ExternalUID',   'Edit');
                                 addAttribute(link.linkSet, 'ExternalType', 'Edit');
 
-                                setAttribute(link, 'ExternalID',   linkID);
+                                setAttribute(link, 'ExternalUID',   linkID);
                                 setAttribute(link, 'ExternalType', linkType);
                             else
                                 rethrow(ME)

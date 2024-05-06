@@ -1,21 +1,6 @@
 classdef UMLVisitor < m3i.Visitor
 %UMLVisitor Helper Visitor class for SysMLConnector.internal.import that scans UML model loaded from XMI file
     
-% -------------------------------------------    
-% SysML->ZC Mapping table:
-% -------------------------------------------    
-%      UMLPackage -> MATLAB Project (and project sub-folder when sub-package)
-%      UMLClass stereotyped by SysML Block -> Architecture model    
-%         UMLProperty typed by UMLClass stereotyped by SysML Block -> Component
-%         UMLPort stereotyped by SysML ProxyPort -> Architecture port
-%         UMLPort's type (UMLClass) whose properties are stereotyped by SysML FlowProperty -> Interface with elements
-%         UMLConnector between ProxyPorts -> Connector
-%         UMLPort stereotyped by SysML FullPort -> Component inside
-%         Architecture (unless typed by an interface)
-%         (Nested classes treated as another class)
-% -------------------------------------------    
-
-    
     properties
         PackagesToIgnore = [];
 

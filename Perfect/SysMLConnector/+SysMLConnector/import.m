@@ -70,8 +70,16 @@ function report = import(modelFilename, outputDirectory, options)
 %          (e.g. int16). This is especially useful for interface elements.
 %
 %       AdditionalURIs (:,3) string = ""
-%          Additional URIs to import with columns specifying full URI, its
-%          corresponding short name, and file location.
+%          Multiple dependent files can be imported into one project by
+%          specifying the dependencies as additional URIs. Each file should
+%          be included as a row in an n-by-3 string array with columns for:
+%          the full URI as it appears in the XMI files, the corresponding
+%          short name, and the file path. 
+%
+%          UML, UML Primitive Types, and SysML are included by default and
+%          do not need to be specified.
+%
+%          ["http://url/to/MySpecialURI.xml" "MySpecialURI.xml" "c:\Working\URIs\MySpecialURI.xml"]
 % 
 %    USAGE:
 %       SysMLConnector.import('MySysMLFile.xml');
