@@ -22,14 +22,27 @@ function flow = addZCActivityFlow(source, destination, NameValueArgs)
         add_line(parentPath, sourceExpression, destinationExpression, 'AUTOROUTING', 'on');
         systemcomposer.internal.arch.internal.processBatchedPluginEvents(topModel);
     catch ME
-        fprintf('Parent Path: %s\nSource Expression: %s\nDestination Expression: %s\n\n', parentPath, sourceExpression, destinationExpression);
-        rethrow(ME);
+        error('SysMLConnector:internal:CandidateAD:internal:addZCActivityFlow:InvalidConnection', 'Error connecting activities.\n  Parent Path: %s\n  Source Expression: %s\n  Destination Expression: %s\n Error Code: %s (%i)\n', parentPath, sourceExpression, destinationExpression, ME.identifier, ME.stack(1).line);
     end
     
-    % Get flow to return
-    compPort = systemcomposer.utils.getArchitecturePeer(sourcePortHandle);
-    conn = compPort.getConnectors;
-    flow = conn.getTrait(systemcomposer.activitydiagram.model.Flow.StaticMetaClass);
+    % Get flow to return. Add in retry for race condition.
+    errorCount = 0;
+    conn = [];
+    while isempty(conn)
+        try
+            compPort = systemcomposer.utils.getArchitecturePeer(sourcePortHandle);
+            conn = compPort.getConnectors;
+            flow = conn.getTrait(systemcomposer.activitydiagram.model.Flow.StaticMetaClass);
+        catch ME
+            errorCount = errorCount + 1;
+
+            if errorCount > 2
+                error('SysMLConnector:internal:CandidateAD:internal:addZCActivityFlow:MissingFlow', 'Missing activity flow.\n  Parent Path: %s\n  Source Expression: %s\n  Destination Expression: %s\n Error Code: %s (%i)\n', parentPath, sourceExpression, destinationExpression, ME.identifier, ME.stack(1).line);
+            end
+
+            pause(0.100);
+        end
+    end
 
     if ~isempty(NameValueArgs.Guard)
         setGuard(flow, NameValueArgs.Guard);
