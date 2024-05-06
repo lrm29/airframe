@@ -268,12 +268,12 @@ function report = import(modelFilename, outputDirectory, options)
         end
     end
 
-    % Create a back-up graph.
-    SysMLConnector.internal.XMIGraph.Graph.getGraph(xmiTmpFname, Refresh=true);
-
     % Load the XMI file
     rdr = f.createXmiReader(s);
     m3imod = rdr.read(xmiTmpFname);
+
+    % Create a back-up graph.
+    SysMLConnector.internal.XMIGraph.Graph.getGraph(m3imod.uri, Refresh=true);
     
     %% Survey the model and build up a projection into ZC
     

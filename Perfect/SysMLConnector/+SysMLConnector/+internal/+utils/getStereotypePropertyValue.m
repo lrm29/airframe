@@ -39,6 +39,10 @@ function propertyValue = getStereotypePropertyValue(element, propertyFQN, option
             stereotypeApplicationElement = xmiGraph.lookup(stereotypeApplicationID);
             if ~isempty(stereotypeApplicationElement) && hasProperty(stereotypeApplicationElement, propertyName)
                 propertyValue = getProperty(stereotypeApplicationElement, propertyName);
+
+                if ismissing(propertyValue)
+                    propertyValue = '';
+                end
             end
         else
             useBackup = true;

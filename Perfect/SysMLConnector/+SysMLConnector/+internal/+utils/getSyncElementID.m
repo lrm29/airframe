@@ -29,8 +29,8 @@ function syncElementID = getSyncElementID(pinElement, options)
                 if ~ismissing(xmiExtProp) && hasProperty(xmiExtProp, 'modelExtension')
                     mdlExtAttr = xmiExtProp.getProperty('modelExtension');
 
-                    if ~ismissing(mdlExtAttr) && hasProperty(mdlExtAttr, 'syncElementIDAttibute')
-                        syncElementID = getProperty(mdlExtAttr, 'syncElementIDAttibute');
+                    if ~ismissing(mdlExtAttr) && hasProperty(mdlExtAttr, 'syncElementAttribute')
+                        syncElementID = getProperty(mdlExtAttr, 'syncElementAttribute');
 
                         if ismissing(syncElementID)
                             syncElementID = '';
