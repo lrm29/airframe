@@ -343,23 +343,31 @@ classdef Builder < handle
         function archMdl = createActivityDiagram(this, candAct)
             archMdlName = this.getModelName(candAct.Name);
             candAct.BuildName = archMdlName;
-            publish(candAct);
-            actArch  = SysMLConnector.internal.CandidateAD.internal.getArchitecturePeer(candAct.ZCElement);
-            archMdl  = actArch.Model;
-            slHandle = archMdl.SimulinkHandle;
+
+            try
+                publish(candAct);
+            catch ME
+                warning('SysMLConnector:internal:Builder:FailedToBuildActivityDiagram', 'Unable to complete build of activity diagram ''%s'' with ID ''%s''. Error: %s (%i).', candAct.Name, candAct.ExtElementID, ME.identifier, ME.stack(1).line);
+            end
+
+            if ~isempty(candAct.ZCElement)
+                actArch  = SysMLConnector.internal.CandidateAD.internal.getArchitecturePeer(candAct.ZCElement);
+                archMdl  = actArch.Model;
+                slHandle = archMdl.SimulinkHandle;
+                
+                candProj = candAct.ParentPackage;
+                archMdlPath = this.ProjectPath + ...
+                    candProj.ZCProjectFolder + filesep + archMdlName + ".slx";
+                this.AllModelPaths = [this.AllModelPaths archMdlPath];
+    
+                save_system(slHandle, archMdlPath);
+    
+                this.RootProject.addFile(archMdlPath);
+    
+                this.ArchModelExtIDMap(candAct.ExtElementID) = slHandle;
             
-            candProj = candAct.ParentPackage;
-            archMdlPath = this.ProjectPath + ...
-                candProj.ZCProjectFolder + filesep + archMdlName + ".slx";
-            this.AllModelPaths = [this.AllModelPaths archMdlPath];
-
-            save_system(slHandle, archMdlPath);
-
-            this.RootProject.addFile(archMdlPath);
-
-            this.ArchModelExtIDMap(candAct.ExtElementID) = slHandle;
-        
-            this.Stats.NumActivityDiagrams = this.Stats.NumActivityDiagrams + 1;
+                this.Stats.NumActivityDiagrams = this.Stats.NumActivityDiagrams + 1;
+            end
         end
 
         function interactionMdl = createInteraction(this, candInteraction)

@@ -20,7 +20,6 @@ function flow = addZCActivityFlow(source, destination, NameValueArgs)
 
     try
         add_line(parentPath, sourceExpression, destinationExpression, 'AUTOROUTING', 'on');
-        systemcomposer.internal.arch.internal.processBatchedPluginEvents(topModel);
     catch ME
         error('SysMLConnector:internal:CandidateAD:internal:addZCActivityFlow:InvalidConnection', 'Error connecting activities.\n  Parent Path: %s\n  Source Expression: %s\n  Destination Expression: %s\n Error Code: %s (%i)\n', parentPath, sourceExpression, destinationExpression, ME.identifier, ME.stack(1).line);
     end
@@ -29,6 +28,9 @@ function flow = addZCActivityFlow(source, destination, NameValueArgs)
     errorCount = 0;
     conn = [];
     while isempty(conn)
+        % Flushing the modeling queue.
+        systemcomposer.internal.arch.internal.processBatchedPluginEvents(topModel);
+
         try
             compPort = systemcomposer.utils.getArchitecturePeer(sourcePortHandle);
             conn = compPort.getConnectors;
@@ -36,11 +38,12 @@ function flow = addZCActivityFlow(source, destination, NameValueArgs)
         catch ME
             errorCount = errorCount + 1;
 
-            if errorCount > 2
-                error('SysMLConnector:internal:CandidateAD:internal:addZCActivityFlow:MissingFlow', 'Missing activity flow.\n  Parent Path: %s\n  Source Expression: %s\n  Destination Expression: %s\n Error Code: %s (%i)\n', parentPath, sourceExpression, destinationExpression, ME.identifier, ME.stack(1).line);
-            end
+            % Wait to see if the queue just needs more time.
+            pause(0.250);
+        end
 
-            pause(0.100);
+        if errorCount > 2
+            error('SysMLConnector:internal:CandidateAD:internal:addZCActivityFlow:MissingFlow', 'Missing activity flow.\n  Parent Path: %s\n  Source Expression: %s\n  Destination Expression: %s\n Error Code: %s (%i)\n', parentPath, sourceExpression, destinationExpression, ME.identifier, ME.stack(1).line);
         end
     end
 
