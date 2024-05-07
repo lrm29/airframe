@@ -15,6 +15,7 @@
     <PreRemoveFcn>PreRemoveFcn</PreRemoveFcn>
     <Remove>DocSrc</Remove>
     <Remove>Src</Remove>
+    <Word>Blockset</Word>
     <Word>enums</Word>
     <Word>etc</Word>
     <Word>evaluatable</Word>
@@ -23,6 +24,7 @@
     <Word>Inlining</Word>
     <Word>mdzip</Word>
     <Word>sequencediagram</Word>
+    <Word>simulatable</Word>
     <Word>SingleUseArchitectureInlining</Word>
     <Word>superclasses</Word>
     <Word>Swimlanes</Word>
