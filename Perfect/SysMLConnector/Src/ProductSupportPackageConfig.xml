@@ -1,7 +1,7 @@
 <ProductSupportPackage>
 	<!-- Required Tags -->
 	<Name>System Composer SysML Connector</Name>
-	<Image>+SysMLConnector/+internal/icons/ico-sysml-connector.png</Image>
+	<Image>+SysMLConnector/+internal/+icons/ico-sysml-connector.png</Image>
 	<Author>MathWorks SysML Team</Author>
 	<Email>sysml@mathworks.com</Email>
 	<Company>MathWorks</Company>
@@ -13,7 +13,7 @@
 	<Dependency>System Composer</Dependency>
     <App>
         <Name>SysML Connector</Name>
-        <Image>+SysMLConnector/+internal/icons/ico-sysml-connector.png</Image>
+        <Image>+SysMLConnector/+internal/+icons/ico-sysml-connector-app-24.png</Image>
         <CallbackFcn>SysMLConnector.app</CallbackFcn>
     </App>
     <!--Opt-->
