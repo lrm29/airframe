@@ -126,53 +126,8 @@ classdef CandidateInterface < SysMLConnector.internal.CandidateElement
                 this.ZCElement = intf;
                 intf.ExternalUID = this.ExtElementID;
                 for k = 1:length(this.Elements)
-                    thisElem = this.Elements(k);
-                    
-                    tName = 'double'; % assume
-                    isBus = false;
-                    if contains(thisElem.TypeName, "Bus:") 
-                        tName = char("Bus: " + thisElem.Type.BuildName);
-                        isBus = true;
-                    elseif contains(thisElem.TypeName, "Enumeration")
-                        tName = ['Enum:' char(thisElem.Type.BuildName)]; 
-                    elseif contains(thisElem.TypeName, "Dtype:")
-                        dtypeName = extractAfter(thisElem.TypeName, "Dtype:");
-                        if isKey(builder.DatatypeMapping, dtypeName)
-                            tName = char(builder.DatatypeMapping(dtypeName));
-                        else
-                            if contains(dtypeName, 'Bool', 'IgnoreCase', true)
-                                tName = 'boolean';
-                            elseif contains(dtypeName, 'Int', 'IgnoreCase', true) || ...
-                                    contains(dtypeName, 'Natural', 'IgnoreCase', true)
-                                tName = 'int32';
-                            elseif contains(dtypeName, 'Real', 'IgnoreCase', true)
-                                tName = 'double';
-                            elseif contains(dtypeName, 'string', 'IgnoreCase', true)
-                                tName = 'string';
-                            end
-                        end
-                    end
-                    if isBus
-                        iElem = intf.addElement(...
-                            char(builder.makeValidName(thisElem.Name)), ...
-                            'Type', tName);
-                        iElem.ExternalUID = thisElem.ExtElementID;
-                    else
-                        dVal = 1; % assume
-                        if ~isinf(thisElem.Dim) && thisElem.Dim > 0
-                            dVal = thisElem.Dim;
-                        end
-                    
-                        dimensions = int2str(dVal);
-                        if strcmp(dimensions, '0')
-                            % heuristic to help catch user modeling errors
-                            dimensions = '1';
-                        end
-                        iElem = intf.addElement(...
-                            char(builder.makeValidName(thisElem.Name)), ...
-                            'Type', tName, 'Dimensions', dimensions);
-                        iElem.ExternalUID = thisElem.ExtElementID;
-                    end
+                    thisElement = this.Elements(k);
+                    builder.setDataType(thisElement, intf);
                 end
             end
         end

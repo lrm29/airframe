@@ -203,25 +203,11 @@ classdef UMLVisitor < m3i.Visitor
                             elType = this.visitEnumeration(property.type);
                             elTypeName = "Enumeration";
                         elseif isa(property.type, 'umlmm.DataType')
+                            elType = this.visitValueType(property.type);
                             elTypeName = "Dtype:" + string(property.type.name);
                         end
                     else
-                        try %#ok<TRYNC> basic heuristic with no recovery
-                            % Try to recover using regex
-                            elType = SysMLConnector.internal.utils.getBlockPropertyType(property);
-
-                            if endsWith(elType,        'SysML_dataType.String')
-                                elTypeName = 'Dtype:string';
-                            elseif endsWith(elType,    'SysML_dataType.Number')     ...
-                                   || endsWith(elType, 'SysML_dataType.Real')    ...
-                                   || endsWith(elType, 'SysML_dataType.Complex')
-                                elTypeName = 'Dtype:real';
-                            elseif endsWith(elType,    'SysML_dataType.Boolean')
-                                elTypeName = 'Dtype:boolean';
-                            elseif endsWith(elType,    'SysML_dataType.Integer')
-                                elTypeName = 'Dtype:integer';
-                            end
-                        end
+                        [elType, elTypeName] = SysMLConnector.internal.utils.getBlockPropertyType(property);
                     end
 
                     elDim = inf;
@@ -408,9 +394,13 @@ classdef UMLVisitor < m3i.Visitor
                             elType = this.visitEnumeration(pA.type);
                             elTypeName = "Enumeration";
                         elseif isa(pA.type, 'umlmm.DataType')
+                            elType = this.visitValueType(pA.type);
                             elTypeName = "Dtype:" + string(pA.type.name);
                         end
+                    else
+                        [elType, elTypeName] = SysMLConnector.internal.utils.getBlockPropertyType(pA);
                     end
+
                     if pA.redefinedProperty.size > 0
                         rdP = pA.redefinedProperty.at(1);
                         redefProps = [redefProps this.getExtID(rdP)]; %#ok<AGROW>
@@ -436,6 +426,41 @@ classdef UMLVisitor < m3i.Visitor
             end
         end
         
+        function [propType, propTypeName] = visitValueType(this, element)
+            if isa(element, 'umlmm.PrimitiveType')
+                propType = element;
+                propTypeName = ['Dtype:' lower(element.name)];
+
+                return
+            end
+
+            valueTypeID = this.getExtID(element);
+            propType = SysMLConnector.internal.CandidateElement.idMap(...
+                "lookup", valueTypeID);
+            if isempty(propType)
+                propType = SysMLConnector.internal.CandidateValueType(...
+                    string(element.name), valueTypeID);
+                recVisitSignalSuperClass(this, element, propType, strings(0));
+            end
+            propTypeName = "ValueType:" + propType.Name;
+
+            % Check to see if the value type has a general type
+            if element.generalization.size > 0
+                generalization = element.generalization.at(1);
+
+                if isempty(generalization.general)
+                    [baseValueType, baseValueTypeName] = SysMLConnector.internal.utils.getBlockPropertyType(generalization, AttributeName='general');
+                else
+                    [baseValueType, baseValueTypeName] = visitValueType(this, generalization.general);
+                end
+
+                if ~isempty(baseValueType)
+                    propType.Type = baseValueType;
+                    propType.TypeName = baseValueTypeName;
+                end
+            end
+        end
+
         function [propType, propTypeName] = visitSignal(this, element)
             
             sigID = this.getExtID(element);
@@ -483,11 +508,14 @@ classdef UMLVisitor < m3i.Visitor
                                 propType = this.visitEnumeration(prop.type);
                                 propTypeName = "Enumeration";
                             elseif isa(prop.type, 'umlmm.DataType')
+                                propType = this.visitValueType(prop.type);
                                 propTypeName = "Dtype:" + string(prop.type.name);
                             else
                                 addNotImported(this, prop.type, "UnsupportedFlowType", ...
                                                "Interface flow property is not a primitive type or signal");
                             end
+                        else
+                            [propType, propTypeName] = SysMLConnector.internal.utils.getBlockPropertyType(prop);
                         end
 
                         % Instead of getting 'direction' directly we get the property
@@ -600,6 +628,11 @@ classdef UMLVisitor < m3i.Visitor
             
             % Visit package elements
             visitChildren(this, package.ownedMember)
+        end
+
+        function ret = visitumlmmDataType(this, element)
+            this.visitValueType(element);
+            ret = [];
         end
 
         function ret = visitumlmmSignal(this, element)
