@@ -42,10 +42,8 @@ classdef Graph < SysMLConnector.internal.XMIGraph.Node
 
         function element = lookup(graphObj, elementID)
             element = [];
-            try
+            try %#ok<TRYNC> do not slow this down with extra checks. If it does not work, return empty.
                 element = graphObj.IDMap(elementID);
-            catch ME
-                disp(ME.identifier);
             end
         end
 

@@ -4,7 +4,7 @@ classdef UMLVisitor < m3i.Visitor
     properties
         PackagesToIgnore = [];
 
-        ProfilesFound = [];
+        ProfilesFound = []
         ArchNameGeneratedIdx = 1;        
         NotImported = [];
     end
@@ -79,19 +79,8 @@ classdef UMLVisitor < m3i.Visitor
                             candElem.addStereotype(stExtID);
                             leafClass = false;
                         end
-                            
-                        % Cache profile
-                        thisProf = st.package;
-                        pFound = false;
-                        for pIdx = 1:length(this.ProfilesFound)
-                            if this.ProfilesFound(pIdx) == thisProf
-                                pFound = true;
-                                break;
-                            end
-                        end
-                        if ~pFound
-                            this.ProfilesFound = [this.ProfilesFound thisProf];
-                        end
+
+                        visitumlmmProfile(this, st.package);
                         
                         % Get stereotype properties
                         for p = 1:st.ownedAttribute.size
@@ -637,6 +626,18 @@ classdef UMLVisitor < m3i.Visitor
 
         function ret = visitumlmmSignal(this, element)
             this.visitSignal(element);
+            ret = [];
+        end
+
+        function ret = visitumlmmProfile(this, profile)
+            if isempty(this.ProfilesFound)
+                this.ProfilesFound = dictionary;
+            end
+
+            if isequal(this.ProfilesFound.numEntries, 0) || ~this.ProfilesFound.isKey(profile.toString)
+                this.ProfilesFound(profile.toString) = profile;
+            end
+            
             ret = [];
         end
         

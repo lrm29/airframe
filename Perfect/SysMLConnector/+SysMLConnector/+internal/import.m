@@ -287,8 +287,13 @@ function report = import(modelFilename, outputDirectory, options)
     end
 
     % Extract profiles and stereotypes
-    m3iprofs = umlmmV.ProfilesFound;
+    m3iprofs = [];
     candProfiles = [];
+
+    if ~isempty(umlmmV.ProfilesFound)
+        m3iprofs = umlmmV.ProfilesFound.values;
+    end
+
     for k = 1:length(m3iprofs)
         newProf = SysMLConnector.internal.CandidateProfile(string(m3iprofs(k).name));
         candProfiles = [candProfiles newProf]; %#ok<AGROW>

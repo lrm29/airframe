@@ -32,6 +32,70 @@ function [propertyType, propertyTypeName] = getBlockPropertyType(property, optio
                 if ~isempty(xmiGraph)
                     propertyElement = xmiGraph.lookup(elementID);
                 end
+
+                % One more heuristic for stereotype property types.
+                if isempty(propertyElement) ...
+                    && isa(property, 'M3I.ImmutableProperty') ...
+                    && isprop(property, 'qualifiedName') ...
+                    && ~ismissing(string(property.qualifiedName))
+                    
+                    stereotypeParts = strsplit(property.qualifiedName, '.');
+
+                    profile = [];
+                    for profileIdx = 1:numel(xmiGraph.Profiles)
+                        iterProfile = xmiGraph.Profiles(profileIdx);
+
+                        if ismissing(iterProfile.Name)
+                            continue;
+                        end
+
+                        if strcmp(iterProfile.Name, stereotypeParts{1})
+                            profile = iterProfile;
+                            break;
+                        end
+                    end
+
+                    stereotype = [];
+                    if ~isempty(profile)
+                        stereotypes = profile.getProperty('packagedElement');
+
+                        if ~ismissing(stereotypes)
+                            for stereotypeIdx = 1:numel(stereotypes)
+                                iterStereotype = stereotypes(stereotypeIdx);
+
+                                if ismissing(iterStereotype.Name)
+                                    continue;
+                                end
+
+                                if strcmp(iterStereotype.Name, stereotypeParts{2})
+                                    stereotype = iterStereotype;
+                                    break;
+                                end
+                            end
+                        end
+                    end
+
+                    if ~isempty(stereotype)
+                        properties = stereotype.getProperty('ownedAttribute');
+
+                        if ~ismissing(properties)
+                            for propertyIdx = 1:numel(properties)
+                                iterProperty = properties(propertyIdx);
+
+                                if ismissing(iterProperty.Name)
+                                    continue;
+                                end
+
+                                if strcmp(iterProperty.Name, stereotypeParts{3})
+                                    propertyElement = iterProperty;
+                                    break;
+                                end
+                            end
+                        end
+                    end
+
+                    
+                end
             end
     
             if ~isempty(propertyElement)

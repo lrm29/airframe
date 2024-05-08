@@ -102,5 +102,8 @@ function report = import(modelFilename, outputDirectory, options)
 
     optionArgs = namedargs2cell(options);
 
-    report = SysMLConnector.internal.import(modelFilename, outputDirectory, optionArgs{:});
+    internalReport = SysMLConnector.internal.import(modelFilename, outputDirectory, optionArgs{:});
+
+    report.NotImported = internalReport.NotImported;
+    report.ImportedTotals = internalReport.ImportedTotals;
 end

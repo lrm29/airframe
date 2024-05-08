@@ -694,7 +694,7 @@ classdef Builder < handle
                             if strcmp(prop.DatatypeName, 'Enumeration')
                                 props(p).Value = this.makeValidName(props(p).Value);
                             end
-                            propValueString = ['''' props(p).Value  ''''];
+                            propValueString = ['''' char(props(p).Value)  ''''];
                         end
 
                         try
