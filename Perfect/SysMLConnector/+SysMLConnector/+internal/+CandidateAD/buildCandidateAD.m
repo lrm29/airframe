@@ -40,6 +40,8 @@ function [candidateAD, notImported] = buildCandidateAD(adStruct, candidateAD)
                 node = candidateAD.addNode(nodeName, 'Initial', nodeID);
             case 'umlmm.ActivityFinalNode'
                 node = candidateAD.addNode(nodeName, 'ActivityFinal', nodeID);
+            case 'umlmm.FlowFinalNode'
+                node = candidateAD.addNode(nodeName, 'FlowFinal', nodeID);
             case {'umlmm.MergeNode', 'umlmm.DecisionNode'}
                 node = candidateAD.addNode(nodeName, 'MergeDecision', nodeID);
             case {'umlmm.JoinNode', 'umlmm.ForkNode'}

@@ -280,8 +280,8 @@ classdef UMLVisitor < m3i.Visitor
                 reqXMIID, string(element.name), reqIDString, ...
                 reqTextString, reqOwner, reqType);
 
-            additionalProperties = properties(cStype)';
-            additionalProperties = string(setdiff(additionalProperties, {'base_Class', 'base_ClassObject', 'Id', 'Text', 'propertyName', 'propertyValue'}));
+            reqProperties = properties(cStype)';
+            additionalProperties = string(setdiff(reqProperties, {'base_Class', 'base_ClassObject', 'Id', 'Text', 'propertyName', 'propertyValue'}));
             
             elementPath = this.getFullPath(element);
             for additionalProperty = additionalProperties
@@ -295,9 +295,14 @@ classdef UMLVisitor < m3i.Visitor
             end
 
             % Check for stereotype properties
-            if ismember('propertyName', additionalProperties) && ismember('propertyValue', additionalProperties)
+            if ismember('propertyName', reqProperties) && ismember('propertyValue', reqProperties)
                 for stereotypePropertyIdx = 1:cStype.propertyName.size
                     propertyName = cStype.propertyName.at(stereotypePropertyIdx);
+                    
+                    if startsWith(propertyName, 'SysML.Requirement.')
+                        continue;
+                    end
+
                     try
                         addAdditionalProperty(req, propertyName, cStype.propertyValue.at(stereotypePropertyIdx));
                     catch ME
