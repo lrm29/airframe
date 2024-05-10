@@ -668,7 +668,7 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
                         thisComp.ReferenceArch = [];
                         thisComp.ReferenceArchExtElementID = [];
                         
-                        thisNotImported = element.createNotImported('Architecture Reference', 'Circular behavioral references are not permitted so the component behavior was ignored.');
+                        thisNotImported = thisComp.createNotImported('Architecture Reference', 'Circular behavioral references are not permitted so the component behavior was ignored.');
                         notImported = [notImported thisNotImported]; %#ok<AGROW>
 
                         break;
