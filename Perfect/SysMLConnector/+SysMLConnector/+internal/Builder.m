@@ -386,7 +386,7 @@ classdef Builder < handle
         
         function comp = createComponent(this, archHdl, comp)
             compName = comp.Name;
-            if compName == ""
+            if compName == "" && ~isempty(comp.ReferenceArch)
                 % Inherit name from architecture
                 compName = comp.ReferenceArch.Name;
             end

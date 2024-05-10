@@ -140,8 +140,14 @@ classdef CandidateConnector < SysMLConnector.internal.CandidateElement
                     e1Pname = "[Aport]." + port.BuildName;
                 end
             else
+                if ~isempty(this.End1Comp.ReferenceArch)
+                    refArchName = this.End1Comp.ReferenceArch.Name;
+                else
+                    refArchName = "";
+                end
+
                 e1Pname = "[" + this.End1Comp.Name + "]" + "<" + ...
-                          this.End1Comp.ReferenceArch.Name + ">." + ...
+                          refArchName + ">." + ...
                           this.End1RefArch.getPortName(this.End1RefPortExtElementID);
             end
 
@@ -155,8 +161,14 @@ classdef CandidateConnector < SysMLConnector.internal.CandidateElement
                     e2Pname = "[Aport]." + port.BuildName;
                 end
             else
+                if ~isempty(this.End2Comp.ReferenceArch)
+                    refArchName = this.End2Comp.ReferenceArch.Name;
+                else
+                    refArchName = "";
+                end
+
                 e2Pname = "[" + this.End2Comp.Name + "]" + "<" + ...
-                          this.End2Comp.ReferenceArch.Name + ">." + ...
+                          refArchName + ">." + ...
                           this.End2RefArch.getPortName(this.End2RefPortExtElementID);
             end
             

@@ -984,7 +984,7 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
             cComps = this.ChildComponents;
             for p = 1:length(cComps)
                 thisComp = cComps(p);
-                if thisComp.Valid && thisComp.IsInliningItsArch
+                if thisComp.Valid && thisComp.IsInliningItsArch && ~isempty(thisComp.ReferenceArch)
                     thisComp.ReferenceArch.finishBuildConnect(builder);
                 end
             end
