@@ -9,6 +9,7 @@ end
 %% Include/Exclude Tasks in processmodel
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+includePSPT = ispc();
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Define Shared Path Variables
@@ -48,9 +49,11 @@ importTask = pm.addTask(XMIImporterCI.task.ImportXMI( ...
     IterationQuery=xmiQuery));
 checkTask = pm.addTask(XMIImporterCI.task.CheckXMIDB( ...
     IterationQuery=xmiQuery,Nice=true));
-% psptTask = pm.addTask(citools.task.PackagePSP( ...
-    % AccessToken="eupHXNYdZ6oouy2piVsP", pspDirectory="Perfect", ...
-    % Nice=true));
+if includePSPT
+    psptTask = pm.addTask(citools.task.PackagePSP( ...
+        AccessToken="eupHXNYdZ6oouy2piVsP", pspDirectory="Perfect", ...
+        Nice=true));
+end
 
 importMDZIPTask = pm.addTask(XMIImporterCI.task.ImportXMI(...
     IterationQuery=mdzipQuery,Name="Import MDZIP",...
@@ -64,8 +67,10 @@ importMDZIPTask = pm.addTask(XMIImporterCI.task.ImportXMI(...
 importTask.runsAfter(importMDZIPTask);
 checkTask.dependsOn(importTask);
 % make sure pspt is last
-% psptTask.dependsOn(importMDZIPTask); % replace when second check task is added
-% psptTask.dependsOn(checkTask);
+if includePSPT
+    psptTask.dependsOn(importMDZIPTask); % replace when second check task is added
+    psptTask.dependsOn(checkTask);
+end
 
 % !PROCESSMODEL_EDITOR_MARKER! %
 % Do not remove. Process Advisor uses the comment above to automatically add tasks. %
