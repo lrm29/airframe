@@ -57,8 +57,7 @@ end
 
 importMDZIPTask = pm.addTask(XMIImporterCI.task.ImportXMI(...
     IterationQuery=mdzipQuery,Name="Import MDZIP",...
-    OutputDirectory=fullfile('$DEFAULTOUTPUTDIR$',"MDZIPImport"),...
-    Nice=true)); % turn off nice when import is expected to pass
+    OutputDirectory=fullfile('$DEFAULTOUTPUTDIR$',"MDZIPImport"))); 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
