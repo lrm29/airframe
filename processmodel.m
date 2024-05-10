@@ -51,12 +51,12 @@ checkTask = pm.addTask(XMIImporterCI.task.CheckXMIDB( ...
     IterationQuery=xmiQuery,Nice=true));
 if includePSPT
     psptTask = pm.addTask(citools.task.PackagePSP( ...
-        AccessToken="eupHXNYdZ6oouy2piVsP", pspDirectory="Perfect");
+        AccessToken="eupHXNYdZ6oouy2piVsP", pspDirectory="Perfect"));
 end
 
 importMDZIPTask = pm.addTask(XMIImporterCI.task.ImportXMI(...
     IterationQuery=mdzipQuery,Name="Import MDZIP",...
-    OutputDirectory=fullfile('$DEFAULTOUTPUTDIR$',"MDZIPImport"));
+    OutputDirectory=fullfile('$DEFAULTOUTPUTDIR$',"MDZIPImport")));
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
