@@ -187,7 +187,7 @@ classdef CheckXMIDB < padv.Task
                     elements{i} = ...
                         obj.findElemetsWithExternalUID(element{i});
                 end
-            else
+            elseif isscalar(element)
                 % get the properties of this element
                 properties = fieldnames(element);
                 % first make sure this is an System Composer and has not
@@ -239,6 +239,13 @@ classdef CheckXMIDB < padv.Task
                     % not sure what this is but no UUID no processing
                     elements = cell.empty();
                     return;
+                end
+            else
+                % it's not a cell or a scalar, it's an array
+                elements = cell(size(element));
+                for i = 1:numel(elements)
+                    elements{i} = ...
+                        obj.findElemetsWithExternalUID(element(i));
                 end
             end
             % move empty cells to simplify return
