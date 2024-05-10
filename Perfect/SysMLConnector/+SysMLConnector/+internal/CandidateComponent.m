@@ -89,10 +89,18 @@ classdef CandidateComponent < SysMLConnector.internal.CandidateElement
             else
                 cName = this.Name;
             end
+
+            if ~isempty(this.ReferenceArch)
+                referenceArchPath = this.ReferenceArch.getPostLinkFullPath();
+            else
+                referenceArchPath = "";
+            end
+            
             printer.print("Component: " + cName + ...
                           " [Valid = " + this.Valid + "] [" + ...
-                          this.ReferenceArch.getPostLinkFullPath() + "]");
-            if this.IsInliningItsArch
+                          referenceArchPath + "]");
+
+            if ~isempty(this.ReferenceArch) && this.IsInliningItsArch
                 printer.openScope("");
                 printer.openScope("InlineArch: " + this.ReferenceArch.Name);
                 this.ReferenceArch.print(printer);
