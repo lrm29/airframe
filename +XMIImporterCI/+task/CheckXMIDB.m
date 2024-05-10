@@ -118,7 +118,9 @@ classdef CheckXMIDB < padv.Task
                     try
                         model = systemcomposer.loadModel( ...
                             importedArtifacts(i).ArtifactAddress.getFileAddress());
-                        elements = obj.findElemetsWithExternalUID(model.Architecture);
+                        elements = obj.findElemetsWithExternalUID(...
+                            {model.Architecture, ...
+                            model.InterfaceDictionary.Interfaces});
                         elementDicitonary(...
                             string(...
                             cellfun(@(e) e.ExternalUID,elements,...
@@ -179,7 +181,13 @@ classdef CheckXMIDB < padv.Task
             %
             %
             % check if element is an array if so deal with it
-            if isscalar(element)
+            if iscell(element)
+                elements = cell(size(element));
+                for i = 1:numel(elements)
+                    elements{i} = ...
+                        obj.findElemetsWithExternalUID(element{i});
+                end
+            else
                 % get the properties of this element
                 properties = fieldnames(element);
                 % first make sure this is an System Composer and has not
@@ -231,12 +239,6 @@ classdef CheckXMIDB < padv.Task
                     % not sure what this is but no UUID no processing
                     elements = cell.empty();
                     return;
-                end
-            else
-                elements = cell(size(element));
-                for i = 1:numel(elements)
-                    elements{i} = ...
-                        obj.findElemetsWithExternalUID(element(i));
                 end
             end
             % move empty cells to simplify return
