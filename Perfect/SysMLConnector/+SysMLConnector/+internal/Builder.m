@@ -169,35 +169,7 @@ classdef Builder < handle
 
         function addNotImported(this, element, type, reason)
             % This function is intentionally written to be fault-tolerant.
-            
-            notImp.Type = type;
-            notImp.Reason = reason;
-            notImp.Stereotype = SysMLConnector.internal.utils.getClassName(element);
-
-            try
-                notImp.ElementID = element.ExtElementID;
-            catch ME
-                warning(ME.identifier, '%s', getReport(ME));
-                notImp.ElementID = "";
-            end
-
-            try
-                % Try to get the path
-                notImp.Element = getFullPath(element);
-            catch ME
-                % do not break the build, just warn to let us know we
-                % missed a property assignment.
-                warning(ME.identifier, '%s', getReport(ME));
-
-                if ~strcmp(notImp.ElementID, "")
-                    % Every element should have this property
-                    notImp.Element = notImp.ElementID; 
-                else
-                    % Give up and just use the class name.
-                    notImp.Element = notImp.Stereotype; 
-                end
-                
-            end
+            notImp = element.createNotImported(type, reason);
             
             this.NotImported = [this.NotImported notImp];
 

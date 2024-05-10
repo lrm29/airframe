@@ -646,8 +646,10 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
             end            
         end
         
-        function checkArchReferenceCycles(this)
+        function notImported = checkArchReferenceCycles(this)
             % Check for cycles (Components that have children referencing the parent)
+            notImported = [];
+
             cComps = this.ChildComponents;
             for p = 1:length(cComps)
                 thisComp = cComps(p);
@@ -655,14 +657,20 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
                 
                 archsToCheck = thisComp.ParentArchitecture;
                 allArchsToCheck = archsToCheck;
-                hasCycle = false; % assume
+
                 while ~isempty(archsToCheck)
                     archCheck = archsToCheck(1);
                     archCheck.Visited = true;
                     archsToCheck = archsToCheck(2:end);
                     
                     if archCheck == compArch
-                        hasCycle = true;
+                        % Remove the circular reference.
+                        thisComp.ReferenceArch = [];
+                        thisComp.ReferenceArchExtElementID = [];
+                        
+                        thisNotImported = element.createNotImported('Architecture Reference', 'Circular behavioral references are not permitted so the component behavior was ignored.');
+                        notImported = [notImported thisNotImported]; %#ok<AGROW>
+
                         break;
                     end
                     
@@ -674,9 +682,7 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
                         end
                     end
                 end
-                if hasCycle
-                    thisComp.setInvalid("Reference cycle");
-                end
+
                 for n = 1:length(allArchsToCheck)
                     allArchsToCheck(n).Visited = false;
                 end
@@ -887,22 +893,45 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
             for p = 1:length(cComps)
                 thisComp = cComps(p);
                 if thisComp.Valid
-                    if ~thisComp.IsInliningItsArch 
-                        % Link to reference architecture model
-                        refMdlName = builder.lookupModelNameFromExtID(...
-                            thisComp.ReferenceArchExtElementID);
-                        thisComp.ZCElement.linkToModel(refMdlName);
-                    else
-                        thisComp.ReferenceArch.finishBuildLinkComps(builder);
-                    end
+                    try
+                        if ~isempty(thisComp.ReferenceArch)
+                            if ~thisComp.IsInliningItsArch 
+                                % Link to reference architecture model
+                                refMdlName = builder.lookupModelNameFromExtID(...
+                                    thisComp.ReferenceArchExtElementID);
+                                    thisComp.ZCElement.linkToModel(refMdlName);
+                            else
+                                thisComp.ReferenceArch.finishBuildLinkComps(builder);
+                            end
                     
-                    defWidth = thisComp.ReferenceArch.getDefaultCompWidth();
-                    compPos = get_param(thisComp.ZCElement.SimulinkHandle,'Position');
-                    offsetPos = 10 * (cIdx-1);
-                    set_param(thisComp.ZCElement.SimulinkHandle,'Position',...
-                                            [compPos(1), compPos(2), ...
-                                        compPos(1)+defWidth, ...
-                                        compPos(4)] + offsetPos);
+                            defWidth = thisComp.ReferenceArch.getDefaultCompWidth();
+                        else
+                            defWidth = strlength(thisComp.Name)*10 + 20;
+                        end
+
+                        compPos = get_param(thisComp.ZCElement.SimulinkHandle,'Position');
+                        offsetPos = 10 * (cIdx-1);
+                        set_param(thisComp.ZCElement.SimulinkHandle,'Position',...
+                                                [compPos(1), compPos(2), ...
+                                            compPos(1)+defWidth, ...
+                                            compPos(4)] + offsetPos);
+                    catch ME
+                        type   = 'Reference Component Link';
+                        reason = sprintf('Unable to finish building component with error: %s', ME.identifier);
+                        builder.addNotImported(thisComp, type, reason);
+
+                        try %#ok<TRYNC>
+                            % Try to position the component using basic heuristics but do not recover again.
+                            defWidth = strlength(thisComp.Name)*10 + 20;
+                            compPos = get_param(thisComp.ZCElement.SimulinkHandle,'Position');
+                            offsetPos = 10 * (cIdx-1);
+                            set_param(thisComp.ZCElement.SimulinkHandle,'Position',...
+                                                    [compPos(1), compPos(2), ...
+                                                compPos(1)+defWidth, ...
+                                                compPos(4)] + offsetPos);
+                        end
+                    end
+
                     cIdx = cIdx + 1;
                 end
             end

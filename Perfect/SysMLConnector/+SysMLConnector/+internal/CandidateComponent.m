@@ -13,6 +13,7 @@ classdef CandidateComponent < SysMLConnector.internal.CandidateElement
         
         Valid = true;
         InvalidReason = "";
+        Build = true;
         
         ZCElement = [];
     end
@@ -70,9 +71,14 @@ classdef CandidateComponent < SysMLConnector.internal.CandidateElement
                 end
             end
         end
+
+        function fullPath = getFullPath(this)
+            fullPath = this.ParentArchitecture.getPostLinkFullPath() + "/" + this.Name;
+        end
         
         function setInvalid(this, reason)
             this.Valid = false;
+            this.Build = false;
             this.InvalidReason = reason;
         end
         
