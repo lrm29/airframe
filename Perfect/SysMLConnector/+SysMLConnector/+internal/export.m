@@ -9,7 +9,7 @@ function export(models, xmiFilename, options)
 %     Optional input parameters that may be specified as comma separated 
 %     name-value pairs are:  
 %
-%     - 'UseExternalIDs': false | {true}
+%     - 'UseExternalUIDs': false | {true}
 %       false - Do not use the ExternalUID property of the elements being exported
 %       true  - Export the ExternalUID property of elements being exported as the
 %               XMI ID of the corresponding object in the XMI file. This option
@@ -20,18 +20,16 @@ function export(models, xmiFilename, options)
 %       false - Keep nested interfaces as Interface Blocks
 %       true  - Export nested interfaces as UML signals     
 %
-%     Current limitations:
-%     - Profiles and stereotypes are not exported
-%     - Views are not exported
-%
     arguments
         models (1,:) systemcomposer.arch.Model {mustBeNonempty}
         xmiFilename (1,:) char {mustBeNonempty} = models(1).Name
-        options.UseExternalIDs (1,1) logical = true
+        options.UseExternalUIDs (1,1) logical = true
         options.MakeNestedInterfacesSignals (1,1) logical = true
     end
+    [exportPath, umlModelName] = fileparts(xmiFilename);
+    exportFilePath = fullfile(exportPath, [umlModelName '.xml']);
 
-    useExternalIDs = options.UseExternalIDs;
+    useExternalUIDs = options.UseExternalUIDs;
     makeNestedSignals = options.MakeNestedInterfacesSignals;
 
     if ~isa(models, 'systemcomposer.arch.Model')
@@ -68,7 +66,7 @@ function export(models, xmiFilename, options)
     tr = M3I.Transaction(m3im);
 
     umlMdl = umlmm.Model(m3im);
-    umlMdl.name = xmiFilename;
+    umlMdl.name = umlModelName;
     pf=umlmm.ProfileApplication(m3im);
     umlMdl.profileApplication.append(pf);
     pf.appliedProfile=sysmlprofile;
@@ -99,7 +97,7 @@ function export(models, xmiFilename, options)
                 visitArchForBuild(allArchMdlsToVisit(nVisited).Architecture, [], ...
                                   archToBlockMap, archToArchHdlMap, portToProxyPortMap, ...
                                   intfToIntfBlockMap, ...
-                                  m3im, umlBlkPkg, umlIntfPkg, m3iIDtoExtIDMap, useExternalIDs, makeNestedSignals);
+                                  m3im, umlBlkPkg, umlIntfPkg, m3iIDtoExtIDMap, useExternalUIDs, makeNestedSignals);
             allArchMdlsVisited(allArchMdlsToVisit(nVisited).Name) = true;
             
             allArchMdlsToVisit = [allArchMdlsToVisit childArchMdls]; %#ok<AGROW>
@@ -115,7 +113,7 @@ function export(models, xmiFilename, options)
     for k = 1:length(allArchs)
         m3iIDtoExtIDMap = finalizeArch(archToArchHdlMap(allArchs{k}), archToBlockMap, ...
                                        portToProxyPortMap, m3im, m3iIDtoExtIDMap, ...
-                                       useExternalIDs);
+                                       useExternalUIDs);
     end
         
     %% End build
@@ -127,18 +125,18 @@ function export(models, xmiFilename, options)
     s = M3I.XmiWriterSettings();
     s.MultiPackageMetaModel = false;
     s.UseURI = true;
-    if useExternalIDs
+    if useExternalUIDs
         s.UseExternalId = true;
         s.OutputFormat = 'MagicDraw';
     end
     
     %  Write to file
-    outXMIFileNameC = string(xmiFilename);
+    outXMIFileNameC = string(exportFilePath);
 
     f = M3I.XmiWriterFactory();
     w = f.createXmiWriter(s);
     w.setPreferredUriForPrefix('sysml',"http://www.omg.org/spec/SysML/20150709/SysML")
-    w.write(outXMIFileNameC + ".xml", m3im);
+    w.write(outXMIFileNameC, m3im);
     
 end
 

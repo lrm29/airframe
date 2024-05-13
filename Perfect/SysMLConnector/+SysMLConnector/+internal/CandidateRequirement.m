@@ -34,7 +34,14 @@ classdef CandidateRequirement < SysMLConnector.internal.CandidateElement
                 propVal = propVal.toString;
             end
             
+            propName = regexprep(propName, '[^0-9a-zA-Z]', '_');
             propStruct = this.AdditionalProperties;
+            
+            if ~isempty(propStruct)
+                % Ensure unique property name in struct.
+                propName = SysMLConnector.internal.utils.nextName(fieldnames(propStruct), propName);
+            end
+
             propStruct.(propName) = propVal;
             this.AdditionalProperties = propStruct;
         end

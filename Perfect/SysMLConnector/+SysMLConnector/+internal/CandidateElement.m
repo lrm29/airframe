@@ -104,5 +104,36 @@ classdef CandidateElement < handle
             pVal.Value = val;
             this.StereotypePropVals = [this.StereotypePropVals pVal];
         end
+
+        function notImported = createNotImported(this, type, reason)
+            notImported.Type = type;
+            notImported.Reason = reason;
+            notImported.Stereotype = SysMLConnector.internal.utils.getClassName(this);
+
+            try
+                notImported.ElementID = this.ExtElementID;
+            catch ME
+                warning(ME.identifier, '%s', getReport(ME));
+                notImported.ElementID = "";
+            end
+
+            try
+                % Try to get the path
+                notImported.Element = getFullPath(this);
+            catch ME
+                % do not break the build, just warn to let us know we
+                % missed a property assignment.
+                warning(ME.identifier, '%s', getReport(ME));
+
+                if ~strcmp(notImported.ElementID, "")
+                    % Every element should have this property
+                    notImported.Element = notImported.ElementID; 
+                else
+                    % Give up and just use the class name.
+                    notImported.Element = notImported.Stereotype; 
+                end
+                
+            end
+        end
     end
 end
