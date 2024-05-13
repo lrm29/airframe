@@ -129,12 +129,13 @@ classdef Builder < handle
             % Create a shutdown file to ensure all Profiles close
             sdownFile = this.ProjectPath + filesep + "projectShutdown.m";
             fid = fopen(sdownFile, 'w');
+            sdownFileCleanup = onCleanup(@()fclose(fid));
             for k = 1:length(this.Profiles)
                 fprintf(fid, ['profTmp = systemcomposer.profile.Profile.find(''', ...
                               this.Profiles(k).Name, ''');\n']);
                 fprintf(fid, 'if ~isempty(profTmp); profTmp.close(true); end; clear(''profTmp'');\n');
             end
-            fclose(fid);
+            delete(sdownFileCleanup);
             this.RootProject.addFile(sdownFile);
             this.RootProject.addShutdownFile(sdownFile);
             
@@ -163,7 +164,10 @@ classdef Builder < handle
                 this.Profiles(k).close;
             end
 
-            this.ProjectSLDD.save;
+            if ~isempty(this.ProjectSLDD) && isvalid(this.ProjectSLDD) && isOpen(this.ProjectSLDD) 
+                this.ProjectSLDD.save;
+            end
+
             this.RootProject.close;
         end
 
