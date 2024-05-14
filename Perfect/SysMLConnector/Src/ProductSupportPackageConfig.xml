@@ -27,8 +27,7 @@
     <Word>fqn</Word>
     <Word>Inlines</Word>
     <Word>Inlining</Word>
-    <Word>Int</Word>
-    <Word>Int32</Word>
+    <Word>*Int*</Word>
     <Word>mdzip</Word>
     <Word>pkg</Word>
     <Word>sequencediagram</Word>
