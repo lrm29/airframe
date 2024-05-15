@@ -18,7 +18,7 @@ includePSPT = ispc();
 % Set default root directory for task results
 pm.DefaultOutputDirectory = fullfile('$PROJECTROOT$', 'PA_Results');
 defaultResultPath = fullfile( ...
-    '$DEFAULTOUTPUTDIR$','$ITERATIONARTIFACT$');
+    '$DEFAULTOUTPUTDIR$','$ITERATIONARTIFACT$'); %#ok<NASGU>
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Register Tasks
