@@ -18,7 +18,7 @@ includePSPT = ispc();
 % Set default root directory for task results
 pm.DefaultOutputDirectory = fullfile('$PROJECTROOT$', 'PA_Results');
 defaultResultPath = fullfile( ...
-    '$DEFAULTOUTPUTDIR$','$ITERATIONARTIFACT$');
+    '$DEFAULTOUTPUTDIR$','$ITERATIONARTIFACT$'); %#ok<NASGU>
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Register Tasks
@@ -51,7 +51,8 @@ checkTask = pm.addTask(XMIImporterCI.task.CheckXMIDB( ...
     IterationQuery=xmiQuery,Nice=true));
 if includePSPT
     psptTask = pm.addTask(citools.task.PackagePSP( ...
-        AccessToken="eupHXNYdZ6oouy2piVsP", pspDirectory="Perfect"));
+        AccessToken="eupHXNYdZ6oouy2piVsP", ...
+        pspDirectory=fullfile("Perfect","SysMLConnector")));
 end
 
 importMDZIPTask = pm.addTask(XMIImporterCI.task.ImportXMI(...
