@@ -9,6 +9,7 @@ end
 %% Include/Exclude Tasks in processmodel
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+includePSPT = ispc();
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Define Shared Path Variables
@@ -17,7 +18,7 @@ end
 % Set default root directory for task results
 pm.DefaultOutputDirectory = fullfile('$PROJECTROOT$', 'PA_Results');
 defaultResultPath = fullfile( ...
-    '$DEFAULTOUTPUTDIR$','$ITERATIONARTIFACT$');
+    '$DEFAULTOUTPUTDIR$','$ITERATIONARTIFACT$'); %#ok<NASGU>
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Register Tasks
@@ -48,14 +49,15 @@ importTask = pm.addTask(XMIImporterCI.task.ImportXMI( ...
     IterationQuery=xmiQuery));
 checkTask = pm.addTask(XMIImporterCI.task.CheckXMIDB( ...
     IterationQuery=xmiQuery,Nice=true));
-% psptTask = pm.addTask(citools.task.PackagePSP( ...
-    % AccessToken="eupHXNYdZ6oouy2piVsP", pspDirectory="Perfect", ...
-    % Nice=true));
+if includePSPT
+    psptTask = pm.addTask(citools.task.PackagePSP( ...
+        AccessToken="eupHXNYdZ6oouy2piVsP", ...
+        pspDirectory=fullfile("Perfect","SysMLConnector")));
+end
 
 importMDZIPTask = pm.addTask(XMIImporterCI.task.ImportXMI(...
     IterationQuery=mdzipQuery,Name="Import MDZIP",...
-    OutputDirectory=fullfile('$DEFAULTOUTPUTDIR$',"MDZIPImport"),...
-    Nice=true)); % turn off nice when import is expected to pass
+    OutputDirectory=fullfile('$DEFAULTOUTPUTDIR$',"MDZIPImport")));
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -64,8 +66,10 @@ importMDZIPTask = pm.addTask(XMIImporterCI.task.ImportXMI(...
 importTask.runsAfter(importMDZIPTask);
 checkTask.dependsOn(importTask);
 % make sure pspt is last
-% psptTask.dependsOn(importMDZIPTask); % replace when second check task is added
-% psptTask.dependsOn(checkTask);
+if includePSPT
+    psptTask.dependsOn(importMDZIPTask); % replace when second check task is added
+    psptTask.dependsOn(checkTask);
+end
 
 % !PROCESSMODEL_EDITOR_MARKER! %
 % Do not remove. Process Advisor uses the comment above to automatically add tasks. %

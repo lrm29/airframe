@@ -168,9 +168,10 @@ function report = import(modelFilename, outputDirectory, options)
         copyfile(modelFilename, fullfile(xmiTmpDir, xmiTmpFname));
     end
         
-    umlTok = [];
+    umlTok   = [];
     sysmlTok = [];
-    primTok = [];
+    primTok  = [];
+    
     xmiStartDir = cd(xmiTmpDir);
     while 1
         tline = fgetl(xmiFid);
@@ -213,8 +214,9 @@ function report = import(modelFilename, outputDirectory, options)
     
     xmiLoc = string(fileparts(mfilename('fullpath'))); 
     unzip(xmiLoc + filesep + "xmi" + filesep + "supportFiles.zip", pwd);
-    if (isempty(additionalURIs) || ~any(additionalURIs(:,1) == "SysML.xmi")) && ...
-            contains(sysmlTok, "2018")
+    if (isempty(additionalURIs) || (~any(additionalURIs(:,1) == "SysML.xmi")) ...
+                                    && ~isempty(sysmlTok) ...
+                                    && contains(sysmlTok, "2018"))
         % Copy correct variant of SysML XMI
         movefile("SysML.xmi.2018", "SysML.xmi");
     end
@@ -387,6 +389,8 @@ function report = import(modelFilename, outputDirectory, options)
     % 6. Make multiple fan in connectors to a single input invalid
     % -----------------------------------------------------------
     
+    % Start building the report.
+    report.NotImported = umlmmV.NotImported;
 
     % Fetch lists of elements
     candArchs = SysMLConnector.internal.CandidateElement.idMap(...
@@ -465,7 +469,9 @@ function report = import(modelFilename, outputDirectory, options)
     end
     for k = 1:length(candArchs)
         thisArch = candArchs{k};
-        thisArch.checkArchReferenceCycles();
+        notImported = thisArch.checkArchReferenceCycles();
+
+        report.NotImported = [report.NotImported notImported];
     end
     
     % Set interface direction. Split bidirectional interfaces
@@ -502,18 +508,19 @@ function report = import(modelFilename, outputDirectory, options)
         thisLink = candReqLinks{k};
         thisLink.link();
     end
+
     % Refresh to get new links that may have been added
     candReqLinks = SysMLConnector.internal.CandidateElement.idMap(...
         "getElems", "SysMLConnector.internal.CandidateReqLink");
     
-    %% Prune pkg tree
-    buildRootModel = rootModel.visitAndPrunePackageBuildTree(...
-        inlineSingleUseArchsAcrossPackages, ...
-        pruneEmptyArchsWithNoRefAndNoChildren, ...
-        simulinkLeaf);
-
-    report.NotImported = umlmmV.NotImported;
-    if isempty(buildRootModel)
+    if ~isempty(rootModel)
+        %% Prune pkg tree
+            buildRootModel = rootModel.visitAndPrunePackageBuildTree(...
+                inlineSingleUseArchsAcrossPackages, ...
+                pruneEmptyArchsWithNoRefAndNoChildren, ...
+                simulinkLeaf);
+    else
+        buildRootModel = [];
         warning('No suitable model found in XMI');
     end
     
