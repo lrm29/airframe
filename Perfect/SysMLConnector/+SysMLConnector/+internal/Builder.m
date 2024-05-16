@@ -279,8 +279,7 @@ classdef Builder < handle
         
         function slMdlHdl = createSimulinkModel(this, candArch)
             tempMdlName = this.BuildProject + "_tmp";
-            new_system(tempMdlName, "Architecture");
-            tempMdlZCM = get_param(tempMdlName, 'SystemComposerModel');
+            tempMdlZCM = systemcomposer.createModel(tempMdlName);
             tempMdlZCM.linkDictionary(this.ProjectSLDDPath);
             for k = 1:length(this.Profiles)
                 tempMdlZCM.applyProfile(this.Profiles(k).Name)
