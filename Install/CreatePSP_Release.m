@@ -1,7 +1,7 @@
 clear, clc
 
 RepositoryType = "Git";                % (1,1) string  : Repository Type {"Folder","Svn","Git"}.
-RepositoryURL  = "https://N1rHE-UpRwd8mY2x-M3H@insidelabs-git.mathworks.com/ProductSupportPackage/amer/sysml-xmi-importer/-/tree/main/Perfect/SysMLConnector"; % (1,1) string  : Repository URL.
+RepositoryURL  = "https://N1rHE-UpRwd8mY2x-M3H@insidelabs-git.mathworks.com/ProductSupportPackage/amer/sysml-xmi-importer/-/tree/BuildStream/Perfect/SysMLConnector"; % (1,1) string  : Repository URL.
 BuildDir       = "../Build";           % (1,1) string  : Build directory.
 OutputDir      = "../Release/R2024a";  % (1,1) string  : Output directory.
 IsDistributed  = true;                 % (1,1) logical : Upload to SFT {true,false}.

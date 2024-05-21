@@ -18,7 +18,7 @@ classdef CheckXMIDB < padv.Task
                 options.Name = "Check XMI";
                 % artifacts the task iterates over
                 options.IterationQuery = ...
-                    XMIImporterCI.query.findXMI();
+                    XMIImporterCI.query.findByExtension(extension=".xml");
                 % input artifacts for the task
                 options.InputQueries = ...
                     [padv.builtin.query.GetIterationArtifact,...
@@ -118,7 +118,9 @@ classdef CheckXMIDB < padv.Task
                     try
                         model = systemcomposer.loadModel( ...
                             importedArtifacts(i).ArtifactAddress.getFileAddress());
-                        elements = obj.findElemetsWithExternalUID(model.Architecture);
+                        elements = obj.findElemetsWithExternalUID(...
+                            {model.Architecture, ...
+                            model.InterfaceDictionary.Interfaces});
                         elementDicitonary(...
                             string(...
                             cellfun(@(e) e.ExternalUID,elements,...
@@ -179,7 +181,13 @@ classdef CheckXMIDB < padv.Task
             %
             %
             % check if element is an array if so deal with it
-            if isscalar(element)
+            if iscell(element)
+                elements = cell(size(element));
+                for i = 1:numel(elements)
+                    elements{i} = ...
+                        obj.findElemetsWithExternalUID(element{i});
+                end
+            elseif isscalar(element)
                 % get the properties of this element
                 properties = fieldnames(element);
                 % first make sure this is an System Composer and has not
@@ -233,6 +241,7 @@ classdef CheckXMIDB < padv.Task
                     return;
                 end
             else
+                % it's not a cell or a scalar, it's an array
                 elements = cell(size(element));
                 for i = 1:numel(elements)
                     elements{i} = ...
