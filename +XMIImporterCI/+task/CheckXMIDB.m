@@ -54,6 +54,10 @@ classdef CheckXMIDB < padv.Task
             % run checks how the import worked
             taskResult = padv.TaskResult;
             taskResult.Status = padv.TaskStatus.Pass;
+
+            warnState = warning('off', 'Slvnv:slreq:illegalDataForMATFile');
+            cleanupWarning = onCleanup(@() warning(warnState));
+            
             try
                 % get working artifact
                 xmiArtifact = XMIImporterCI.utilities.rerunQuery( ...
@@ -132,7 +136,7 @@ classdef CheckXMIDB < padv.Task
                 end
                 %% need to analyse the collected data
                 explorer = XMIChecker.CandidateExplorer();
-                explorer.explore(report.imported);
+                explorer.explore(report.imported); %#ok<PROPLC> "report" is loaded from mat file
                 %% Validate imported data
                 candidates = explorer.dictionary.values;
                 validators = XMIChecker.Validator.build(candidates,xmidb,elementDicitonary);

@@ -101,7 +101,11 @@ classdef ImportXMI < padv.Task
                 outputFiles = ...
                     [outputProjectPath+"_report.txt",...
                     outputProjectPath+"_report.mat"];
+                
+                warnState = warning('off', 'Slvnv:slreq:illegalDataForMATFile');
+                cleanupWarning = onCleanup(@() warning(warnState));
                 save(outputFiles(2),"report");
+                delete(cleanupWarning);
                 % need to open the new project to get files
                 if exist(outputProjectPath,"dir")
                     % if the import imported nothing then no project is
