@@ -1,25 +1,10 @@
 classdef UMLVisitor < m3i.Visitor
 %UMLVisitor Helper Visitor class for SysMLConnector.internal.import that scans UML model loaded from XMI file
     
-% -------------------------------------------    
-% SysML->ZC Mapping table:
-% -------------------------------------------    
-%      UMLPackage -> MATLAB Project (and project sub-folder when sub-package)
-%      UMLClass stereotyped by SysML Block -> Architecture model    
-%         UMLProperty typed by UMLClass stereotyped by SysML Block -> Component
-%         UMLPort stereotyped by SysML ProxyPort -> Architecture port
-%         UMLPort's type (UMLClass) whose properties are stereotyped by SysML FlowProperty -> Interface with elements
-%         UMLConnector between ProxyPorts -> Connector
-%         UMLPort stereotyped by SysML FullPort -> Component inside
-%         Architecture (unless typed by an interface)
-%         (Nested classes treated as another class)
-% -------------------------------------------    
-
-    
     properties
         PackagesToIgnore = [];
 
-        ProfilesFound = [];
+        ProfilesFound = []
         ArchNameGeneratedIdx = 1;        
         NotImported = [];
     end
@@ -94,19 +79,8 @@ classdef UMLVisitor < m3i.Visitor
                             candElem.addStereotype(stExtID);
                             leafClass = false;
                         end
-                            
-                        % Cache profile
-                        thisProf = st.package;
-                        pFound = false;
-                        for pIdx = 1:length(this.ProfilesFound)
-                            if this.ProfilesFound(pIdx) == thisProf
-                                pFound = true;
-                                break;
-                            end
-                        end
-                        if ~pFound
-                            this.ProfilesFound = [this.ProfilesFound thisProf];
-                        end
+
+                        visitumlmmProfile(this, st.package);
                         
                         % Get stereotype properties
                         for p = 1:st.ownedAttribute.size
@@ -218,25 +192,11 @@ classdef UMLVisitor < m3i.Visitor
                             elType = this.visitEnumeration(property.type);
                             elTypeName = "Enumeration";
                         elseif isa(property.type, 'umlmm.DataType')
+                            elType = this.visitValueType(property.type);
                             elTypeName = "Dtype:" + string(property.type.name);
                         end
                     else
-                        try %#ok<TRYNC> basic heuristic with no recovery
-                            % Try to recover using regex
-                            elType = SysMLConnector.internal.utils.getBlockPropertyType(property);
-
-                            if endsWith(elType,        'SysML_dataType.String')
-                                elTypeName = 'Dtype:string';
-                            elseif endsWith(elType,    'SysML_dataType.Number')     ...
-                                   || endsWith(elType, 'SysML_dataType.Real')    ...
-                                   || endsWith(elType, 'SysML_dataType.Complex')
-                                elTypeName = 'Dtype:real';
-                            elseif endsWith(elType,    'SysML_dataType.Boolean')
-                                elTypeName = 'Dtype:boolean';
-                            elseif endsWith(elType,    'SysML_dataType.Integer')
-                                elTypeName = 'Dtype:integer';
-                            end
-                        end
+                        [elType, elTypeName] = SysMLConnector.internal.utils.getBlockPropertyType(property);
                     end
 
                     elDim = inf;
@@ -320,8 +280,8 @@ classdef UMLVisitor < m3i.Visitor
                 reqXMIID, string(element.name), reqIDString, ...
                 reqTextString, reqOwner, reqType);
 
-            additionalProperties = properties(cStype)';
-            additionalProperties = string(setdiff(additionalProperties, {'base_Class', 'base_ClassObject', 'Id', 'Text', 'propertyName', 'propertyValue'}));
+            reqProperties = properties(cStype)';
+            additionalProperties = string(setdiff(reqProperties, {'base_Class', 'base_ClassObject', 'Id', 'Text', 'propertyName', 'propertyValue'}));
             
             elementPath = this.getFullPath(element);
             for additionalProperty = additionalProperties
@@ -335,9 +295,14 @@ classdef UMLVisitor < m3i.Visitor
             end
 
             % Check for stereotype properties
-            if ismember('propertyName', additionalProperties) && ismember('propertyValue', additionalProperties)
+            if ismember('propertyName', reqProperties) && ismember('propertyValue', reqProperties)
                 for stereotypePropertyIdx = 1:cStype.propertyName.size
                     propertyName = cStype.propertyName.at(stereotypePropertyIdx);
+                    
+                    if startsWith(propertyName, 'SysML.Requirement.')
+                        continue;
+                    end
+
                     try
                         addAdditionalProperty(req, propertyName, cStype.propertyValue.at(stereotypePropertyIdx));
                     catch ME
@@ -423,9 +388,13 @@ classdef UMLVisitor < m3i.Visitor
                             elType = this.visitEnumeration(pA.type);
                             elTypeName = "Enumeration";
                         elseif isa(pA.type, 'umlmm.DataType')
+                            elType = this.visitValueType(pA.type);
                             elTypeName = "Dtype:" + string(pA.type.name);
                         end
+                    else
+                        [elType, elTypeName] = SysMLConnector.internal.utils.getBlockPropertyType(pA);
                     end
+
                     if pA.redefinedProperty.size > 0
                         rdP = pA.redefinedProperty.at(1);
                         redefProps = [redefProps this.getExtID(rdP)]; %#ok<AGROW>
@@ -451,6 +420,41 @@ classdef UMLVisitor < m3i.Visitor
             end
         end
         
+        function [propType, propTypeName] = visitValueType(this, element)
+            if isa(element, 'umlmm.PrimitiveType')
+                propType = element;
+                propTypeName = ['Dtype:' lower(element.name)];
+
+                return
+            end
+
+            valueTypeID = this.getExtID(element);
+            propType = SysMLConnector.internal.CandidateElement.idMap(...
+                "lookup", valueTypeID);
+            if isempty(propType)
+                propType = SysMLConnector.internal.CandidateValueType(...
+                    string(element.name), valueTypeID);
+                recVisitSignalSuperClass(this, element, propType, strings(0));
+            end
+            propTypeName = "ValueType:" + propType.Name;
+
+            % Check to see if the value type has a general type
+            if element.generalization.size > 0
+                generalization = element.generalization.at(1);
+
+                if isempty(generalization.general)
+                    [baseValueType, baseValueTypeName] = SysMLConnector.internal.utils.getBlockPropertyType(generalization, AttributeName='general');
+                else
+                    [baseValueType, baseValueTypeName] = visitValueType(this, generalization.general);
+                end
+
+                if ~isempty(baseValueType)
+                    propType.Type = baseValueType;
+                    propType.TypeName = baseValueTypeName;
+                end
+            end
+        end
+
         function [propType, propTypeName] = visitSignal(this, element)
             
             sigID = this.getExtID(element);
@@ -493,20 +497,19 @@ classdef UMLVisitor < m3i.Visitor
                         propTypeName = "";
                         if ~isempty(prop.type)
                             if isa(prop.type, 'umlmm.Signal')
-                                % Equivalent to "Simulink.ValueType"
-                                % In 2021a, this will get dissolved but will be
-                                % ValueType in future release.
-                                % Plus, we only support non-struct value types
                                 [propType, propTypeName] = this.visitSignal(prop.type);
                             elseif isa(prop.type, 'umlmm.Enumeration')
                                 propType = this.visitEnumeration(prop.type);
                                 propTypeName = "Enumeration";
                             elseif isa(prop.type, 'umlmm.DataType')
+                                propType = this.visitValueType(prop.type);
                                 propTypeName = "Dtype:" + string(prop.type.name);
                             else
                                 addNotImported(this, prop.type, "UnsupportedFlowType", ...
                                                "Interface flow property is not a primitive type or signal");
                             end
+                        else
+                            [propType, propTypeName] = SysMLConnector.internal.utils.getBlockPropertyType(prop);
                         end
 
                         % Instead of getting 'direction' directly we get the property
@@ -621,8 +624,25 @@ classdef UMLVisitor < m3i.Visitor
             visitChildren(this, package.ownedMember)
         end
 
+        function ret = visitumlmmDataType(this, element)
+            this.visitValueType(element);
+            ret = [];
+        end
+
         function ret = visitumlmmSignal(this, element)
             this.visitSignal(element);
+            ret = [];
+        end
+
+        function ret = visitumlmmProfile(this, profile)
+            if isempty(this.ProfilesFound)
+                this.ProfilesFound = dictionary;
+            end
+
+            if isequal(this.ProfilesFound.numEntries, 0) || ~this.ProfilesFound.isKey(profile.toString)
+                this.ProfilesFound(profile.toString) = profile;
+            end
+            
             ret = [];
         end
         

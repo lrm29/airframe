@@ -29,29 +29,51 @@ function generateDoc(pspBuilder)
 end
 
 function rebuildTableOfContents
-    % Convert the user guide to a tree of pages and add the new pages.
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %% Convert the user guide to a tree of pages and add the new pages.
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     tocStruct = readstruct('helptoc.xml');
-    docFiles = dir('UserGuide_*.html')';
 
-    if isempty(docFiles)
-        % Nothing to do.
-        return;
-    end
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %% Update the User Guide main sections
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    docFiles = dir('UserGuide_*.html')';
     docFiles = docFiles(~strcmp({docFiles.name},'UserGuide_Scr.html'));
 
-    ugNode = tocStruct.tocitem.tocitem(strcmp([tocStruct.tocitem.tocitem.Text], 'UserGuide'));
+    tocStructUGIndex = strcmp([tocStruct.tocitem.tocitem.Text], 'UserGuide');
+    ugNode = tocStruct.tocitem.tocitem(tocStructUGIndex);
     newTocItem = struct('targetAttribute', '', 'Text', '', 'tocitem', missing);
     ugTocNodes = repmat(newTocItem, 1, numel(docFiles));
     for docFileNum = 1:numel(docFiles)
-        ugTocNodes(docFileNum).targetAttribute = docFiles(docFileNum).name;         
-        ugTocNodes(docFileNum).Text = getTitle(docFiles(docFileNum).name);  
+        ugTocNodes(docFileNum).targetAttribute = string(docFiles(docFileNum).name);         
+        ugTocNodes(docFileNum).Text = string(getTitle(docFiles(docFileNum).name));  
+    end    
+
+    ugNode.tocitem = ugTocNodes;
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %% Update the Import main sections
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    docFiles = dir('Importing_*.html')';
+    ugNodeImportIndex = strcmp([ugNode.tocitem.Text], 'Importing SysML Models');
+    newTocItem = struct('targetAttribute', '', 'Text', '', 'tocitem', missing);
+    importTocNodes = repmat(newTocItem, 1, numel(docFiles));
+    for docFileNum = 1:numel(docFiles)
+        importTocNodes(docFileNum).targetAttribute = string(docFiles(docFileNum).name);         
+        importTocNodes(docFileNum).Text = string(getTitle(docFiles(docFileNum).name));  
     end
 
-    % Update the struct with the new child nodes.
-    ugNode.tocitem = ugTocNodes;
-    tocStruct.tocitem.tocitem(strcmp([tocStruct.tocitem.tocitem.Text], 'UserGuide')) = ugNode;
+    ugNode.tocitem(ugNodeImportIndex).tocitem = importTocNodes;
 
-    % Save the struct to the table of contents file.
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % Update the struct with the new child nodes.
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    tocStruct.tocitem.tocitem(tocStructUGIndex) = ugNode;
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %% Save the struct to the table of contents file.
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     writestruct(tocStruct, 'helptoc.xml', StructNodeName='toc');
     % Remove the <Text> and </Text> tags from the xml so that doc parses it
     % correctly.
@@ -60,6 +82,10 @@ function rebuildTableOfContents
     content = regexprep(content, '(?<startTag><tocitem[^>]*>)\n[ ]*\n?[ ]*(?<text>[^<]*)[ ]*\n[ ]*</tocitem>', '$<startTag>$<text></tocitem>');
     writelines(content, 'helptoc.xml');
 
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %% Helper functions to get page title from an html file.
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     function title = getTitle(file)
         % Get the page title from an html file.
         fileContent = fileread(file);

@@ -1,6 +1,9 @@
 classdef ImportXMI < padv.Task
     %IMPORTXMI runs the updated XMI importer of XMI files
 
+    properties (SetAccess=protected)
+        Nice
+    end
 
     methods
         function obj = ImportXMI(options)
@@ -12,7 +15,7 @@ classdef ImportXMI < padv.Task
                 options.Name = "Import XMI";
                 % artifacts the task iterates over
                 options.IterationQuery = ...
-                    XMIImporterCI.query.findXMI();
+                    XMIImporterCI.query.findByExtension(extension=".xml");
                 % input artifacts for the task
                 options.InputQueries = ...
                     padv.builtin.query.GetIterationArtifact;
@@ -24,6 +27,8 @@ classdef ImportXMI < padv.Task
                 options.InputDependencyQuery = ...
                     padv.builtin.query.FindArtifacts(ArtifactType="m_file",...
                     IncludePath="Perfect");
+                % nice option to supress failures during development
+                options.Nice = false;
             end
             % add self to the dependency list
             options.InputDependencyQuery = XMIImporterCI.query.multiQuery(...
@@ -36,6 +41,7 @@ classdef ImportXMI < padv.Task
                 InputQueries=options.InputQueries, ...
                 InputDependencyQuery=options.InputDependencyQuery);
             obj.OutputDirectory = options.OutputDirectory;
+            obj.Nice = options.Nice;
         end
 
         function taskResult = run(obj,inputArtifacts)
@@ -86,7 +92,7 @@ classdef ImportXMI < padv.Task
                 %% import XMI
                 fprintf('***Importing file ''%s''...\n', ...
                     artifactToUse.ArtifactAddress.getFileAddress);
-                report = SysMLConnector.import( ...
+                report = SysMLConnector.internal.import( ...
                     artifactToUse.ArtifactAddress.getFileAddress, ...
                     outputDirectory); 
                 fprintf('***Import complete for ''%s''.\n', ...
@@ -122,6 +128,11 @@ classdef ImportXMI < padv.Task
             if taskResult.Status == padv.TaskStatus.Pass
                 taskResult.OutputPaths = ...
                     outputFiles(arrayfun(@(x) exist(x,"file"),outputFiles) == 2);
+            end
+            %% make Nice correction
+            if obj.Nice
+                % force result to be pass
+                taskResult.Status = padv.TaskStatus.Pass;
             end
         end
     end

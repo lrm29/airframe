@@ -1,5 +1,5 @@
 function export(models, xmiFilename, options)
-% EXPORT Export a System Composer model into a XMI file
+%% export - Export a System Composer model into a XMI file
 %     SysMLConnector.export(models, xmiFilename) creates an XMI
 %     export for a set of System Composer input models. Only "root" architecture
 %     models need to be specified and any associated referenced models are also
@@ -9,7 +9,7 @@ function export(models, xmiFilename, options)
 %     Optional input parameters that may be specified as comma separated 
 %     name-value pairs are:  
 %
-%     - 'UseExternalIDs': false | {true}
+%     - 'UseExternalUIDs': false | {true}
 %       false - Do not use the ExternalUID property of the elements being exported
 %       true  - Export the ExternalUID property of elements being exported as the
 %               XMI ID of the corresponding object in the XMI file. This option
@@ -20,10 +20,6 @@ function export(models, xmiFilename, options)
 %       false - Keep nested interfaces as Interface Blocks
 %       true  - Export nested interfaces as UML signals     
 %
-%     Current limitations:
-%     - Profiles and stereotypes are not exported
-%     - Views are not 
-%
 %     Usage:
 %     myModel = systemcomposer.loadModel('MyArchitectureModel');
 %     SysMLConnector.export(myModel);
@@ -31,7 +27,7 @@ function export(models, xmiFilename, options)
     arguments
         models (1,:) systemcomposer.arch.Model {mustBeNonempty}
         xmiFilename (1,:) char {mustBeNonempty} = models(1).Name
-        options.UseExternalIDs (1,1) logical = true
+        options.UseExternalUIDs (1,1) logical = true
         options.MakeNestedInterfacesSignals (1,1) logical = true
     end
 
