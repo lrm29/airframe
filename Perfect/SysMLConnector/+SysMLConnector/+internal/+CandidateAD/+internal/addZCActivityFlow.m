@@ -7,7 +7,7 @@ function flow = addZCActivityFlow(source, destination, NameValueArgs)
 
     [sourcePortHandle,      sourceParentPath]      = getPortHandle(source, false);
     [destinationPortHandle, destinationParentPath] = getPortHandle(destination, true);
-    assert(strcmp(sourceParentPath, destinationParentPath), 'xmi:CandidateAD:internal:addZCActivityFlow:AmbiguousFlowPath', ...
+    assert(strcmp(sourceParentPath, destinationParentPath), 'SysMLConnector:internal:CandidateAD:internal:addZCActivityFlow:AmbiguousFlowPath', ...
         'The parent of the source and destination are different. Please provide a valid source/destination pairing.\nSource Parent: %s\nDestination Parent: %s\n', sourceParentPath, destinationParentPath);
     
     parentPath = sourceParentPath;
@@ -85,7 +85,7 @@ function [portHandle, parentPath] = getPortHandle(activityObject, isInput)
 
             return;
         otherwise
-            error('xmi:CandidateAD:internal:addZCActivityFlow:UnexpectedInputType', 'addZCActivityFlow received an unexpected input type of ''%s''.\n\n%s\n', class(activityObject), formattedDisplayText(activityObject));
+            error('SysMLConnector:internal:CandidateAD:internal:addZCActivityFlow:UnexpectedInputType', 'addZCActivityFlow received an unexpected input type of ''%s''.\n\n%s\n', class(activityObject), formattedDisplayText(activityObject));
     end
 
     % <ProductSupportPackage><Protect/></ProductSupportPackage>
