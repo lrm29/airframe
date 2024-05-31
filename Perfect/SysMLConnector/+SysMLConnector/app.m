@@ -10,11 +10,6 @@ function app
     %
     % See the <a href="matlab:SysMLConnector.internal.doc('UserGuide_Scr.html');">SysML Connector User Guide</a> for information about the SysML Connector.
     %
-    app = SysMLConnector.internal.utils.findApp;
-
-    if isempty(app)
-        SysMLConnector.internal.app.Launcher;
-    else
-        SysMLConnector.internal.utils.toFront(app);
-    end
+    connectorApp = SysMLConnector.internal.app.App.getApp;
+    connectorApp.toFront;
 end

@@ -613,6 +613,6 @@ function report = import(modelFilename, outputDirectory, options)
         
         delete(printer);
     end
-end
 
-%% EOF
+    % <ProductSupportPackage><Protect/></ProductSupportPackage>
+end
