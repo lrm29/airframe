@@ -109,7 +109,7 @@ function report = import(modelFilename, outputDirectory, options)
     %% Create a temp version of fixed up XMI file
     outputDirectory = string(outputDirectory);
     if outputDirectory == ""
-        outputDirectory = pwd;
+        outputDirectory = string(pwd);
     end
 
     % Tolerate missing extension on file name.
