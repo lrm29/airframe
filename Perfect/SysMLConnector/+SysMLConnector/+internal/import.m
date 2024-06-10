@@ -95,25 +95,21 @@ function report = import(modelFilename, outputDirectory, options)
 
     if ~isempty(additionalURIs)
         [~,nTmp] = size(additionalURIs); 
-        if nTmp ~= 3
-            error(['Additional URIs must be a [nx3] string matrix with each row ', ...
-                   'specifying a full URI, its corresponding short name, and file location.']);
-        end
+        assert(nTmp == 3, 'SysMLConnector:internal:import:InvalidAdditionalURIFormat', ...
+                'Additional URIs must be a [nx3] string matrix with each row specifying a full URI, its corresponding short name, and file location.');
     end
     
     %% Check mapping table
     if ~isempty(dtypeMapping)
         [~,dN] = size(dtypeMapping);
-        if dN ~= 2
-            error('Datatype mapping must be a Mx2 table of strings');
-        end
+        assert(dN == 2, 'SysMLConnector:internal:import:InvalidDatatypeMappingFormat', 'Datatype mapping must be a Mx2 table of strings');
     end
     
 
     %% Create a temp version of fixed up XMI file
     outputDirectory = string(outputDirectory);
     if outputDirectory == ""
-        outputDirectory = pwd;
+        outputDirectory = string(pwd);
     end
 
     % Tolerate missing extension on file name.
@@ -141,16 +137,23 @@ function report = import(modelFilename, outputDirectory, options)
 
     assert(isfile(modelFilename), 'SysMLConnector:internal:import:InputFileNotFound', 'Input file ''%s'' not found.', originalModelFilename);
 
-    if ~exist(outputDirectory, 'dir')
-        error('Output directory does not exist.');
-    end
+    assert(isfolder(outputDirectory), 'SysMLConnector:internal:import:OutputDirectoryNotFound', 'Output directory does not exist.');
     
     outputProjName = string(fname);
     
-    xmiTmpDir = outputDirectory + filesep + outputProjName + "_tmp";
+    if options.DebugMode
+        xmiTmpDir = outputDirectory + filesep + outputProjName + "_tmp";
+    else
+        xmiTmpDir = tempname;
+        cleanupTempDir = onCleanup(@() rmdir(xmiTmpDir, 's'));
+    end
+
     xmiTmpFname = outputProjName + "_tmp.xml";
 
+    assert(~isfolder(xmiTmpDir), 'SysMLConnector:internal:import:TemporaryDirectoryExists', 'Temporary directory %s already exists. Please delete it then try the import again.', xmiTmpDir);
+    
     mkdir(xmiTmpDir);
+
 
     % Check if the file is an mdzip archive and if so, retrieve the model
     % file.
@@ -370,7 +373,10 @@ function report = import(modelFilename, outputDirectory, options)
     % Cleanup
     rdr.unloadProfiles;
     cd(xmiStartDir);
-    rmdir(xmiTmpDir, 's');
+
+    if ~options.DebugMode
+        delete(cleanupTempDir);
+    end
 
     % -----------------------------------------------------------
     % Summary of transformations performed on model
@@ -527,10 +533,9 @@ function report = import(modelFilename, outputDirectory, options)
     %% Build model
     repFileName = "";
     if ~tryOnly
-        if exist(outputDirectory + filesep + outputProjName, 'dir')
-            error('Output project already exists. Cannot overwrite.')
-        end
-        repFileName = outputDirectory + filesep + outputProjName + "_report.txt";
+        buildDirectory = outputDirectory + filesep + outputProjName;
+        assert(~isfolder(buildDirectory),'SysMLConnector:internal:import:OutputProjectAlreadyExists', 'Output project ''%s'' already exists. Cannot overwrite.', buildDirectory);
+        repFileName = buildDirectory + "_report.txt";
     end
 
      if ~tryOnly && (~isempty(buildRootModel) || ~isempty(candReqs))
@@ -608,6 +613,6 @@ function report = import(modelFilename, outputDirectory, options)
         
         delete(printer);
     end
-end
 
-%% EOF
+    % <ProductSupportPackage><Protect/></ProductSupportPackage>
+end

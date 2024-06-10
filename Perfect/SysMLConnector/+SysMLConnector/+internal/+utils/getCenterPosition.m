@@ -1,9 +1,0 @@
-function position = getCenterPosition(referencePosition, targetPosition)
-    % Center the target on the reference.
-    referenceCenterX = referencePosition(1) + floor(referencePosition(3)/2);
-    referenceCenterY = referencePosition(2) + floor(referencePosition(4)/2);
-    position =  [referenceCenterX - floor(targetPosition(3)/2), ...
-                 referenceCenterY - floor(targetPosition(4)/2), ...
-                 targetPosition(3), ...
-                 targetPosition(4)];
-end
