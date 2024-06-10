@@ -23,6 +23,6 @@ function cleanEnvironment
     Simulink.data.dictionary.closeAll('-discard');
     slreq.clear;    
     systemcomposer.profile.Profile.closeAll;
-    evalin('base', 'clear(''classes'')');
+    evalin('base', 'clear classes');
     clc
 end

@@ -56,6 +56,59 @@ classdef Pin < SysMLConnector.internal.CandidateAD.Element
             end
         end
 
+        function postPublish(this, target)
+            % This is a basic heuristic to fix an invalid modeling semantic
+            % where multiple flows are connected to this pin by inserting a
+            % proxy merge/decision node.
+            if isempty(this.Parent.Flows)
+                return;
+            end
+
+            try
+                flows = this.Parent.Flows;
+                if this.Direction == systemcomposer.activitydiagram.model.PortDirection.OUTPUT
+                    dirFlag = 'DestinationPin';
+                    nameSuffix = '_Merge';
+                    mergeDecisionExternalID = [char(this.ExtElementID) nameSuffix];
+                    sourceID = mergeDecisionExternalID;
+                    destinationID = this.ExternalID;
+                else % Assume input
+                    dirFlag = 'SourcePin';                
+                    nameSuffix = '_Decision';
+                    mergeDecisionExternalID = [char(this.ExtElementID) nameSuffix];
+                    sourceID = this.ExternalID;
+                    destinationID = mergeDecisionExternalID;
+                end
+    
+                flowIndices = arrayfun(@(flow) flow.(dirFlag)==this, flows);
+
+                if sum(flowIndices, 'all') > 1
+                    % Multiple flows in or out of the pin so add a
+                    % merge/decision node.
+                    flows = flows(flowIndices);
+
+                    mergeDecisionNode = SysMLConnector.internal.CandidateAD.MergeDecisionNode(Name = [this.Name nameSuffix], ...
+                                                                                    ExternalID = mergeDecisionExternalID, ...
+                                                                                    Parent = this.Parent);
+
+                    publish(mergeDecisionNode, target);
+    
+                    proxyFlow = SysMLConnector.internal.CandidateAD.Flow('', sourceID, destinationID, ...
+                                                                         Name = [this.Name '_ProxyFlow'], ...
+                                                                         ExternalID = [char(this.ExtElementID) '_ProxyFlow'], ...
+                                                                         Parent = this.Parent);
+
+                    publish(proxyFlow, target);
+
+                    % Finally, redirect the flows to the merge decision node
+                    % instead of the pin.
+                    set(flows, [dirFlag 'ID'], mergeDecisionNode.ExternalID);
+                end
+            catch ME
+                warning('SysMLConnector:internal:CandidateAD:Pin:postPublish:ProxyMergeDecisionHeuristicFailed', 'A modeling issue was detected where multiple flows came off of ''%s'' but it was unable to be resolved due to error: ''%s''.', SysMLConnector.internal.CandidateAD.internal.getQualifiedName(this), ME.identifier);
+            end
+        end
+
         function prePrint(~,~)
         end
 

@@ -17,6 +17,7 @@
         <CallbackFcn>SysMLConnector.app</CallbackFcn>
     </App>
     <!--Opt-->
+    <PostPullFcn>PostPullFcn</PostPullFcn>
     <PreRemoveFcn>PreRemoveFcn</PreRemoveFcn>
     <Remove>DocSrc</Remove>
     <Remove>Src</Remove>
@@ -27,12 +28,10 @@
     <Word>fqn</Word>
     <Word>Inlines</Word>
     <Word>Inlining</Word>
-    <Word>Int32</Word>
     <Word>mdzip</Word>
     <Word>pkg</Word>
     <Word>sequencediagram</Word>
     <Word>simulatable</Word>
-    <Word>SimulinkIntEnumType</Word>
     <Word>SingleUseArchitectureInlining</Word>
     <Word>superclasses</Word>
     <Word>Swimlanes</Word>

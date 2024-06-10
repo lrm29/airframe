@@ -102,6 +102,8 @@ function report = import(modelFilename, outputDirectory, options)
 
     optionArgs = namedargs2cell(options);
 
+    SysMLConnector.internal.utils.mustBeCompatibleVersionOrLater;
+    
     internalReport = SysMLConnector.internal.import(modelFilename, outputDirectory, optionArgs{:});
 
     report.NotImported = internalReport.NotImported;

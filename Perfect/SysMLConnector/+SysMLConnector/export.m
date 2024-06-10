@@ -33,5 +33,7 @@ function export(models, xmiFilename, options)
 
     optionArgs = namedargs2cell(options);
 
+    SysMLConnector.internal.utils.mustBeCompatibleVersionOrLater;
+
     SysMLConnector.internal.export(models, xmiFilename, optionArgs{:});
 end
