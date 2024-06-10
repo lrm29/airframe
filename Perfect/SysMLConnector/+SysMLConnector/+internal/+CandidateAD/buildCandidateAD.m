@@ -19,6 +19,9 @@ function [candidateAD, notImported] = buildCandidateAD(adStruct, candidateAD)
         return;
     end
 
+    % Keep track of the parameter index to resolve activity referencing.
+    parameterIdx = 0;
+
     for nodeIdx = 1:adStruct.node.size
         nodeStruct = adStruct.node.at(nodeIdx);
 
@@ -48,7 +51,13 @@ function [candidateAD, notImported] = buildCandidateAD(adStruct, candidateAD)
                 node = candidateAD.addNode(nodeName, 'JoinFork', nodeID);
             case 'umlmm.ActivityParameterNode'
                 % This is actually an input or output pin for the activity.
+                parameterIdx = parameterIdx + 1;
                 parameter = nodeStruct.parameter;
+                if isempty(parameter) && ~isempty(nodeStruct.owner.ownedParameter) && parameterIdx <= nodeStruct.owner.ownedParameter.size
+                    % Assume ordered list matches between Parameter and ActivityParameterNode
+                    parameter = nodeStruct.owner.ownedParameter.at(parameterIdx);
+                end
+
                 if isempty(parameter)
                     direction = systemcomposer.activitydiagram.model.PortDirection.INPUT;
 
@@ -227,6 +236,7 @@ function [candidateAD, notImported] = buildCandidateAD(adStruct, candidateAD)
         catch ME
             notImp.Type = SysMLConnector.internal.utils.getClassName(edgeStruct);
             notImp.Element = SysMLConnector.internal.UMLVisitor.getFullPath(edgeStruct);
+            notImp.ElementID = SysMLConnector.internal.utils.getExtID(edgeStruct);
             notImp.Reason = ME.message;
             scName = SysMLConnector.internal.UMLVisitor.getSysMLStereotype(edgeStruct);
             notImp.Stereotype = scName;
