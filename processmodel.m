@@ -49,9 +49,9 @@ importTask = pm.addTask(XMIImporterCI.task.ImportXMI( ...
     IterationQuery=xmiQuery));
 checkTask = pm.addTask(XMIImporterCI.task.CheckXMIDB( ...
     IterationQuery=xmiQuery,Nice=true));
-fprintf("Trigger value seen: %s\n",getenv("$CI_COMMIT_TAG"));
+fprintf("Trigger value seen: %s\n",getenv("CI_COMMIT_TAG"));
 if includePSPT
-    if isempty(getenv("$CI_COMMIT_TAG"))
+    if isempty(getenv("CI_COMMIT_TAG"))
         alwaysRun = false;
     else 
         disp("Forcing PSPT to run for tagged commit")
