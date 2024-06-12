@@ -26,7 +26,9 @@ defaultResultPath = fullfile( ...
 xmlExclusions = ["Skyzer Contractor System Model",...
     "ProductSupportPackageConfig"];
 runAll = getenv("RUNALL");
+tagged = getenv("CI_COMMIT_TAG");
 fprintf("Runall value seen: %s\n",runAll);
+fprintf("Trigger value seen: %s\n",tagged);
 if isempty(runAll)
     disp("Running shorten test set");
     xmiQuery = XMIImporterCI.query.findByExtension( ...
@@ -49,9 +51,8 @@ importTask = pm.addTask(XMIImporterCI.task.ImportXMI( ...
     IterationQuery=xmiQuery));
 checkTask = pm.addTask(XMIImporterCI.task.CheckXMIDB( ...
     IterationQuery=xmiQuery,Nice=true));
-fprintf("Trigger value seen: %s\n",getenv("CI_COMMIT_TAG"));
 if includePSPT
-    if isempty(getenv("CI_COMMIT_TAG"))
+    if isempty(tagged)
         alwaysRun = false;
     else 
         disp("Forcing PSPT to run for tagged commit")
