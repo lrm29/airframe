@@ -5,7 +5,6 @@ variables:
   MATLAB_LOG_FILE: "MATLAB_Log_Output.txt"
   GIT_SUBMODULE_STRATEGY: recursive
   RUNALL: ""
-  TRIGGERED: ""
 
 workflow:
   rules:
@@ -17,10 +16,6 @@ workflow:
     - if: '$CI_PIPELINE_SOURCE != "merge_request_event"'
       variables:
         RUNALL: "" 
-    - if: '$CI_COMMIT_TAG != null'  
-      variables:
-        TRIGGERED: "true"
-        RUNALL: "yes"
 
 stages:
   - SimulinkPipelineGeneration
