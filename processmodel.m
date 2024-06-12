@@ -49,6 +49,7 @@ importTask = pm.addTask(XMIImporterCI.task.ImportXMI( ...
     IterationQuery=xmiQuery));
 checkTask = pm.addTask(XMIImporterCI.task.CheckXMIDB( ...
     IterationQuery=xmiQuery,Nice=true));
+fprintf("Trigger value seen: %s\n",getenv("TRIGGERED"));
 if includePSPT
     if isempty(getenv("TRIGGERED"))
         alwaysRun = false;
