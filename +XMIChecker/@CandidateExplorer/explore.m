@@ -48,6 +48,7 @@ elseif isscalar(candidate)
     fields = fields( ...
         cellfun(@(f) isobject(candidate.(f)) || iscell(candidate.(f)),fields));
     fields = fields(cellfun(@(f) ~isstring(candidate.(f)),fields));
+    fields = fields(cellfun(@(f) ~startsWith(class(candidate.(f),"umlmm")),fields));
     %% process the filtered fields
     cellfun(@(f) obj.explore(candidate.(f)),fields);
 elseif isa(candidate,"containers.Map")
