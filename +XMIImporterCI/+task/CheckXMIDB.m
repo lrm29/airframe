@@ -21,8 +21,7 @@ classdef CheckXMIDB < padv.Task
                     XMIImporterCI.query.findByExtension(extension=".xml");
                 % input artifacts for the task
                 options.InputQueries = ...
-                    [padv.builtin.query.GetIterationArtifact,...
-                    padv.builtin.query.GetOutputsOfDependentTask(Task="Import XMI")];
+                    padv.builtin.query.GetIterationArtifact;
                 % where the task outputs artifacts
                 options.OutputDirectory = fullfile(...
                     '$DEFAULTOUTPUTDIR$','CheckXMI');
@@ -62,9 +61,24 @@ classdef CheckXMIDB < padv.Task
                 % get working artifact
                 xmiArtifact = XMIImporterCI.utilities.rerunQuery( ...
                     obj.IterationQuery,inputArtifacts{1});
+                % make sure output exists
+                if ~exist(obj.resolvePath(obj.OutputDirectory),"dir")
+                    mkdir(obj.resolvePath(obj.OutputDirectory));
+                end
+                % check if this artifact is an MDZip file and if so convert
+                xmiArtifactFilepath = ...
+                    xmiArtifact.ArtifactAddress.getFileAddress();
+                [~,~,ext] = fileparts(xmiArtifactFilepath);
+                if strcmp(ext,".mdzip")
+                    xmiArtifactFilepath = ...
+                        SysMLConnector.internal.utils.getModelFile( ...
+                        xmiArtifactFilepath, ...
+                        obj.resolvePath(obj.OutputDirectory));
+                end
                 % setup the xmidb
-                xmidb = SysMLConnector.internal.CandidateAD.internal.XMIDatabase(readstruct( ...
-                    xmiArtifact.ArtifactAddress.getFileAddress()));
+                xmidb = ...
+                    SysMLConnector.internal.CandidateAD.internal.XMIDatabase( ...
+                    readstruct(xmiArtifactFilepath));
                 % record starting point to restore later
                 startingPoint = pwd;
                 processProject = currentProject();
@@ -163,9 +177,6 @@ classdef CheckXMIDB < padv.Task
                 %% save important data
                 outputFilePath = fullfile(obj.resolvePath(obj.OutputDirectory),...
                     outputFileName);
-                if ~exist(obj.resolvePath(obj.OutputDirectory),"dir")
-                    mkdir(obj.resolvePath(obj.OutputDirectory));
-                end
                 save(outputFilePath,"validators","xmidb","elementDicitonary");
                 taskResult.OutputPaths = outputFilePath;
                 %% back to starting location   

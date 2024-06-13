@@ -23,6 +23,7 @@ defaultResultPath = fullfile( ...
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Register Tasks
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% setup queries
 xmlExclusions = ["Skyzer Contractor System Model",...
     "ProductSupportPackageConfig"];
 runAll = getenv("RUNALL");
@@ -47,10 +48,21 @@ else
     mdzipQuery = XMIImporterCI.query.findByExtension(...
         extension=".mdzip");
 end
+%% setup the XMI tasks
 importTask = pm.addTask(XMIImporterCI.task.ImportXMI( ...
     IterationQuery=xmiQuery));
 checkTask = pm.addTask(XMIImporterCI.task.CheckXMIDB( ...
     IterationQuery=xmiQuery,Nice=true));
+
+%% setup the MDZip tasks
+importMDZIPTask = pm.addTask(XMIImporterCI.task.ImportXMI(...
+    IterationQuery=mdzipQuery,Name="Import MDZIP",...
+    OutputDirectory=fullfile('$DEFAULTOUTPUTDIR$',"MDZIPImport")));
+checkMDZIPTask = pm.addTask(XMIImporterCI.task.CheckXMIDB( ...
+    IterationQuery=mdzipQuery,Name="Check MDZIP", ...
+    OutputDirectory=fullfile('$DEFAULTOUTPUTDIR$',"MDZIPCheck"),Nice=true));
+
+%% setup the PSPT task
 if includePSPT
     if isempty(tagged)
         alwaysRun = false;
@@ -64,19 +76,19 @@ if includePSPT
         alwaysRun=alwaysRun));
 end
 
-importMDZIPTask = pm.addTask(XMIImporterCI.task.ImportXMI(...
-    IterationQuery=mdzipQuery,Name="Import MDZIP",...
-    OutputDirectory=fullfile('$DEFAULTOUTPUTDIR$',"MDZIPImport")));
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Set Task relationships
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 importTask.runsAfter(importMDZIPTask);
 checkTask.dependsOn(importTask);
+addInputQueries(checkTask, ...
+    padv.builtin.query.GetOutputsOfDependentTask(Task=importTask.Name));
+checkMDZIPTask.dependsOn(importMDZIPTask);
+addInputQueries(checkMDZIPTask, ...
+    padv.builtin.query.GetOutputsOfDependentTask(Task=importMDZIPTask.Name));
 % make sure pspt is last
 if includePSPT
-    psptTask.dependsOn(importMDZIPTask); % replace when second check task is added
+    psptTask.dependsOn(checkMDZIPTask); % replace when second check task is added
     psptTask.dependsOn(checkTask);
 end
 
