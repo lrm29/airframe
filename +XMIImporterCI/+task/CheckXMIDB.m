@@ -58,13 +58,14 @@ classdef CheckXMIDB < padv.Task
             cleanupWarning = onCleanup(@() warning(warnState));
             
             try
+                % make sure output exists
+                if exist(obj.resolvePath(obj.OutputDirectory),"dir")
+                    rmdir(obj.resolvePath(obj.OutputDirectory),"s");
+                end
+                mkdir(obj.resolvePath(obj.OutputDirectory));
                 % get working artifact
                 xmiArtifact = XMIImporterCI.utilities.rerunQuery( ...
                     obj.IterationQuery,inputArtifacts{1});
-                % make sure output exists
-                if ~exist(obj.resolvePath(obj.OutputDirectory),"dir")
-                    mkdir(obj.resolvePath(obj.OutputDirectory));
-                end
                 % check if this artifact is an MDZip file and if so convert
                 xmiArtifactFilepath = ...
                     xmiArtifact.ArtifactAddress.getFileAddress();
@@ -74,6 +75,9 @@ classdef CheckXMIDB < padv.Task
                         SysMLConnector.internal.utils.getModelFile( ...
                         xmiArtifactFilepath, ...
                         obj.resolvePath(obj.OutputDirectory));
+                    saveXMI = true;
+                else
+                    saveXMI = false;
                 end
                 % setup the xmidb
                 xmidb = ...
@@ -178,11 +182,16 @@ classdef CheckXMIDB < padv.Task
                 outputFilePath = fullfile(obj.resolvePath(obj.OutputDirectory),...
                     outputFileName);
                 save(outputFilePath,"validators","xmidb","elementDicitonary");
-                taskResult.OutputPaths = outputFilePath;
+                if saveXMI
+                    taskResult.OutputPaths = ...
+                        [outputFilePath,xmiArtifactFilepath];
+                else
+                    taskResult.OutputPaths = outputFilePath;
+                end
                 %% back to starting location   
                 cd(startingPoint);
             catch ME
-                dsip(ME.message);
+                disp(ME.message);
                 disp(ME.getReport());
                 for i = 1:numel(ME.stack)
                     disp(ME.stack(i));
