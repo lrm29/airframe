@@ -4,4 +4,5 @@ function reset
     SysMLConnector.internal.utils.getBlockPropertyType(Reset=true);
     SysMLConnector.internal.utils.getStereotypePropertyValue(Reset=true);
     SysMLConnector.internal.utils.getSyncElementID(Reset=true);
+    delete(SysMLConnector.internal.StatusMonitor.getStatusMonitor);
 end

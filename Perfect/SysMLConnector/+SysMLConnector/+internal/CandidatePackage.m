@@ -98,6 +98,8 @@ classdef CandidatePackage < SysMLConnector.internal.CandidateElement
         end
         
         function prelimBuild(this, builder)
+            SysMLConnector.internal.StatusMonitor.publishEvent('BuildPackage', this.ExtElementID, 'Building package %s (%i of %i).', this.Name, builder.getPackageIdx, builder.PackageCount);
+
             builder.createProjectFolder(this);
             
             for k = 1:length(this.BuildArchitectures)

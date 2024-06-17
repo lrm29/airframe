@@ -383,4 +383,5 @@ function m3iIDtoExtIDMap = finalizeArch(arch, archToBlockMap, portToProxyPortMap
         umlClass.ownedConnector.push_back(umlConn);
     end
     
+    % <ProductSupportPackage><Protect/></ProductSupportPackage>
 end

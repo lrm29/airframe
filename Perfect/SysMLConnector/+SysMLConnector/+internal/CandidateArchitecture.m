@@ -879,6 +879,8 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
         end
         
         function prelimBuild(this, builder)
+            SysMLConnector.internal.StatusMonitor.publishEvent('BuildArchitecture', this.ExtElementID, 'Building architecture %s (%i of %i).', this.Name, builder.getArchitectureIdx, builder.ArchitectureCount);
+
             if this.BuildAsSimulink
                 builder.createSimulinkModel(this);
             else
@@ -993,6 +995,8 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
         end
             
         function finishBuild(this, builder)
+            SysMLConnector.internal.StatusMonitor.publishEvent('FinalizeArchitecture', this.ExtElementID, 'Finalizing architecture %s (%i of %i).', this.Name, builder.getArchitectureIdx-builder.ArchitectureCount, builder.ArchitectureCount);
+
             if ~this.BuildAsSimulink
                 this.finishBuildLinkComps(builder);
                 this.finishBuildConnect(builder);
