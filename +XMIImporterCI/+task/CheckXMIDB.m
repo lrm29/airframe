@@ -56,6 +56,18 @@ classdef CheckXMIDB < padv.Task
 
             warnState = warning('off', 'Slvnv:slreq:illegalDataForMATFile');
             cleanupWarning = onCleanup(@() warning(warnState));
+
+            %% check for open SLDD files
+            % can cause errors
+            if ~isempty(Simulink.data.dictionary.getOpenDictionaryPaths)
+                openDDs = Simulink.data.dictionary.getOpenDictionaryPaths();
+                cellfun( ...
+                    @(odd) warning("Data dictionary %s was left open and will be closed.",odd), ...
+                    openDDs);
+                taskResult.ResultValues.Warn = taskResult.ResultValues.Warn + ...
+                    numel(openDDs);
+                Simulink.data.dictionary.closeAll('-discard');
+            end
             
             try
                 % make sure output exists

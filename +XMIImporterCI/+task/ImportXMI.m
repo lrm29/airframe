@@ -50,6 +50,18 @@ classdef ImportXMI < padv.Task
             taskResult.Status = padv.TaskStatus.Pass;
             project = currentProject;
 
+            %% check for open SLDD files
+            % can cause errors
+            if ~isempty(Simulink.data.dictionary.getOpenDictionaryPaths)
+                openDDs = Simulink.data.dictionary.getOpenDictionaryPaths();
+                cellfun( ...
+                    @(odd) warning("Data dictionary %s was left open and will be closed.",odd), ...
+                    openDDs);
+                taskResult.ResultValues.Warn = taskResult.ResultValues.Warn + ...
+                    numel(openDDs);
+                Simulink.data.dictionary.closeAll('-discard');
+            end
+
             %% TODO: fix this
             % need to check with development this isn't right
             % re-running query to get what I need
