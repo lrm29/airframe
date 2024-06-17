@@ -4,10 +4,10 @@ function modelFilePath = getModelFile(mdzipFile, outputDirectory)
     %
     arguments
         mdzipFile (1,1) string {mustBeFile}
-        outputDirectory (1,1) string {mustBeFolder} = fileparts(which(mdzipFile))
+        outputDirectory (1,1) string {mustBeFolder} = fileparts(mdzipFile)
     end
 
-    [~, modelName] = fileparts(which(mdzipFile));
+    [~, modelName] = fileparts(mdzipFile);
     modelFilePath = fullfile(outputDirectory, modelName + ".xml");
 
     assert(~isfile(modelFilePath), 'SysMLConnector:internal:utils:getModelFile:FileExists', 'File ''%s'' already exists. Delete it then try again.', modelFilePath);

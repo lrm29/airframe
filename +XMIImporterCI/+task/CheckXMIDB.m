@@ -21,8 +21,7 @@ classdef CheckXMIDB < padv.Task
                     XMIImporterCI.query.findByExtension(extension=".xml");
                 % input artifacts for the task
                 options.InputQueries = ...
-                    [padv.builtin.query.GetIterationArtifact,...
-                    padv.builtin.query.GetOutputsOfDependentTask(Task="Import XMI")];
+                    padv.builtin.query.GetIterationArtifact;
                 % where the task outputs artifacts
                 options.OutputDirectory = fullfile(...
                     '$DEFAULTOUTPUTDIR$','CheckXMI');
@@ -57,14 +56,45 @@ classdef CheckXMIDB < padv.Task
 
             warnState = warning('off', 'Slvnv:slreq:illegalDataForMATFile');
             cleanupWarning = onCleanup(@() warning(warnState));
+
+            %% check for open SLDD files
+            % can cause errors
+            if ~isempty(Simulink.data.dictionary.getOpenDictionaryPaths)
+                openDDs = Simulink.data.dictionary.getOpenDictionaryPaths();
+                cellfun( ...
+                    @(odd) warning("Data dictionary %s was left open and will be closed.",odd), ...
+                    openDDs);
+                taskResult.ResultValues.Warn = taskResult.ResultValues.Warn + ...
+                    numel(openDDs);
+                Simulink.data.dictionary.closeAll('-discard');
+            end
             
             try
+                % make sure output exists
+                if exist(obj.resolvePath(obj.OutputDirectory),"dir")
+                    rmdir(obj.resolvePath(obj.OutputDirectory),"s");
+                end
+                mkdir(obj.resolvePath(obj.OutputDirectory));
                 % get working artifact
                 xmiArtifact = XMIImporterCI.utilities.rerunQuery( ...
                     obj.IterationQuery,inputArtifacts{1});
+                % check if this artifact is an MDZip file and if so convert
+                xmiArtifactFilepath = ...
+                    xmiArtifact.ArtifactAddress.getFileAddress();
+                [~,~,ext] = fileparts(xmiArtifactFilepath);
+                if strcmp(ext,".mdzip")
+                    xmiArtifactFilepath = ...
+                        SysMLConnector.internal.utils.getModelFile( ...
+                        xmiArtifactFilepath, ...
+                        obj.resolvePath(obj.OutputDirectory));
+                    saveXMI = true;
+                else
+                    saveXMI = false;
+                end
                 % setup the xmidb
-                xmidb = SysMLConnector.internal.CandidateAD.internal.XMIDatabase(readstruct( ...
-                    xmiArtifact.ArtifactAddress.getFileAddress()));
+                xmidb = ...
+                    SysMLConnector.internal.CandidateAD.internal.XMIDatabase( ...
+                    readstruct(xmiArtifactFilepath));
                 % record starting point to restore later
                 startingPoint = pwd;
                 processProject = currentProject();
@@ -163,15 +193,17 @@ classdef CheckXMIDB < padv.Task
                 %% save important data
                 outputFilePath = fullfile(obj.resolvePath(obj.OutputDirectory),...
                     outputFileName);
-                if ~exist(obj.resolvePath(obj.OutputDirectory),"dir")
-                    mkdir(obj.resolvePath(obj.OutputDirectory));
-                end
                 save(outputFilePath,"validators","xmidb","elementDicitonary");
-                taskResult.OutputPaths = outputFilePath;
+                if saveXMI
+                    taskResult.OutputPaths = ...
+                        [outputFilePath,xmiArtifactFilepath];
+                else
+                    taskResult.OutputPaths = outputFilePath;
+                end
                 %% back to starting location   
                 cd(startingPoint);
             catch ME
-                dsip(ME.message);
+                disp(ME.message);
                 disp(ME.getReport());
                 for i = 1:numel(ME.stack)
                     disp(ME.stack(i));
