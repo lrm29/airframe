@@ -71,18 +71,38 @@ function report = import(modelFilename, outputDirectory, options)
         options.AdditionalURIs (:,3) string = string.empty
         options.UseRealSysMLURIs (1,1) logical = false
         options.DebugMode (1,1) logical = false
+        options.ListenerCallback = [];
+        options.CancelRequestCallback = [];
     end
     
     % Reset cached functions
     SysMLConnector.internal.utils.reset;
 
-    if ~options.DebugMode
+    % Set up output object
+    report.NotImported    = [];
+    report.ImportedTotals = [];
+    report.imported       = [];
+
+    if options.DebugMode
+         SysMLConnector.internal.StatusMonitor.enableDebug;
+         verboseImport = true;
+    else
         warnState = warning('off', 'backtrace');
         cleanupWarning = onCleanup(@() warning(warnState));
+        verboseImport = options.Verbose;
+    end
+
+    if ~isempty(options.ListenerCallback)
+        statusListener =  SysMLConnector.internal.StatusMonitor.registerListener(options.ListenerCallback);
+        listenerCleanup = onCleanup(@() SysMLConnector.internal.StatusMonitor.unregisterListener(statusListener));
+    end
+
+    if ~isempty(options.CancelRequestCallback)
+        SysMLConnector.internal.StatusMonitor.addCancelRequestCallback(options.CancelRequestCallback);
+        cancelCleanup = onCleanup(@SysMLConnector.internal.StatusMonitor.removeCancelRequestCallback);
     end
 
     % Gather input arguments:
-    verboseImport = options.Verbose;
     inlineSingleUseArchsAcrossPackages = options.SingleUseArchitectureInlining == "aggressive";
     pruneEmptyArchsWithNoRefAndNoChildren = options.PruneEmptyArchitectures;
     tryOnly        = options.TrialOnly;
@@ -144,16 +164,18 @@ function report = import(modelFilename, outputDirectory, options)
     if options.DebugMode
         xmiTmpDir = outputDirectory + filesep + outputProjName + "_tmp";
     else
+        importStartDirectory = pwd;
         xmiTmpDir = tempname;
-        cleanupTempDir = onCleanup(@() rmdir(xmiTmpDir, 's'));
+        cleanupTempDir = onCleanup(@() SysMLConnector.internal.utils.cleanupTempDirectory(importStartDirectory, xmiTmpDir));
     end
 
     xmiTmpFname = outputProjName + "_tmp.xml";
 
     assert(~isfolder(xmiTmpDir), 'SysMLConnector:internal:import:TemporaryDirectoryExists', 'Temporary directory %s already exists. Please delete it then try the import again.', xmiTmpDir);
+
+    SysMLConnector.internal.StatusMonitor.publishEvent('ParsingSourceFile', originalModelFilename, sprintf('Parsing source file %s.', originalModelFilename));
     
     mkdir(xmiTmpDir);
-
 
     % Check if the file is an mdzip archive and if so, retrieve the model
     % file.
@@ -225,11 +247,15 @@ function report = import(modelFilename, outputDirectory, options)
     end
     
     %% Load XMI to UML model
+    log = M3I.Logger;
     if verboseImport
         M3IUserMessages.show;
-        log = M3I.Logger;
         log.instance.setTestMode;
         log.instance.Level='All';
+    else
+        M3IUserMessages.hide;
+        log.instance.resetTestMode;
+        log.instance.Level='Fatal';
     end
     
     f = M3I.XmiReaderFactory();
@@ -297,16 +323,42 @@ function report = import(modelFilename, outputDirectory, options)
 
     if ~isempty(umlmmV.ProfilesFound)
         m3iprofs = umlmmV.ProfilesFound.values;
+    else
+        SysMLConnector.internal.StatusMonitor.publishEvent('ParsingProfiles', '', 'No profiles found.');
     end
 
-    for k = 1:length(m3iprofs)
-        newProf = SysMLConnector.internal.CandidateProfile(string(m3iprofs(k).name));
+    numProfiles = length(m3iprofs);
+    for k = 1:numProfiles
+        profileName = string(m3iprofs(k).name);
+        SysMLConnector.internal.StatusMonitor.publishEvent('ParsingProfile', profileName, 'Parsing profile %s (%i of %i).', profileName, k, numProfiles);
+
+        newProf = SysMLConnector.internal.CandidateProfile(profileName);
         candProfiles = [candProfiles newProf]; %#ok<AGROW>
         
         numProfTypes = m3iprofs(k).ownedType.size;
+
+        stereotypeIndices = double.empty(0, numProfTypes);
+        stereotypeCount = 0;
+
         for m = 1:numProfTypes
             pType = m3iprofs(k).ownedType.at(m);
             if isa(pType, 'M3I.ImmutableCustomStereotype')
+                stereotypeCount = stereotypeCount + 1;
+                stereotypeIndices(stereotypeCount) = m;
+            end
+        end
+
+        if stereotypeCount == 0
+            SysMLConnector.internal.StatusMonitor.publishEvent('ParsingStereotypes', profileName, 'No stereotypes found.');
+        else
+            idx = 0;
+            for m = stereotypeIndices
+                idx = idx + 1;
+
+                pType = m3iprofs(k).ownedType.at(m);
+                stereotypeName = string(pType.name);
+    
+                SysMLConnector.internal.StatusMonitor.publishEvent('ParsingStereotype', stereotypeName, 'Parsing stereotype %s (%i of %i).', profileName + "." + stereotypeName, idx, stereotypeCount);
                 
                 % Get stereotype superclass ID
                 scExtID = "";
@@ -318,7 +370,7 @@ function report = import(modelFilename, outputDirectory, options)
                 end
                 
                 newStype = SysMLConnector.internal.CandidateStereotype(...
-                    string(pType.toString()), string(pType.name), ...
+                    string(pType.toString()), stereotypeName, ...
                     newProf, string(pType.qualifiedName), scExtID);
                 newProf.addStereotype(newStype);
                 
@@ -329,7 +381,7 @@ function report = import(modelFilename, outputDirectory, options)
                         elTypeName = "";
                         elType = "";
                         pElemType = pElem.type;
-
+    
                         if isempty(pElemType)
                             % Try to resolve one more time using regex
                             typeID = SysMLConnector.internal.utils.getBlockPropertyType(pElem);
@@ -344,7 +396,7 @@ function report = import(modelFilename, outputDirectory, options)
                                 elTypeName = "Dtype:" + string(pElemType.name);
                             end
                         end
-
+    
                         if isa(elType, 'SysMLConnector.internal.CandidateEnum')
                             % Stereotype properties do not support
                             % dictionary enumerations so mark this one
@@ -352,7 +404,7 @@ function report = import(modelFilename, outputDirectory, options)
                             elType.Internal = false;
                             elTypeName = "Enumeration";
                         end
-
+    
                         newStype.addProperty(string(pElem.name), elTypeName, elType);
                     end
                 end
@@ -377,23 +429,6 @@ function report = import(modelFilename, outputDirectory, options)
     if ~options.DebugMode
         delete(cleanupTempDir);
     end
-
-    % -----------------------------------------------------------
-    % Summary of transformations performed on model
-    % -----------------------------------------------------------
-    % 1. When an Architecture is a specialization of another, 
-    %    merge in all of the "superclass" ports, components, and
-    %    connectors
-    % 2. When an Architecture is used only once, inline it if its
-    %    in the same package (project)
-    % 3. Split bidirectional interfaces and corresponding ports
-    %    into separate input and output interfaces/ports
-    % 4. Transform deep nested connectors to be wired all the
-    %    way through parent components
-    % 5. Do not realize any architectures that are both empty 
-    %    and have no references
-    % 6. Make multiple fan in connectors to a single input invalid
-    % -----------------------------------------------------------
     
     % Start building the report.
     report.NotImported = umlmmV.NotImported;
@@ -419,10 +454,16 @@ function report = import(modelFilename, outputDirectory, options)
         "getElems", "SysMLConnector.internal.CandidateReqLink");
 
     % Merge in generalizations
-    for k = 1:length(candArchs)
+    numCandidateArchitectures = length(candArchs);
+    for k = 1:numCandidateArchitectures
         thisArch = candArchs{k};
+
+        SysMLConnector.internal.StatusMonitor.publishEvent('MergingGeneralizations', thisArch.Name, 'Merging generalizations for %s (%i of %i).', thisArch.Name, k, numCandidateArchitectures);
+
         thisArch.mergeGeneralizations();
     end    
+    
+    SysMLConnector.internal.StatusMonitor.publishEvent('LinkingPackageChildren', 'Packages', 'Linking packages and children.');
     
     % Link packages in parent-child relationships
     rootPackages  = SysMLConnector.internal.CandidatePackage.empty(0, length(candPkgs));
@@ -469,6 +510,7 @@ function report = import(modelFilename, outputDirectory, options)
     end
     
     % Check for reference cycles (Component referring to ancestor Architecture)
+    SysMLConnector.internal.StatusMonitor.publishEvent('ReferenceCycles', 'ReferenceCycles', 'Checking architectures for reference cycles.');
     for k = 1:length(candArchs)
         thisArch = candArchs{k};
         thisArch.Visited = false;
@@ -480,6 +522,7 @@ function report = import(modelFilename, outputDirectory, options)
         report.NotImported = [report.NotImported notImported];
     end
     
+    SysMLConnector.internal.StatusMonitor.publishEvent('ArchitectureCleanup', 'ArchitectureCleanup', 'Cleaning up ports/interfaces/connectors.');
     % Set interface direction. Split bidirectional interfaces
     for k = 1:length(candIntfs)
         candIntfs{k}.setDirectionAndSplitBidirectional(true);
@@ -505,6 +548,7 @@ function report = import(modelFilename, outputDirectory, options)
     end
     
     %% Link requirements to each other and model elements
+    SysMLConnector.internal.StatusMonitor.publishEvent('LinkRequirements', 'Requirements', 'Creating requirements link candidates.');
     for k = 1:length(candReqs)
         thisReq = candReqs{k};
         thisReq.link();
@@ -520,6 +564,8 @@ function report = import(modelFilename, outputDirectory, options)
         "getElems", "SysMLConnector.internal.CandidateReqLink");
     
     if ~isempty(rootModel)
+        SysMLConnector.internal.StatusMonitor.publishEvent('RemoveUnusedElements', '', 'Removing unused elements from build tree.');
+
         %% Prune pkg tree
             buildRootModel = rootModel.visitAndPrunePackageBuildTree(...
                 inlineSingleUseArchsAcrossPackages, ...
@@ -527,6 +573,7 @@ function report = import(modelFilename, outputDirectory, options)
                 simulinkLeaf);
     else
         buildRootModel = [];
+        SysMLConnector.internal.StatusMonitor.publishEvent('NoSuitableModel', '', 'No suitable model found in XMI.');
         warning('No suitable model found in XMI');
     end
     
@@ -541,6 +588,15 @@ function report = import(modelFilename, outputDirectory, options)
      if ~tryOnly && (~isempty(buildRootModel) || ~isempty(candReqs))
         builder = SysMLConnector.internal.Builder(...
             outputDirectory, outputProjName, dtypeMapping, validNameStyle);
+
+        numArchitectures = sum(arrayfun(@(candidateArchitecture) candidateArchitecture{:}.Build==true, candArchs), 'all');
+        numPackages      = sum(arrayfun(@(candidatePackage)      candidatePackage{:}.Build==true, candPkgs), 'all');
+
+        builder.updateBuildCounts(numel(candActivities), numel(candAllocs),       ...
+                                  numArchitectures,      numel(candInteractions), ...
+                                  numPackages,           numel(candProfiles),     ...
+                                  numel(candReqs),       numel(candReqLinks))
+
         builder.createProfiles(candProfiles);
         
         if ~isempty(buildRootModel)
@@ -563,6 +619,7 @@ function report = import(modelFilename, outputDirectory, options)
         report.NotImported = [report.NotImported builder.NotImported];
         report.ImportedTotals = builder.Stats;       
         
+        builder.BuildComplete = true;
         delete(builder);
     
      end
@@ -577,6 +634,7 @@ function report = import(modelFilename, outputDirectory, options)
 
     %% Print for reporting
     if ~strcmp(repFileName, "")
+        SysMLConnector.internal.StatusMonitor.publishEvent('GeneratingReport', '', 'Generating import report.');
         printer = SysMLConnector.internal.Printer(repFileName, verboseImport, tryOnly);
         
         printer.startSection('NOT IMPORTED FROM XML');
@@ -613,6 +671,8 @@ function report = import(modelFilename, outputDirectory, options)
         
         delete(printer);
     end
+
+    SysMLConnector.internal.StatusMonitor.publishEvent('ImportComplete', originalModelFilename, 'Import of %s complete.', originalModelFilename);
 
     % <ProductSupportPackage><Protect/></ProductSupportPackage>
 end

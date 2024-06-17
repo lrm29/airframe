@@ -43,6 +43,8 @@ classdef CandidateEnum < SysMLConnector.internal.CandidateElement
         end
 
         function prelimBuild(this, builder)
+            SysMLConnector.internal.StatusMonitor.publishEvent('BuildEnumeration', this.ExtElementID, 'Building enumeration %s (%i of %i).', this.Name, builder.getEnumerationIdx, builder.EnumerationCount);
+
             this.BuildName = builder.makeValidName(this.Name);
             builder.AllEnumNames = [builder.AllEnumNames string(this.BuildName)];
 

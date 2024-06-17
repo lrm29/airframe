@@ -33,7 +33,37 @@ classdef Builder < handle
         Profiles = []
 
         NotImported = []; % Stuff that failed to build should get added here.
+        BuildComplete = false; % if false, then delete method knows the import did not exit cleanly.
         Stats 
+    end
+
+    properties (SetAccess=private)
+        % These are set by the importer before building for the status
+        % monitor.
+        ActivityCount
+        AllocationCount
+        ArchitectureCount
+        EnumerationCount
+        InteractionCount
+        InterfaceCount
+        PackageCount
+        ProfileCount
+        RequirementCount
+        RequirementLinkCount
+    end
+    
+    properties (Access=private)
+        % These are incremented when they are retrieved for the status monitor.
+        ActivityIdx        = 0
+        AllocationIdx      = 0
+        ArchitectureIdx    = 0
+        EnumerationIdx     = 0
+        InteractionIdx     = 0
+        InterfaceIdx       = 0
+        PackageIdx         = 0
+        ProfileIdx         = 0
+        RequirementIdx     = 0
+        RequirementLinkIdx = 0
     end
  
     methods
@@ -62,6 +92,8 @@ classdef Builder < handle
                     dtypeMapping(k,2);
             end
             
+            SysMLConnector.internal.StatusMonitor.publishEvent('BuilderCreateProject', buildProj, 'Creating project %s.', buildProj);
+
             pPath = buildDir + filesep + buildProj;
             this.RootProject = matlab.project.createProject(...
                 'Name', buildProj, 'Folder', pPath);
@@ -74,6 +106,7 @@ classdef Builder < handle
             this.ProjectSLDDName = this.makeValidName(buildProj) + "_DD.sldd";
             ddFile = this.ProjectPath + filesep + this.ProjectSLDDName;
 
+            SysMLConnector.internal.StatusMonitor.publishEvent('BuilderCreateDataDictionary', this.ProjectSLDDName, 'Creating data dictionary.');
             try
                 this.ProjectSLDD = systemcomposer.createDictionary(ddFile);
             catch ME
@@ -120,12 +153,27 @@ classdef Builder < handle
         end
         
         function delete(this)
+            % Check to see if the import was successful
+            if ~this.BuildComplete
+                warning('SysMLConnector:import:CancelBuild', 'Import aborted. Performing clean up. It is recommended that you let the clean up complete on its own.');
+            end
+
+            % The builder needs to exit cleanly so do not allow the status
+            % monitor to abort the build during builder delete.
+            SysMLConnector.internal.StatusMonitor.inhibitCancelRequest;
+            cleanup = onCleanup(@SysMLConnector.internal.StatusMonitor.uninhibitCancelRequest);
+
+            SysMLConnector.internal.StatusMonitor.publishEvent('FinalizingBuild', '', 'Finalizing build.');
+
             allMdls = this.ArchModelExtIDMap.values;
             
-            for k = 1:length(this.Profiles)
+            numProfiles = length(this.Profiles);
+            for k = 1:numProfiles
+                SysMLConnector.internal.StatusMonitor.publishEvent('SavingProfiles', this.Profiles(k).Name, 'Saving profiles (%i of %i).', k, numProfiles);
                 this.Profiles(k).save;
             end
             
+            SysMLConnector.internal.StatusMonitor.publishEvent('AddingShutdownFileToProject', '', 'Adding shutdown file to project.');
             % Create a shutdown file to ensure all Profiles close
             sdownFile = this.ProjectPath + filesep + "projectShutdown.m";
             fid = fopen(sdownFile, 'w');
@@ -139,35 +187,48 @@ classdef Builder < handle
             this.RootProject.addFile(sdownFile);
             this.RootProject.addShutdownFile(sdownFile);
             
-            for k = 1:length(allMdls)
-                save_system(allMdls{k}, '', ...
+            numModels = length(allMdls);
+            for k = 1:numModels
+                modelHandle = allMdls{k};
+                modelName = get_param(modelHandle, 'Name');
+                SysMLConnector.internal.StatusMonitor.publishEvent('SavingAndClosingModels', modelName, 'Saving and closing models, %s (%i of %i).', modelName, k, numModels);
+                save_system(modelHandle, '', ...
                             'SaveDirtyReferencedModels', 'on');
-                close_system(allMdls{k});
+                close_system(modelHandle);
             end
 
-            for k = 1:length(this.AllocationSets)
+            numAllocationSets = length(this.AllocationSets);
+            for k = 1:numAllocationSets
                 allocationSet = this.AllocationSets(k);
+                SysMLConnector.internal.StatusMonitor.publishEvent('SavingAndClosingAllocationSets', allocationSet.Name, 'Saving and closing allocation sets (%i of %i).', k, numAllocationSets);
                 save(allocationSet);
                 close(allocationSet);
             end
             
             if ~isempty(this.ReqFile)
+                SysMLConnector.internal.StatusMonitor.publishEvent('SavingAndClosingRequirementSet', this.ReqFile.Name, 'Saving and closing requirement set.');
                 this.ReqFile.save;
                 this.ReqFile.close;
             end
             
-            for k = 1:length(this.AllLinkSets)
+            numLinkSets = length(this.AllLinkSets);
+            for k = 1:numLinkSets
+                SysMLConnector.internal.StatusMonitor.publishEvent('AddingLinksetsToProject', this.AllLinkSets(k), 'Adding requirement link sets to project (%i of %i).', k, numLinkSets);
                 this.RootProject.addFile(this.AllLinkSets(k));
             end
             
-            for k = 1:length(this.Profiles)
+            numProfiles = length(this.Profiles);
+            for k = 1:numProfiles
+                SysMLConnector.internal.StatusMonitor.publishEvent('ClosingProfiles', this.Profiles(k).Name, 'Closing profiles (%i of %i).', k, numProfiles);
                 this.Profiles(k).close;
             end
 
             if ~isempty(this.ProjectSLDD) && isvalid(this.ProjectSLDD) && isOpen(this.ProjectSLDD) 
+                SysMLConnector.internal.StatusMonitor.publishEvent('SavingDataDictionary', this.ProjectSLDDName, 'Saving data dictionary.');
                 this.ProjectSLDD.save;
             end
 
+            SysMLConnector.internal.StatusMonitor.publishEvent('ClosingProject', this.RootProject.Name, 'Closing imported project.');
             this.RootProject.close;
         end
 
@@ -191,6 +252,8 @@ classdef Builder < handle
             enumTypes = SysMLConnector.internal.CandidateElement.idMap(...
                 "getElems", "SysMLConnector.internal.CandidateEnum");
 
+            this.EnumerationCount = numel(enumTypes);
+
             arrayfun(@(enumType) prelimBuild(enumType, this), [enumTypes{:}]);
         end
         
@@ -205,7 +268,8 @@ classdef Builder < handle
             intfTypes = [valueTypes intfTypes];
 
             allIntfNames = [];
-            for k = 1:length(intfTypes)
+            this.InterfaceCount = length(intfTypes);
+            for k = 1:this.InterfaceCount
                 thisIntf = intfTypes{k};
                 if thisIntf.doBuild()
                     allIntfNames = [allIntfNames this.makeValidName(thisIntf.Name)]; %#ok<AGROW>
@@ -316,12 +380,15 @@ classdef Builder < handle
         end
 
         function archMdl = createActivityDiagram(this, candAct)
+            SysMLConnector.internal.StatusMonitor.publishEvent('BuildActivity', candAct.ExtElementID, 'Building activity %s (%i of %i).', candAct.Name, this.getActivityIdx, this.ActivityCount);
+
             archMdlName = this.getModelName(candAct.Name);
             candAct.BuildName = archMdlName;
 
             try
                 publish(candAct);
             catch ME
+                SysMLConnector.internal.StatusMonitor.publishEvent('BuildActivityFailed', candAct.ExtElementID, 'Build of activity %s did not exit cleanly.', candAct.Name);
                 warning('SysMLConnector:internal:Builder:FailedToBuildActivityDiagram', 'Unable to complete build of activity diagram ''%s'' with ID ''%s''. Error: %s (%i).', candAct.Name, candAct.ExtElementID, ME.identifier, ME.stack(1).line);
             end
 
@@ -346,6 +413,8 @@ classdef Builder < handle
         end
 
         function interactionMdl = createInteraction(this, candInteraction)
+            SysMLConnector.internal.StatusMonitor.publishEvent('BuildInteraction', candInteraction.ExtElementID, 'Building interaction %s (%i of %i).', candInteraction.Name, this.getInteractionIdx, this.InteractionCount);
+
             archMdlName = this.getModelName(candInteraction.Name);
             candInteraction.BuildName = archMdlName;
             publish(candInteraction);
@@ -430,6 +499,8 @@ classdef Builder < handle
         end
         
         function intf = createInterface(this, intfExtID, intfName)
+            SysMLConnector.internal.StatusMonitor.publishEvent('BuildInterface', intfExtID, 'Building interface %s (%i of %i).', intfName, this.getInterfaceIdx, this.InterfaceCount);
+
             assert(~this.IntfExtIDMap.isKey(intfExtID));
             intf = this.ProjectSLDD.addInterface(char(intfName));
             this.IntfExtIDMap(intfExtID) = intf;
@@ -437,6 +508,7 @@ classdef Builder < handle
         end
 
         function valueType = createValueType(this, intfExtID, intfName)
+            SysMLConnector.internal.StatusMonitor.publishEvent('BuildInterface', intfExtID, 'Building interface %s (%i of %i).', intfName, this.getInterfaceIdx, this.InterfaceCount);
             assert(~this.IntfExtIDMap.isKey(intfExtID));
             valueType = this.ProjectSLDD.addValueType(char(intfName));
             this.IntfExtIDMap(intfExtID) = valueType;
@@ -561,8 +633,11 @@ classdef Builder < handle
         end
         
         function createProfiles(this, candProfiles)
-            for k = 1:length(candProfiles)
+            numProfiles = length(candProfiles);
+            for k = 1:numProfiles
                 thisProf = candProfiles(k);
+
+                SysMLConnector.internal.StatusMonitor.publishEvent('BuildingProfile', thisProf.Name, 'Building profile %s (%i of %i).', thisProf.Name, this.getProfileIdx, this.ProfileCount);
                 if ~isempty(thisProf.Stereotypes)
                     % Fixup names of stereotypes to be unique. This happens
                     % because stereotypes in different packages in the same profile
@@ -586,8 +661,11 @@ classdef Builder < handle
                     this.Stats.NumProfiles = this.Stats.NumProfiles + 1;
                     
                     % Add stereotypes 
-                    for p = 1:length(thisProf.Stereotypes)
+                    numStereotypes = length(thisProf.Stereotypes);
+                    for p = 1:numStereotypes
                         st = thisProf.Stereotypes(p);
+                        SysMLConnector.internal.StatusMonitor.publishEvent('BuildingStereotype', st.ExtElementID, 'Building stereotype %s (%i of %i).', st.Name, p, numStereotypes);
+
                         st.ZCElement = newProf.addStereotype(st.Name);
                         props = st.Properties;
                         this.Stats.NumStereotypes = this.Stats.NumStereotypes + 1;
@@ -841,9 +919,14 @@ classdef Builder < handle
                 return;
             end
 
+            % Update the allocation count to the valid ones.
+            this.AllocationCount = numel(candidateAllocations);
+
             % Populate the allocation sets and scenarios.
-            for allocationIdx = 1:numel(candidateAllocations)
+            for allocationIdx = 1:this.AllocationCount
                 candidateAllocation = candidateAllocations(allocationIdx);
+
+                SysMLConnector.internal.StatusMonitor.publishEvent('BuildAllocations', candidateAllocation.ExtElementID, 'Building allocations (%i of %i).', this.getAllocationIdx, this.AllocationCount);
 
                 allocSetName = candidateAllocation.AllocationSetName;
                 if isempty(candidateAllocation.Model)
@@ -919,6 +1002,7 @@ classdef Builder < handle
                 this.makeValidName(this.BuildProject) + "_REQ.slreqx";
             this.ReqFileName = reqFileName;
             
+            SysMLConnector.internal.StatusMonitor.publishEvent('BuilderCreateRequirementSet', reqFileName, 'Creating requirement set ''%s''.', reqFileName);
             try
                 this.ReqFile = slreq.new(reqFileName);
             catch ME
@@ -937,6 +1021,9 @@ classdef Builder < handle
 
             for k = 1:length(candReqs)
                 thisReq = candReqs{k};
+                
+                SysMLConnector.internal.StatusMonitor.publishEvent('BuilderRequirements', thisReq.ExtElementID, 'Building requirements (%i of %i).', this.getRequirementIdx, this.RequirementCount);
+                                
                 if isempty(thisReq.ParentRequirement)
                     this.recAddRequirementToSet(thisReq, ...
                                                 this.ReqFile);
@@ -950,16 +1037,23 @@ classdef Builder < handle
             originalWarnState = warning('off', 'Slvnv:oslc:LinkExists');
             cleanup = onCleanup(@() warning(originalWarnState));
             
-            for k = 1:length(allMdls)
-                save_system(allMdls{k}, '', ...
+            numModels = length(allMdls);
+            for k = 1:numModels
+                modelHandle = allMdls{k};
+                modelName = get_param(modelHandle, 'Name');
+                SysMLConnector.internal.StatusMonitor.publishEvent('BuilderSaveModelsBeforeLinking', modelName, 'Saving all models before adding requirement links, %s (%i of %i).', modelName, k, numModels);
+                save_system(modelHandle, '', ...
                             'SaveDirtyReferencedModels', 'on');
             end
             
-            
             for k = 1:length(candReqLinks)
                 thisLink = candReqLinks{k};
+
+                reqIndex = this.getRequirementLinkIdx;
+                SysMLConnector.internal.StatusMonitor.publishEvent('BuilderRequirementLink', thisLink.ExtElementID, 'Building requirement link (%i of %i).', reqIndex, this.RequirementLinkCount);
                 
                 if ~thisLink.Valid || isempty(thisLink.Client.LinkTarget) || isempty(thisLink.Supplier.LinkTarget)
+                    SysMLConnector.internal.StatusMonitor.publishEvent('BuilderRequirementLinkNotValid', thisLink.ExtElementID, 'Requirement link %i of %i not valid.', reqIndex, this.RequirementLinkCount);
                     addNotImported(this, thisLink, 'Requirement Link', 'Link not valid during build. Probably due to a missing link end or a link between elements that are not linkable.');
                     continue;
                 end
@@ -1040,6 +1134,68 @@ classdef Builder < handle
                 ls.save;
             end
         end
-        
+
+
+        function updateBuildCounts(builder, activityCount, allocationCount, architectureCount, interactionCount, packageCount, profileCount, requirementCount, requirementLinkCount)
+            % This is set by the import function and used by the status monitor.
+            builder.ActivityCount        = activityCount;
+            builder.AllocationCount      = allocationCount;
+            builder.ArchitectureCount    = architectureCount;
+            builder.InteractionCount     = interactionCount;
+            builder.PackageCount         = packageCount;
+            builder.ProfileCount         = profileCount;
+            builder.RequirementCount     = requirementCount;
+            builder.RequirementLinkCount = requirementLinkCount;
+        end
+
+        function index = getActivityIdx(this)
+            this.ActivityIdx = this.ActivityIdx + 1;
+            index = this.ActivityIdx;
+        end
+
+        function index = getAllocationIdx(this)
+            this.AllocationIdx = this.AllocationIdx + 1;
+            index = this.AllocationIdx;
+        end
+
+        function index = getArchitectureIdx(this)
+            this.ArchitectureIdx = this.ArchitectureIdx + 1;
+            index = this.ArchitectureIdx;
+        end
+
+        function index = getEnumerationIdx(this)
+            this.EnumerationIdx = this.EnumerationIdx + 1;
+            index = this.EnumerationIdx;
+        end
+
+        function index = getInteractionIdx(this)
+            this.InteractionIdx = this.InteractionIdx + 1;
+            index = this.InteractionIdx;
+        end
+
+        function index = getInterfaceIdx(this)
+            this.InterfaceIdx = this.InterfaceIdx + 1;
+            index = this.InterfaceIdx;
+        end
+
+        function index = getPackageIdx(this)
+            this.PackageIdx = this.PackageIdx + 1;
+            index = this.PackageIdx;
+        end
+
+        function index = getProfileIdx(this)
+            this.ProfileIdx = this.ProfileIdx + 1;
+            index = this.ProfileIdx;
+        end
+
+        function index = getRequirementIdx(this)
+            this.RequirementIdx = this.RequirementIdx + 1;
+            index = this.RequirementIdx;
+        end
+
+        function index = getRequirementLinkIdx(this)
+            this.RequirementLinkIdx = this.RequirementLinkIdx + 1;
+            index = this.RequirementLinkIdx;
+        end
     end
 end
