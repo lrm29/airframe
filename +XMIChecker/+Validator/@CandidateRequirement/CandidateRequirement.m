@@ -2,12 +2,12 @@ classdef CandidateRequirement < XMIChecker.Validator.Validator
     %CANDIDATEREQUIREMENT validates candidate requirements
 
     methods
-        function obj = CandidateRequirement(candidate,~,~)
+        function obj = CandidateRequirement(candidate,xmidb,~)
             %CANDIDATEREQUIREMENT Construct an instance of this class
             % process requirement on arrival
             arguments
                 candidate (1,1) SysMLConnector.internal.CandidateRequirement
-                ~
+                xmidb (1,1) SysMLConnector.internal.CandidateAD.internal.XMIDatabase
                 ~
             end
             % store the candidate
@@ -26,14 +26,35 @@ classdef CandidateRequirement < XMIChecker.Validator.Validator
                         if strcmp(requirement.Description,candidate.Text) && ...
                                 strcmp(requirement.Summary,candidate.Name)
                             % going to assume ID + Text is unique
-                            obj.pass = 1;
+                            if ismember("ExternalUID", ...
+                                    requirementSet.CustomAttributeNames)
+                                % the XMIDB can be checked so check
+                                if ismember( ...
+                                        requirement.getAttribute("ExternalUID"), ...
+                                        xmidb.LookupTable.keys)
+                                    % found it 
+                                    obj.pass = 1;
+                                else
+                                    % did not find this in the XMIDB 
+                                    % failure
+                                    obj.fail = obj.fail + 1;
+                                end
+                            else
+                                % unable to confirm requirement in XMIDB
+                                % add a warning
+                                obj.warn = obj.warn + 1;
+                                % mark the result as a failure
+                                obj.fail = obj.fail + 1;
+                            end
                             % passed so we are done
+                            close(requirementSet);
                             return;
                         end
                     end
                 end
+                % close the requirement set before going on
+                close(requirementSet);
             end
-            %% TODO: check XMI database
             % nothing is found fail
             obj.fail = 1;
         end
