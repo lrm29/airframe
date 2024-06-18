@@ -71,18 +71,23 @@ classdef CheckXMIDB < padv.Task
             
             try
                 % make sure output exists
-                if exist(obj.resolvePath(obj.OutputDirectory),"dir")
-                    rmdir(obj.resolvePath(obj.OutputDirectory),"s");
-                end
-                mkdir(obj.resolvePath(obj.OutputDirectory));
+                if ~exist(obj.resolvePath(obj.OutputDirectory),"dir")
+                    mkdir(obj.resolvePath(obj.OutputDirectory));
+                end                
                 % get working artifact
                 xmiArtifact = XMIImporterCI.utilities.rerunQuery( ...
                     obj.IterationQuery,inputArtifacts{1});
                 % check if this artifact is an MDZip file and if so convert
                 xmiArtifactFilepath = ...
                     xmiArtifact.ArtifactAddress.getFileAddress();
-                [~,~,ext] = fileparts(xmiArtifactFilepath);
+                [~,xmiFileName,ext] = fileparts(xmiArtifactFilepath);
                 if strcmp(ext,".mdzip")
+                    xmiFilePath = fullfile( ...
+                            obj.resolvePath(obj.OutputDirectory),xmiFileName+".xml");
+                    if exist(xmiFilePath,"file")                            
+                        % need to clear the old XMI file extracted
+                        delete(xmiFilePath);
+                    end
                     xmiArtifactFilepath = ...
                         SysMLConnector.internal.utils.getModelFile( ...
                         xmiArtifactFilepath, ...
