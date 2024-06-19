@@ -18,8 +18,16 @@ classdef Allocation < XMIChecker.Validator.Validator
                     % no parent but expected? no
                     obj.fail = 1;
                 else
-                    % this is weird
-                    obj.warn = 1;
+                    % check if one end is missing 
+                    if ismember(candidate.SourceID,foundElements.keys) && ...
+                        ismember(candidate.TargetID,foundElements.keys)
+                        % this is weird, both ends exist
+                        obj.warn = 1;
+                    else
+                        % this means the allocation could not be built and
+                        % was marked correctly
+                        obj.pass = 1;
+                    end
                 end
                 % no need to analyze nothing
                 return;

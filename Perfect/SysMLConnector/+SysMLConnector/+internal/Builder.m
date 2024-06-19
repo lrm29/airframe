@@ -908,11 +908,11 @@ classdef Builder < handle
                 candidateAllocations = [candidateAllocations{:}];
             end
             
+            % Set the build flag to false for the checker.
+            arrayfun(@(invalidAllocation) set(invalidAllocation, "Build", false), candidateAllocations(~[candidateAllocations.IsValid]));
             % At this point, the source and target should be valid. If
             % they are not, nothing can be done to fix it.
             candidateAllocations = candidateAllocations([candidateAllocations.IsValid]);
-            % Set the build flag to false for the checker.
-            arrayfun(@(invalidAllocation) set(invalidAllocation.Build, false), candidateAllocations(~[candidateAllocations.IsValid]));
             
             if isempty(candidateAllocations)
                 % Nothing to do.
