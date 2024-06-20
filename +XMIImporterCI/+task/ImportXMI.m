@@ -109,6 +109,9 @@ classdef ImportXMI < padv.Task
                     outputDirectory); 
                 fprintf('***Import complete for ''%s''.\n', ...
                     artifactToUse.ArtifactAddress.getFileAddress);
+                %% set the pass and warn based on report
+                taskResult.ResultValues.Pass = numel(report.imported);
+                taskResult.ResultValues.Warn = numel(report.NotImported);
                 %% get some outputs setup
                 outputFiles = ...
                     [outputProjectPath+"_report.txt",...
