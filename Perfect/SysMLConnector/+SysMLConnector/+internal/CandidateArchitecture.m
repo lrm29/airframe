@@ -384,6 +384,44 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
             end
         end
         
+        function canInline = canBeInlined(this,checkedArchitectures)
+            % checks to see if this candidate can be inlined 
+            %
+            % arguments:
+            % this - this
+            % checkedArchitectures - array of candidates to make sure this
+            % does not get stuck in a loop
+            %
+            % return:
+            % canInLine - true/false indicating if the architecture can be
+            % inlined without orphaning elements
+            arguments
+                this SysMLConnector.internal.CandidateArchitecture  
+                checkedArchitectures SysMLConnector.internal.CandidateArchitecture ...
+                    = SysMLConnector.internal.CandidateArchitecture.empty
+            end
+            checkedArchitectures = [checkedArchitectures,this];
+            % first check if this has a reference component
+            if isempty(this.ReferencingComps) || ...
+                    isempty(this.ReferencingComps.ParentArchitecture)
+                % no reference means need to build the architecture
+                canInline = false;
+            elseif any(checkedArchitectures == ...
+                    this.ReferencingComps.ParentArchitecture)
+                % this means that we have hit a loop meaning we can't
+                % inline this architecture
+                canInline = false;
+            elseif this.ReferencingComps.ParentArchitecture.Build
+                % if the parent is being built the reference component will
+                % be
+                canInline = this.ReferencingComps.ParentArchitecture.Build;
+            else
+                % this means the the reference components parent is new and
+                % not being built directly
+                % need to get the answer from it
+                canInline = this.ReferencingComps.ParentArchitecture.canBeInlined(checkedArchitectures);
+            end
+        end
     end
     
     methods
@@ -667,7 +705,7 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
                         % Remove the circular reference.
                         thisComp.ReferenceArch = [];
                         thisComp.ReferenceArchExtElementID = [];
-                        
+
                         thisNotImported = thisComp.createNotImported('Architecture Reference', 'Circular behavioral references are not permitted so the component behavior was ignored.');
                         notImported = [notImported thisNotImported]; %#ok<AGROW>
 
@@ -788,13 +826,26 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
                 % If a single reference, check if we should inline
                 aPrj = this.ParentPackage;
                 rcPrj = this.ReferencingComps.ParentArchitecture.ParentPackage;
-                if aPrj.ExtElementID == rcPrj.ExtElementID || ...
+                if (aPrj.ExtElementID == rcPrj.ExtElementID || ...
                         inlineSingleUseArchsAcrossPackages || ...
-                        this.Derived
+                        this.Derived) && this.canBeInlined()
                     this.IsInlined = true;
                     this.ReferencingComps.IsInliningItsArch = true;
                     this.ParentPackage = rcPrj; % Fixup parent pkg link for book keeping
                     build = false; % Will be built when building the Component instead of Prj
+                    % need to check if the reference component is part of a
+                    % loop
+                    % any inlined architecture cannot be part of a loop
+                    % since it will only be implemented as a single
+                    % component in the parent architecture
+                    % also, the loop detection will remove reference
+                    % architecture from components in this architecture
+                    % that from a loop
+                    if isempty(this.ReferencingComps.ReferenceArch)
+                        this.ReferencingComps.ReferenceArch = this;
+                        this.ReferencingComps.ReferenceArchExtElementID = ...
+                            this.ExtElementID;
+                    end
                 end
             end
             this.Build = build;
@@ -852,7 +903,8 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
             % Do prelim build of inline Components
             for p = 1:length(cComps)
                 thisComp = cComps(p);
-                if thisComp.Valid && thisComp.IsInliningItsArch
+                if thisComp.Valid && thisComp.IsInliningItsArch && ...
+                        ~isempty(thisComp.ReferenceArch)
                     thisComp.ReferenceArch.prelimBuildArchBody(...
                         thisComp.ZCElement.Architecture, builder);
                 end
