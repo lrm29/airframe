@@ -8,7 +8,8 @@ pipeline = padv.pipeline.GitLabOptions;
 pipeline.Tags = "long-jobs";
 pipeline.RerunFailedTasks = true;
 pipeline.RerunErroredTasks = true;
-pipeline.MatlabLaunchCmd = "mw -using BR2024ad matlab";
+releaseInfo = matlabRelease;
+pipeline.MatlabLaunchCmd = "mw -using B"+releaseInfo.Release+"d matlab";
 pipeline.MatlabStartupOptions = "-logfile output.log";
 % force for now
 pipeline.ForceRunAllTasks = options.force;

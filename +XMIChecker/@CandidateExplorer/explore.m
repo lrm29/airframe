@@ -14,6 +14,7 @@ elseif isa(candidate,"dictionary")
     end
 elseif isscalar(candidate)
     if isenum(candidate) || ...
+            ismissing(candidate) || ...
             (~isstruct(candidate) && ~isvalid(candidate))
         % invalid stop digging
         return;

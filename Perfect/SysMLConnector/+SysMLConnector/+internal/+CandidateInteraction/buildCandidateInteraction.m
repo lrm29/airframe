@@ -48,4 +48,14 @@ function [candidateInteraction, notImported] = buildCandidateInteraction(element
             SysMLConnector.internal.CandidateAllocation.Allocation(lifelineID, referenceID, Name='', ExternalID=allocationID);
         end
     end
+
+    %% Collect Fragment Data
+    if ~isMATLABReleaseOlderThan("R2024b")
+        % only check fragments in R2024b and later
+        for fragmentIdx = 1:element.fragment.size
+            umlFragment = element.fragment.at(fragmentIdx);
+            candidateInteraction.addFragment(umlFragment);
+        end
+    end
 end
+

@@ -1,7 +1,12 @@
-classdef Interaction < SysMLConnector.internal.CandidateInteraction.Element
+classdef Interaction < SysMLConnector.internal.CandidateInteraction.Element & ...
+        SysMLConnector.internal.CandidateInteraction.OperandReporter
     properties
         Lifelines
         RootFragment
+        Messages
+        LifeLineMap = dictionary();
+        Fragments
+        MessageMap = dictionary();
     end
 
     properties % Build Properties
@@ -61,13 +66,14 @@ classdef Interaction < SysMLConnector.internal.CandidateInteraction.Element
 
         function postPublish(this, varargin)
             arrayfun(@publish, this.Lifelines);
-
+            arrayfun(@publish, this.Fragments);
             Simulink.BlockDiagram.arrangeSystem(this.ZCElement.Name);
         end
 
         function lifeline = addLifeline(this, name, externalID)
             lifeline = SysMLConnector.internal.CandidateInteraction.Lifeline(name, externalID, this);
             this.Lifelines = [this.Lifelines lifeline];
+            this.LifeLineMap(externalID) = lifeline;
         end
 
         function linkPackage(this)            
@@ -100,5 +106,8 @@ classdef Interaction < SysMLConnector.internal.CandidateInteraction.Element
         function postPrint(this, printer)
             printer.closeScope("SequenceDiagram: " + this.Name);
         end
+
+        message = addMessage(this,name,externalID,to,from);
+        fragment = addFragment(this,element);
     end
 end
