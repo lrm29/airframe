@@ -27,8 +27,7 @@ else
         % this means it was not buildable but was built...
         obj.pass = 0;
         obj.fail = 1;
-    end
-    if obj.fail > 0
+    elseif obj.fail > 0 % use elseif as can only be pass or fail
         % this is actually the expected result, it isn't buildable and
         % wasn't built
         obj.fail = 0;
