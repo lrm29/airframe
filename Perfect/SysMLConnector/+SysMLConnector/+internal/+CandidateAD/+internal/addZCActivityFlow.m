@@ -35,14 +35,15 @@ function flow = addZCActivityFlow(source, destination, NameValueArgs)
             compPort = systemcomposer.utils.getArchitecturePeer(sourcePortHandle);
             conn = compPort.getConnectors;
             flow = conn.getTrait(systemcomposer.activitydiagram.model.Flow.StaticMetaClass);
+            errorCount = 0;
         catch ME
             errorCount = errorCount + 1;
 
             % Wait to see if the queue just needs more time.
-            pause(0.250);
+            pause(0.250*errorCount);
         end
 
-        if errorCount > 2
+        if errorCount > 9
             error('SysMLConnector:internal:CandidateAD:internal:addZCActivityFlow:MissingFlow', 'Missing activity flow.\n  Parent Path: %s\n  Source Expression: %s\n  Destination Expression: %s\n Error Code: %s (%i)\n', parentPath, sourceExpression, destinationExpression, ME.identifier, ME.stack(1).line);
         end
     end
