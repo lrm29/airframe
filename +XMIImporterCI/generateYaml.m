@@ -4,17 +4,8 @@ arguments
     % so we can tune this later
     options.force = false
 end
-pipeline = padv.pipeline.GitLabOptions;
-pipeline.Tags = "long-jobs";
-pipeline.RerunFailedTasks = true;
-pipeline.RerunErroredTasks = true;
-releaseInfo = matlabRelease;
-pipeline.MatlabLaunchCmd = "mw -using B"+releaseInfo.Release+"d matlab";
-pipeline.MatlabStartupOptions = "-logfile output.log";
-% force for now
-pipeline.ForceRunAllTasks = options.force;
-padv.pipeline.generateGitLabPipeline(pipeline);
-
+%% call to generate pipeline
+pipeline = citools.utilities.generateYaml(force=options.force,Tags="long-jobs");
 %% need to add wokrflow info
 files = dir(pipeline.GeneratedPipelineDirectory);
 files = files(~[files.isdir]);
@@ -25,9 +16,9 @@ for i = 1:numel(files)
     %% add workflow to the yaml
     newLines = {'workflow:',sprintf('  rules:'),...
         sprintf('    - if: ''$CI_PIPELINE_SOURCE == "merge_request_event"'''),...
-        sprintf('      variables:'),sprintf('        RUNALL: "yes"'),...
-        sprintf('    - if: ''$CI_PIPELINE_SOURCE != "merge_request_event"'''),...
-        sprintf('      variables:'),sprintf('        RUNALL: ""')};
+        ...%sprintf('      variables:'),sprintf('        RUNALL: "yes"'),...
+        sprintf('    - if: ''$CI_PIPELINE_SOURCE != "merge_request_event"''')};%,...
+        %sprintf('      variables:'),sprintf('        RUNALL: ""')};
     lines = [newLines,lines];
     %% save to file
     text = strjoin(lines,newline);
