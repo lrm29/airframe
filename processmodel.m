@@ -88,9 +88,9 @@ checkMDZIPTask.dependsOn(importMDZIPTask);
 addInputQueries(checkMDZIPTask, ...
     padv.builtin.query.GetOutputsOfDependentTask(Task=importMDZIPTask.Name));
 % make sure pspt is last
-if includePSPT
-    psptTask.dependsOn(checkMDZIPTask); % replace when second check task is added
-    psptTask.dependsOn(checkTask);
+if includePSPT && isempty(getenv("DEVMODE"))
+    importTask.dependsOn(psptTask); % replace when second check task is added
+    importMDZIPTask.dependsOn(psptTask);
 end
 
 % !PROCESSMODEL_EDITOR_MARKER! %
