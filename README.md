@@ -8,7 +8,7 @@ This PSP is a replacement of the XMI PSP that ships with R2024a and earlier rele
 - Profiles, Stereotypes, Stereotype Properties
 - Requirements (No stereotypes for now)
 - Activity Diagrams (No stereotypes or Swimlanes for now)
-- Sequence Diagrams (Lifelines only for now)
+- Sequence Diagrams
 
 **To-Do:**
 - State Diagrams

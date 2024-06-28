@@ -1,0 +1,61 @@
+# Copyright 2023 The MathWorks, Inc.
+
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+  MATLAB_LOG_FILE: "MATLAB_Log_Output.txt"
+
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_PIPELINE_SOURCE != "merge_request_event"'
+
+stages:
+  - SimulinkPipelineGeneration
+  - SimulinkPipelineExecution
+
+# Do not change the name of the jobs in this pipeline
+SimulinkPipelineGeneration:
+    
+    stage: SimulinkPipelineGeneration
+
+    tags:
+        - long-jobs
+
+    script:
+    # Open the project and generate the pipeline using
+    # appropriate options in project root
+        - >
+            mw -using B"$MATLAB_VERSION"d matlab
+            -nodesktop
+            -logfile "$MATLAB_LOG_FILE"
+            -batch "
+            cp = openProject(pwd);
+            XMIImporterCI.generateYaml(force=$FORCE);
+            "
+  
+    artifacts:
+        
+        paths:
+        # This file is generated automatically by 
+        # padv.pipeline.generatePipeline. Update this field if the 
+        # name or location of the generated pipeline file is changed
+            - derived/pipeline
+
+SimulinkPipelineExecution:
+
+  stage: SimulinkPipelineExecution
+
+  trigger:
+        
+    include: 
+      - artifact: derived/pipeline/simulink_pipeline.yml
+        job: SimulinkPipelineGeneration
+        
+    strategy: depend
+
+    forward:
+      pipeline_variables: true
+
+  # Do not change the name of this variable
+  variables:
+    PADV_ROOT_PIPELINE_ID: $CI_PIPELINE_ID 
