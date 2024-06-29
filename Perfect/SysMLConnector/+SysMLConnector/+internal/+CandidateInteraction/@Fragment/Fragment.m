@@ -6,6 +6,8 @@ classdef Fragment < SysMLConnector.internal.CandidateInteraction.Element & ...
         Type = []
         Operands = []
         DefaultGuard = missing % used to inform operands of default Guard value in some cases
+        Lifeline = []
+        NotImported = []
     end
 
     properties (SetAccess=protected) %Build Properties
@@ -29,20 +31,27 @@ classdef Fragment < SysMLConnector.internal.CandidateInteraction.Element & ...
                 warning("SysMLConnector:internal:CandidateInteraction:Fragement",...
                     "Fragments are not supported before R2024b.");
                 return;
-            end
+            end            
+            %% Parse the content of the fragment
             if isa(element,"umlmm.MessageOccurrenceSpecification")
                 % means this gives order to a message
+                messageExtID = SysMLConnector.internal.utils.getExtID(element.message);
                 if interaction.MessageMap.isConfigured && ismember( ...
-                        SysMLConnector.internal.utils.getExtID(element.message), ...
-                        [interaction.MessageMap.keys])
-                    % the message this fragment represents is already taken
-                    % care of
-                    return;
+                        messageExtID, [interaction.MessageMap.keys])
+                    % the message this fragment relates to has been created
+                    % link it to make sure the graph makes sense
+                    fragmentObj.Message = interaction.MessageMap(messageExtID);
                 else
                     % new message, add it
                     fragmentObj.Message = interaction.addMessage(...
                         fragmentObj,element.message);
                 end
+                % need the lifeline to register with the message
+                fragmentObj.Lifeline = interaction.LifeLineMap( ...
+                    SysMLConnector.internal.utils.getExtID( ...
+                    element.covered.at(1)));
+                % now register
+                fragmentObj.Message.registerFragment(fragmentObj);
             elseif isa(element,"umlmm.CombinedFragment")
                 % Combined Fragments have interaction constraints
                 fragmentObj.Type = systemcomposer.interaction.internal.fragmentTypeStrToEnum(...
@@ -67,7 +76,10 @@ classdef Fragment < SysMLConnector.internal.CandidateInteraction.Element & ...
                 end
             else
                 warning("SysMLConnector:internal:CandidateInteraction:Fragement", ...
-                    "Unhandled fragment type %s",class(element));
+                    "Unsupported fragment type %s",class(element));
+                fragmentObj.NotImported = fragmentObj.createNotImported( ...
+                    "Sequence Diagram Fragment",...
+                    sprintf("Unsupported fragement type %s.",class(element)));
             end
         end
 
