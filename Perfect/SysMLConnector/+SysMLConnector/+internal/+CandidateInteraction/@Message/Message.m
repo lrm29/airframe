@@ -2,6 +2,8 @@ classdef Message < SysMLConnector.internal.CandidateInteraction.Element
     properties (SetAccess=protected)
         From 
         To 
+        StartFragment
+        EndFragment
     end
 
     properties (SetAccess=protected)% Build Properties
@@ -27,6 +29,7 @@ classdef Message < SysMLConnector.internal.CandidateInteraction.Element
         end
 
         doPublish(this, varargin);
+        registerFragment(this, fragment);
     end
 
     methods (Static)

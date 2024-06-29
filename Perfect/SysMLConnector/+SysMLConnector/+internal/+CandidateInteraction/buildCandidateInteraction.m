@@ -56,6 +56,8 @@ function [candidateInteraction, notImported] = buildCandidateInteraction(element
             umlFragment = element.fragment.at(fragmentIdx);
             candidateInteraction.addFragment(umlFragment);
         end
+        % add the not imported to the output
+        notImported = [notImported, candidateInteraction.Fragments.NotImported];
     end
 end
 
