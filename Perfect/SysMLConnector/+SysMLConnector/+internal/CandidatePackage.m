@@ -16,6 +16,7 @@ classdef CandidatePackage < SysMLConnector.internal.CandidateElement
         Architectures = [];  
         Activities = [];
         Interactions = [];
+        StateMachines = [];
 
         Build = false;
         BuildParentPackage = [];
@@ -25,6 +26,7 @@ classdef CandidatePackage < SysMLConnector.internal.CandidateElement
         BuildInteractions  = [];
         BuildAllocations   = [];
         BuildEnumerations  = [];
+        BuildStateMachines = [];
         
         ZCProjectFolder = "";
     end
@@ -70,6 +72,14 @@ classdef CandidatePackage < SysMLConnector.internal.CandidateElement
         function addEnumeration(this, enumeration)
             this.Enumerations = [this.Enumerations enumeration];
         end
+
+        function addStateMachine(this,stateMachine)
+            arguments
+                this SysMLConnector.internal.CandidatePackage
+                stateMachine SysMLConnector.internal.CandidateStateMachine.StateMachine
+            end
+            this.StateMachines = [this.StateMachines,stateMachine];
+        end
         
         function print(this, printer)
             printer.openScope("Package: [Persist= " + ...
@@ -113,6 +123,8 @@ classdef CandidatePackage < SysMLConnector.internal.CandidateElement
             for k = 1:length(this.BuildInteractions)
                 this.BuildInteractions(k).prelimBuild(builder);
             end
+
+            arrayfun(@(sm) sm.prelimBuild(builder),this.StateMachines);
             
             % Unique child folder names
             if ~isempty(this.BuildChildPackages)
@@ -141,6 +153,7 @@ classdef CandidatePackage < SysMLConnector.internal.CandidateElement
             for k = 1:length(this.BuildChildPackages)
                 this.BuildChildPackages(k).finishBuild(builder)
             end               
+            arrayfun(@(sm) sm.finishBuild(builder),this.StateMachines);
         end
 
         function buildChildRet = recVisitForPrune(this)
@@ -187,6 +200,9 @@ classdef CandidatePackage < SysMLConnector.internal.CandidateElement
             
             % Build all sequence diagrams
             this.BuildInteractions = this.Interactions;
+
+            % Build all the state machines
+            this.BuildStateMachines = this.StateMachines;
             
             for k = 1:length(this.ChildPackages)
                 this.ChildPackages(k).recVisitForArchPrune(...

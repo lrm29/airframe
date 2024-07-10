@@ -861,6 +861,19 @@ classdef UMLVisitor < m3i.Visitor
             visitChildren(this, element.ownedBehavior);
         end
 
+        function ret = visitumlmmStateMachine(~, element)
+            % Import State Machine
+            ret = [];
+            try
+                SysMLConnector.internal.CandidateStateMachine.StateMachine(element,...
+                    SysMLConnector.internal.utils.getUMLPackageParentID(element));
+            catch
+                warning("SysMLConnector:internal:UMLVisitor", ...
+                    "Error occured while importing a state machine named %s.",...
+                    element.name);
+            end
+        end
+
         function ret = visitumlmmUseCase(this, element)
             % Import any behaviors but still log the use case itself as not
             % imported.

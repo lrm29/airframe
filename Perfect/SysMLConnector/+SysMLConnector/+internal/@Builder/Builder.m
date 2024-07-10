@@ -147,6 +147,7 @@ classdef Builder < handle
             this.Stats.NumStereotypeProps = 0;
             this.Stats.NumStereotypesApplied = 0;
             this.Stats.NumStereotypePropsSet = 0;
+            this.Stats.NumStateMachines = 0;
             
             populateEnumerations(this);
             populateInterfaces(this);
@@ -434,6 +435,8 @@ classdef Builder < handle
         
             this.Stats.NumInteractions = this.Stats.NumInteractions + 1;
         end
+
+        stateMachineMdl = createStateMachine(this,candStateMachine);
         
         function archMdl = createArchitectureModel(this, candArch)
             archMdlName = this.getModelName(candArch.Name);
