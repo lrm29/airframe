@@ -1,4 +1,4 @@
-classdef (Abstract) Validator < handle
+classdef Validator < handle
     %VALIDATOR base class for all validators
     % Picks correct validator for the type if no specific validator is
     % available switches to the default
@@ -10,6 +10,15 @@ classdef (Abstract) Validator < handle
         fail {mustBeNumeric} = 0
         % store candidate data
         candidate
+    end
+
+    methods
+        function validatorObj = Validator(candidate)
+            arguments
+                candidate = []
+            end
+            validatorObj.candidate = candidate;
+        end
     end
 
     methods (Access = protected)

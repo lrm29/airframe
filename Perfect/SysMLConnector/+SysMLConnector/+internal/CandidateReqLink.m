@@ -137,7 +137,11 @@ classdef CandidateReqLink < SysMLConnector.internal.CandidateElement
             cName = ""; 
             
             if ~isempty(this.Supplier)
-                sName = this.Supplier.Name;
+                try
+                    sName = this.Supplier.Name;
+                catch
+                    sName = '';
+                end
             end
             
             if ~isempty(this.Client)

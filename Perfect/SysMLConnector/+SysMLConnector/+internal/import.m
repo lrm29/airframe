@@ -452,6 +452,8 @@ function report = import(modelFilename, outputDirectory, options)
         "getElems", "SysMLConnector.internal.CandidateRequirement");
     candReqLinks = SysMLConnector.internal.CandidateElement.idMap(...
         "getElems", "SysMLConnector.internal.CandidateReqLink");
+    candStateMachines = SysMLConnector.internal.CandidateElement.idMap(...
+        "getElems", "SysMLConnector.internal.CandidateStateMachine.StateMachine");
 
     % Merge in generalizations
     numCandidateArchitectures = length(candArchs);
@@ -546,6 +548,9 @@ function report = import(modelFilename, outputDirectory, options)
         thisArch = candArchs{k};
         thisArch.fixFanInConnectors();
     end
+
+    % Link State Machines to their owning packages
+    cellfun(@(sm) sm.linkPackage(), candStateMachines);
     
     %% Link requirements to each other and model elements
     SysMLConnector.internal.StatusMonitor.publishEvent('LinkRequirements', 'Requirements', 'Creating requirements link candidates.');
@@ -630,7 +635,8 @@ function report = import(modelFilename, outputDirectory, options)
     % need to add a mechanism for not imported
     % impReport.imported = SysMLConnector.internal.CandidateElement.idMap("getAll");
     report.imported = [candPkgs, candArchs, candActivities, ...
-        candInteractions, candidateValueTypes, candIntfs, candAllocs, candReqs];
+        candInteractions, candidateValueTypes, candIntfs, candAllocs,...
+        candReqs, candStateMachines];
 
     %% Print for reporting
     if ~strcmp(repFileName, "")
