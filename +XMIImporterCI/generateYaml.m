@@ -5,7 +5,7 @@ arguments
     options.force = false
 end
 %% call to generate pipeline
-fprintf("Seen tags: %s\n",getenv("CI_RUNNER_TAGS"));
+fprintf("Seen tags: %s\n",getenv("TAGS"));
 pipeline = citools.utilities.generateYaml(force=options.force,Tags="long-jobs");
 %% need to add wokrflow info
 files = dir(pipeline.GeneratedPipelineDirectory);
