@@ -19,7 +19,7 @@ SimulinkPipelineGeneration:
     stage: SimulinkPipelineGeneration
 
     tags:
-        - long-jobs
+        - $TAGS
 
     script:
     # Open the project and generate the pipeline using
