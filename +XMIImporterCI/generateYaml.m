@@ -5,7 +5,7 @@ arguments
     options.force = false
 end
 %% call to generate pipeline
-pipeline = citools.utilities.generateYaml(force=options.force,Tags="long-jobs");
+pipeline = citools.utilities.generateYaml(force=options.force);
 %% need to add wokrflow info
 files = dir(pipeline.GeneratedPipelineDirectory);
 files = files(~[files.isdir]);
