@@ -8,7 +8,7 @@ end
 if isunix
     pipeline = citools.utilities.generateYaml(force=options.force, ...
         Tags=getenv("TAGS"), ...
-        matlabLaunchCmd="xvfb-run mw -using B"+citools.utilities.getVersion()+"d matlab");
+        matlabLaunchCmd="xvfb-run --auto-servernum --server-num=1 mw -using B"+citools.utilities.getVersion()+"d matlab");
 else
     pipeline = citools.utilities.generateYaml(force=options.force,Tags=getenv("TAGS"));
 end
