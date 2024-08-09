@@ -13,6 +13,7 @@ classdef Element < SysMLConnector.internal.CandidateElement & matlab.mixin.SetGe
     properties (Dependent)
         QualifiedName
         ElementType
+        Built
     end
     
     methods
@@ -41,6 +42,10 @@ classdef Element < SysMLConnector.internal.CandidateElement & matlab.mixin.SetGe
             else
                 qualifiedName = this.ZCElement.Name;
             end
+        end
+
+        function Built = get.Built(this)
+            Built = ~isempty(this.ZCElement);
         end
 
         function linkTarget = getLinkTarget(this)
