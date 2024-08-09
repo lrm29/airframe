@@ -1,4 +1,4 @@
-classdef Pin < XMIChecker.Validator.Default
+classdef Pin < XMIChecker.Validator.CandidateAD.Element
     %PIN validator for Pins
     
     methods
@@ -10,10 +10,11 @@ classdef Pin < XMIChecker.Validator.Default
                 foundElements dictionary
             end
             % call super constructor
-            obj@XMIChecker.Validator.Default(candidate,xmidb,foundElements);
+            obj@XMIChecker.Validator.CandidateAD.Element(candidate,xmidb,foundElements);
             % check token type
             if candidate.TokenType == ...
-                    systemcomposer.activitydiagram.model.TokenType.CONTROL
+                    systemcomposer.activitydiagram.model.TokenType.CONTROL ...
+                    && candidate.Built
                 % if control expect it not to be built so invert result
                 temp.fail = obj.fail;
                 temp.pass = obj.pass;
