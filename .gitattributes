@@ -1,6 +1,6 @@
 *.fig binary
 *.mat binary
-*.mdl binary diff merge=mlAutoMerge
+*.mdl binary merge=mlAutoMerge
 *.mdlp binary
 *.mexa64 binary
 *.mexw64 binary
@@ -16,7 +16,6 @@
 *.slmx binary merge=mlAutoMerge
 *.sltx binary
 *.slxc binary
-*.slx binary merge=mlAutoMerge
 *.slxp binary
 
 ## Other common binary file types
