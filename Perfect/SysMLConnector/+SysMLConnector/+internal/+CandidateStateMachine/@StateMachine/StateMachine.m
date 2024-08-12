@@ -1,13 +1,13 @@
-classdef StateMachine < SysMLConnector.internal.CandidateElement
+classdef StateMachine < SysMLConnector.internal.CandidateElement & ...
+        SysMLConnector.internal.CandidateStateMachine.RegionContainer
     %STATEMACHINE represents a state machine imported from SysML
 
     properties (SetAccess=protected)
         Name
         ParentPackageExtElementID
         ParentPackage
-        StateflowObj
         BuildName
-        Regions
+        StateflowObj
     end
     
     methods
@@ -22,13 +22,12 @@ classdef StateMachine < SysMLConnector.internal.CandidateElement
             stateMachineObj.Name = element.name;
             stateMachineObj.ParentPackageExtElementID = parentPackageExtElementID;
             % now to parse the regions
-            stateMachineObj.Regions = cell(element.region.size,1);
+            stateMachineObj.Regions = SysMLConnector.internal.CandidateStateMachine.Region.empty(element.region.size,0);
             for i = 1:element.region.size
-                stateMachineObj.Regions{i} = ...
+                stateMachineObj.Regions(i) = ...
                     SysMLConnector.internal.CandidateStateMachine.Region(...
                     element.region.at(i),stateMachineObj);
             end
-            stateMachineObj.Regions = [stateMachineObj.Regions{:}];
         end
 
         linkPackage(this);

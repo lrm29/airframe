@@ -1,12 +1,10 @@
-classdef Element < SysMLConnector.internal.CandidateElement
+classdef Element < SysMLConnector.internal.CandidateElement & ...
+        SysMLConnector.internal.CandidateStateMachine.Stateflow
     %ELEMENT basic element of a state machine
     
     properties (SetAccess=protected)
         Parent
-    end
-
-    properties (Abstract,SetAccess=protected)
-        StateflowObj
+        Built = false
     end
     
     methods
@@ -20,6 +18,8 @@ classdef Element < SysMLConnector.internal.CandidateElement
                 externalElementID);
             elementObj.Parent = parent;
         end
+
+        storeID(this);
     end
 
     methods (Abstract)
