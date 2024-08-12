@@ -11,9 +11,9 @@ end
 arrayfun(@(t) t.build(),this.Transitions);
 % then try to make it look better
 subvertexes = this.Subvertexes.values;
-startingSubvertex = subvertexes(subvertexes.IsStart);
+startingSubvertex = subvertexes([subvertexes.IsStart]);
 if isempty(startingSubvertex)
     startingSubvertex = subvertexes(1);
 end
-startingSubvertex.arrange();
+arrayfun(@(ss) ss.arrange(),startingSubvertex);
 end

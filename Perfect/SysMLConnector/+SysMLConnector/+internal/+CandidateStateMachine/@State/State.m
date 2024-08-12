@@ -1,8 +1,11 @@
-classdef State < SysMLConnector.internal.CandidateStateMachine.Node
+classdef State < SysMLConnector.internal.CandidateStateMachine.Node & ...
+        SysMLConnector.internal.CandidateStateMachine.RegionContainer
     %STATE represents a Stateflow state
 
     properties (SetAccess=protected)
         Name
+        ConnectionPoints SysMLConnector.internal.CandidateStateMachine.Port ...
+            = SysMLConnector.internal.CandidateStateMachine.Port.empty
     end
 
     properties (SetAccess=protected,Dependent)
@@ -23,6 +26,31 @@ classdef State < SysMLConnector.internal.CandidateStateMachine.Node
             switch class(element)
                 case "umlmm.State"
                     stateObj.parseState(element);
+                    %% parse connection points
+                    stateObj.ConnectionPoints = ...
+                        SysMLConnector.internal.CandidateStateMachine.Port.empty(element.connectionPoint.size,0);
+                    for i = 1:element.connectionPoint.size
+                        stateObj.ConnectionPoints(i) = ...
+                            SysMLConnector.internal.CandidateStateMachine.Port(...
+                            element.connectionPoint.at(i),stateObj,i);
+                    end
+                    % report the connection points to the parent
+                    parent.addConnectionPoint(stateObj.ConnectionPoints);
+                    %% parse regions
+                    % expect this to be 1                    
+                    stateObj.Regions = ...
+                        SysMLConnector.internal.CandidateStateMachine.Region.empty(element.region.size,0);
+                    for i = 1:element.region.size
+                        stateObj.Regions(i) = ...
+                            SysMLConnector.internal.CandidateStateMachine.Region(...
+                            element.region.at(i),stateObj,...
+                            [stateObj.ConnectionPoints.Junction]);
+                    end
+                    if element.region.size > 1
+                        warning("SysMLConnector:internal:CandidateStateMachine:State",...
+                            "State %s with ID %s contained %d regions, this is not expected please contact MathWorks.",...
+                            stateObj.Name,stateObj.ExtElementID,element.region.size);
+                    end
                 case "umlmm.FinalState"
                     stateObj.parseFinalState(element);
                 otherwise
