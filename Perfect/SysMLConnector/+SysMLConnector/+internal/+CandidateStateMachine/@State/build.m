@@ -4,7 +4,11 @@ arguments
     this SysMLConnector.internal.CandidateStateMachine.State
 end
 this.StateflowObj = Stateflow.State(this.Parent.StateflowObj);
-this.StateflowObj.Name = this.Name;
+if strcmp(this.LabelString,"")
+    this.StateflowObj.Name = this.Name;
+else
+    this.StateflowObj.LabelString = string(this.Name)+newline+this.LabelString;
+end
 this.storeID();
 if ~isempty(this.ConnectionPoints) || ~isempty(this.Regions)
     this.StateflowObj.IsSubchart = true;
