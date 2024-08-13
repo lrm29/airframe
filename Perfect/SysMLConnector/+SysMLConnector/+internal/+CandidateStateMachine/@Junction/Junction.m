@@ -16,11 +16,11 @@ classdef Junction < SysMLConnector.internal.CandidateStateMachine.Node
             %JUNCTION Construct an instance of this class
             arguments
                 element umlmm.Pseudostate
-                parent SysMLConnector.internal.CandidateStateMachine.Region
+                parent SysMLConnector.internal.CandidateStateMachine.Stateflow
             end
             junctionObj@SysMLConnector.internal.CandidateStateMachine.Node(...
                 SysMLConnector.internal.utils.getExtID(element),parent);
-            junctionObj.Type = element.kind.toString;
+            junctionObj.Type = element.kind;
         end
 
         function value = get.Width(this)

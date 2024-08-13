@@ -867,10 +867,10 @@ classdef UMLVisitor < m3i.Visitor
             try
                 SysMLConnector.internal.CandidateStateMachine.StateMachine(element,...
                     SysMLConnector.internal.utils.getUMLPackageParentID(element));
-            catch
+            catch ME
                 warning("SysMLConnector:internal:UMLVisitor", ...
-                    "Error occured while importing a state machine named %s.",...
-                    element.name);
+                    "Error %s(%s:%i) occured while importing a state machine named %s.",...
+                    ME.identifier, ME.stack(1).name, ME.stack(1).line, element.name);
             end
         end
 

@@ -1,4 +1,5 @@
-classdef Transition < SysMLConnector.internal.CandidateStateMachine.GraphicalElement
+classdef Transition < SysMLConnector.internal.CandidateStateMachine.GraphicalElement & ...
+        SysMLConnector.internal.CandidateStateMachine.Stateflow
     %TRANSITION represents transitions in the state machine
 
     properties (SetAccess=protected)
@@ -23,12 +24,37 @@ classdef Transition < SysMLConnector.internal.CandidateStateMachine.GraphicalEle
             end
             transitionObj@SysMLConnector.internal.CandidateStateMachine.GraphicalElement(...
                 SysMLConnector.internal.utils.getExtID(element),parent);
-            transitionObj.Source = parent.Subvertexes(...
-                SysMLConnector.internal.utils.getExtID(element.source));
-            transitionObj.Source.addOutgoingTransition(transitionObj);
-            transitionObj.Target = parent.Subvertexes(...
-                SysMLConnector.internal.utils.getExtID(element.target));
-            transitionObj.Target.addIncomingTransition(transitionObj);
+            try
+                transitionObj.Source = parent.Subvertexes(...
+                    SysMLConnector.internal.utils.getExtID(element.source));
+            catch ME
+                if strcmp('MATLAB:dictionary:ScalarKeyNotFound',ME.identifier)
+                    warning( ...
+                        "SysMLConnector:internal:CandidateStateMachine:Transition",...
+                        "Transition connects to unsupported element with ID %s.", ...
+                        SysMLConnector.internal.utils.getExtID(element.source));
+                else
+                    rethrow(ME);
+                end
+            end
+            try
+                transitionObj.Target = parent.Subvertexes(...
+                    SysMLConnector.internal.utils.getExtID(element.target));
+            catch ME
+                if strcmp('MATLAB:dictionary:ScalarKeyNotFound',ME.identifier)
+                    warning( ...
+                        "SysMLConnector:internal:CandidateStateMachine:Transition",...
+                        "Transition connects to unsupported element with ID %s.", ...
+                        SysMLConnector.internal.utils.getExtID(element.source));
+                else
+                    rethrow(ME);
+                end
+            end
+            % only add transitions to connected elements if both exist
+            if ~isempty(transitionObj.Source) && ~isempty(transitionObj.Target)
+                transitionObj.Source.addOutgoingTransition(transitionObj);
+                transitionObj.Target.addIncomingTransition(transitionObj);
+            end
             %% parse the element
             if element.trigger.size > 0
                 trigger = element.trigger.at(1);
@@ -63,10 +89,18 @@ classdef Transition < SysMLConnector.internal.CandidateStateMachine.GraphicalEle
                 end
             end
             if ~isempty(element.guard)
-                %%TODO:
-                warning( ...
-                    "SysMLConnector:internal:CandidateStateMachine:Transition",...
-                    "Importing guard not supported.");
+                if ~isempty(element.guard.specification)
+                    if element.guard.specification.body.size > 0
+                        transitionObj.LabelString = transitionObj.LabelString + ...
+                            "["+string(element.guard.specification.body.at(1)+"]");
+                        if element.guard.specification.body.size > 1
+                            warning( ...
+                            "SysMLConnector:internal:CandidateStateMachine:Transition",...
+                            "Guard contained %d body elements, this is not expected please contact MathWorks.", ...
+                            element.guard.specification.body.size);
+                        end
+                    end
+                end
             end
             if ~isempty(element.effect)
                 switch class(element.effect)
