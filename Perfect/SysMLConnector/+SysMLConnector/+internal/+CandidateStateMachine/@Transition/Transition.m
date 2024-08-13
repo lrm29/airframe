@@ -89,10 +89,18 @@ classdef Transition < SysMLConnector.internal.CandidateStateMachine.GraphicalEle
                 end
             end
             if ~isempty(element.guard)
-                %%TODO:
-                warning( ...
-                    "SysMLConnector:internal:CandidateStateMachine:Transition",...
-                    "Importing guard not supported.");
+                if ~isempty(element.guard.specification)
+                    if element.guard.specification.body.size > 0
+                        transitionObj.LabelString = transitionObj.LabelString + ...
+                            "["+string(element.guard.specification.body.at(1)+"]");
+                        if element.guard.specification.body.size > 1
+                            warning( ...
+                            "SysMLConnector:internal:CandidateStateMachine:Transition",...
+                            "Guard contained %d body elements, this is not expected please contact MathWorks.", ...
+                            element.guard.specification.body.size);
+                        end
+                    end
+                end
             end
             if ~isempty(element.effect)
                 switch class(element.effect)
