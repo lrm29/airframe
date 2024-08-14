@@ -177,6 +177,23 @@ classdef CheckXMIDB < padv.Task
                         warning(ME.message);
                     end
                 end
+                %% parse Stateflow
+                % above should have loaded all the models so this just has
+                % to find the elements that where imported
+                stateMachineParts = find(sfroot);
+                for i = 1:numel(stateMachineParts)
+                    % determine if each part has a Documents field and if
+                    % it has anything in it
+                    fields = fieldnames(stateMachineParts(i));
+                    if ismember("Document",fields)
+                        if ~strcmp(stateMachineParts(i).Document,'')
+                            % going to assume this is an ID
+                            elementDicitonary(...
+                                string(stateMachineParts(i).Document)) = ...
+                                {stateMachineParts(i)};
+                        end
+                    end
+                end
                 %% need to analyse the collected data
                 explorer = XMIChecker.CandidateExplorer();
                 explorer.explore(report.imported); %#ok<PROPLC> "report" is loaded from mat file

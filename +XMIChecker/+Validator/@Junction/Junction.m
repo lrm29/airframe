@@ -1,5 +1,4 @@
-classdef Junction < XMIChecker.Validator.Validator &... 
-        XMIChecker.Validator.Utilities.Fake
+classdef Junction < XMIChecker.Validator.Validator
     %JUNCTION state machine element validator
 
     methods
@@ -10,9 +9,8 @@ classdef Junction < XMIChecker.Validator.Validator &...
                 xmidb SysMLConnector.internal.CandidateAD.internal.XMIDatabase
                 foundElements dictionary
             end
-            %% TODO: make real validator
-            junctionValidatorObj@XMIChecker.Validator.Utilities.Fake(candidate);
+            junctionValidatorObj@XMIChecker.Validator.Validator(candidate);
+            junctionValidatorObj.processBuildableFlag(candidate.Built);
         end
     end
 end
-
