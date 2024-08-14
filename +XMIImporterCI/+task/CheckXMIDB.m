@@ -68,12 +68,12 @@ classdef CheckXMIDB < padv.Task
                     numel(openDDs);
                 Simulink.data.dictionary.closeAll('-discard');
             end
-            
+
             try
                 % make sure output exists
                 if ~exist(obj.resolvePath(obj.OutputDirectory),"dir")
                     mkdir(obj.resolvePath(obj.OutputDirectory));
-                end                
+                end
                 % get working artifact
                 xmiArtifact = XMIImporterCI.utilities.rerunQuery( ...
                     obj.IterationQuery,inputArtifacts{1});
@@ -83,8 +83,8 @@ classdef CheckXMIDB < padv.Task
                 [~,xmiFileName,ext] = fileparts(xmiArtifactFilepath);
                 if strcmp(ext,".mdzip")
                     xmiFilePath = fullfile( ...
-                            obj.resolvePath(obj.OutputDirectory),xmiFileName+".xml");
-                    if exist(xmiFilePath,"file")                            
+                        obj.resolvePath(obj.OutputDirectory),xmiFileName+".xml");
+                    if exist(xmiFilePath,"file")
                         % need to clear the old XMI file extracted
                         delete(xmiFilePath);
                     end
@@ -157,24 +157,43 @@ classdef CheckXMIDB < padv.Task
                     try
                         model = systemcomposer.loadModel( ...
                             importedArtifacts(i).ArtifactAddress.getFileAddress());
-                        if isMATLABReleaseOlderThan("R2024b")
-                            elements = obj.findElemetsWithExternalUID(...
-                                {model.Architecture, ...
-                                model.InterfaceDictionary.Interfaces,...
-                                model.Views,model.Profiles});
-                        else
-                            elements = obj.findElemetsWithExternalUID(...
-                                {model.Architecture, ...
-                                model.InterfaceDictionary.Interfaces,...
-                                model.Interactions,model.Views,model.Profiles});
+                        if ~isempty(model)
+                            if isMATLABReleaseOlderThan("R2024b")
+                                elements = obj.findElemetsWithExternalUID(...
+                                    {model.Architecture, ...
+                                    model.InterfaceDictionary.Interfaces,...
+                                    model.Views,model.Profiles});
+                            else
+                                elements = obj.findElemetsWithExternalUID(...
+                                    {model.Architecture, ...
+                                    model.InterfaceDictionary.Interfaces,...
+                                    model.Interactions,model.Views,model.Profiles});
+                            end
+                            elementDicitonary(...
+                                string(...
+                                cellfun(@(e) e.ExternalUID,elements,...
+                                'UniformOutput',false))) ...
+                                = elements;
                         end
-                        elementDicitonary(...
-                            string(...
-                            cellfun(@(e) e.ExternalUID,elements,...
-                            'UniformOutput',false))) ...
-                            = elements;
                     catch ME
                         warning(ME.message);
+                    end
+                end
+                %% parse Stateflow
+                % above should have loaded all the models so this just has
+                % to find the elements that where imported
+                stateMachineParts = find(sfroot);
+                for i = 1:numel(stateMachineParts)
+                    % determine if each part has a Documents field and if
+                    % it has anything in it
+                    fields = fieldnames(stateMachineParts(i));
+                    if ismember("Document",fields)
+                        if ~strcmp(stateMachineParts(i).Document,'')
+                            % going to assume this is an ID
+                            elementDicitonary(...
+                                string(stateMachineParts(i).Document)) = ...
+                                {stateMachineParts(i)};
+                        end
                     end
                 end
                 %% need to analyse the collected data
@@ -213,7 +232,7 @@ classdef CheckXMIDB < padv.Task
                 else
                     taskResult.OutputPaths = outputFilePath;
                 end
-                %% back to starting location   
+                %% back to starting location
                 cd(startingPoint);
             catch ME
                 disp(ME.message);

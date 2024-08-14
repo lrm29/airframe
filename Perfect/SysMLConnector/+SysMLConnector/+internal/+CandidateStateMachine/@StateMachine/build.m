@@ -11,6 +11,8 @@ function modelHandle = build(this,name)
     this.StateflowObj = find(sfroot,"-isa","Stateflow.Chart", ...
         Path=string(name)+"/Chart");
 
+    this.StateflowObj.Document = this.ExtElementID;
+
     modelHandle = load_system(name);
 
     arrayfun(@(r) r.build(),this.Regions);

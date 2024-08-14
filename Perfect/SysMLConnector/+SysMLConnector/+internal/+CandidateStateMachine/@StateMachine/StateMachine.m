@@ -9,7 +9,11 @@ classdef StateMachine < SysMLConnector.internal.CandidateElement & ...
         BuildName
         StateflowObj
     end
-    
+
+    properties (Dependent,SetAccess=protected)
+        Built
+    end
+
     methods
         function stateMachineObj = StateMachine(element,parentPackageExtElementID)
             %STATEMACHINE Construct an instance of this class
@@ -34,6 +38,12 @@ classdef StateMachine < SysMLConnector.internal.CandidateElement & ...
         prelimBuild(this,builder);
         finishBuild(this,builder);
         modelHandle = build(this,name);
+
+    function Built = get.Built(this)
+        arguments
+            this SysMLConnector.internal.CandidateStateMachine.StateMachine
+        end
+        Built = ~isempty(this.StateflowObj);
+    end
     end
 end
-
