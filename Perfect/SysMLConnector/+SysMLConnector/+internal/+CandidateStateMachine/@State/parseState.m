@@ -5,5 +5,65 @@ arguments
     element umlmm.State
 end
 this.Name = element.name;
+%% parse connection points
+this.ConnectionPoints = ...
+    SysMLConnector.internal.CandidateStateMachine.Port.empty(element.connectionPoint.size,0);
+for i = 1:element.connectionPoint.size
+    this.ConnectionPoints(i) = ...
+        SysMLConnector.internal.CandidateStateMachine.Port(...
+        element.connectionPoint.at(i),this,i);
+end
+% report the connection points to the parent
+this.Parent.addConnectionPoint(this.ConnectionPoints);
+%% parse regions
+% expect this to be 1
+this.Regions = ...
+    SysMLConnector.internal.CandidateStateMachine.Region.empty(element.region.size,0);
+for i = 1:element.region.size
+    this.Regions(i) = ...
+        SysMLConnector.internal.CandidateStateMachine.Region(...
+        element.region.at(i),this,...
+        [this.ConnectionPoints.Junction]);
+end
+if element.region.size > 1
+    warning("SysMLConnector:internal:CandidateStateMachine:State:parseState",...
+        "State %s with ID %s contained %d regions, this is not expected please contact MathWorks.",...
+        this.Name,this.ExtElementID,element.region.size);
+end
+%% parse the content of the state
+if ~isempty(element.entry)
+    parseString = parseBehavior(element.entry);
+    if ~isempty(parseString)
+        this.LabelString = this.LabelString + "en: "+parseString;
+    end
+end
+if ~isempty(element.doActivity)
+    parseString = parseBehavior(element.doActivity);
+    if ~isempty(parseString)
+        this.LabelString = this.LabelString + "du: "+parseString;
+    end
+end
+if ~isempty(element.exit)
+    parseString = parseBehavior(element.exit);
+    if ~isempty(parseString)
+        this.LabelString = this.LabelString + "ex: "+parseString;
+    end
+end
 end
 
+function labelString = parseBehavior(element)
+arguments
+    element
+end
+switch class(element)
+    case "umlmm.OpaqueBehavior"
+        if ~isempty(element.body)
+            labelString = string(element.body.at(1)) + newline;
+        end
+    otherwise
+        labelString = strings(0);
+        warning("SysMLConnector:internal:CandidateStateMachine:State:parseState",...
+            "A state was found with an unsupported behavior type of %s, please contact MathWorks.",...
+            class(element));
+end
+end
