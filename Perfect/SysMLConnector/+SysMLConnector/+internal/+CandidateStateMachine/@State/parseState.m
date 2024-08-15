@@ -60,6 +60,8 @@ switch class(element)
         if ~isempty(element.body)
             labelString = string(element.body.at(1)) + newline;
         end
+    case "umlmm.Activity"
+        labelString = string(element.name) + newline;
     otherwise
         labelString = strings(0);
         warning("SysMLConnector:internal:CandidateStateMachine:State:parseState",...
