@@ -52,15 +52,8 @@ classdef ImportXMI < padv.Task & XMIImporterCI.utilities.PathManager
 
             %% check for open SLDD files
             % can cause errors
-            if ~isempty(Simulink.data.dictionary.getOpenDictionaryPaths)
-                openDDs = Simulink.data.dictionary.getOpenDictionaryPaths();
-                cellfun( ...
-                    @(odd) warning("Data dictionary %s was left open and will be closed.",odd), ...
-                    openDDs);
-                taskResult.ResultValues.Warn = taskResult.ResultValues.Warn + ...
-                    numel(openDDs);
-                Simulink.data.dictionary.closeAll('-discard');
-            end
+            taskResult.ResultValues.Warn = taskResult.ResultValues.Warn + ...
+                XMIImporterCI.utilities.closeDataDictionaries();
 
             %% TODO: fix this
             % need to check with development this isn't right

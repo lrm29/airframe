@@ -3,9 +3,9 @@ function leaveProject(this)
 arguments
     this XMIImporterCI.utilities.PathManager
 end
+projectPath = this.Project.ProjectPath;
 close(this.Project);
-this.OldPath = addpath(...
-    [genpath(strjoin([this.Project.RootFolder,"Perfect"],filesep)),...
-    genpath(this.Project.RootFolder)]);
+this.OldPath = path;
+arrayfun(@(f) addpath(f.File),projectPath);
 end
 
