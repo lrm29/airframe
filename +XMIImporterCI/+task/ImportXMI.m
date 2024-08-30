@@ -1,4 +1,4 @@
-classdef ImportXMI < padv.Task
+classdef ImportXMI < padv.Task & XMIImporterCI.utilities.PathManager
     %IMPORTXMI runs the updated XMI importer of XMI files
 
     properties (SetAccess=protected)
@@ -31,10 +31,11 @@ classdef ImportXMI < padv.Task
                 options.Nice = false;
             end
             % add self to the dependency list
-            options.InputDependencyQuery = XMIImporterCI.query.multiQuery(...
+            options.InputDependencyQuery = citools.query.GetDependencies(...
+                XMIImporterCI.query.multiQuery(...
                 [options.InputDependencyQuery,...
-                XMIImporterCI.query.findByPath(artifactType="m_file",...
-                filePath=string(mfilename("fullpath"))+".m")]);
+                citools.query.FindArtifactMFilePath( ...
+                string(mfilename("fullpath")))]));
             % call the constructor of the superclass
             obj@padv.Task(options.Name, ...
                 IterationQuery=options.IterationQuery, ...
@@ -48,7 +49,6 @@ classdef ImportXMI < padv.Task
             % imports XMI files and reports if successful
             taskResult = padv.TaskResult;
             taskResult.Status = padv.TaskStatus.Pass;
-            project = currentProject;
 
             %% check for open SLDD files
             % can cause errors
@@ -73,7 +73,7 @@ classdef ImportXMI < padv.Task
                 taskResult.Status = padv.TaskStatus.Error;
                 return;
             else
-                %% need to find where the output will be 
+                %% need to find where the output will be
                 [~,xmiName,~] = fileparts( ...
                     artifactToUse.ArtifactAddress.getFileAddress());
                 outputProjectPath = obj.resolvePath(obj.OutputDirectory)+ ...
@@ -98,15 +98,13 @@ classdef ImportXMI < padv.Task
                 % once the project is closed on linux
                 outputDirectory = obj.resolvePath(obj.OutputDirectory);
                 %% add tools to path
-                close(project);
-                oldPath = addpath(genpath( ...
-                    strjoin([project.RootFolder,"Perfect"],filesep)));
+                obj.leaveProject();
                 %% import XMI
                 fprintf('***Importing file ''%s''...\n', ...
                     artifactToUse.ArtifactAddress.getFileAddress);
                 report = SysMLConnector.internal.import( ...
                     artifactToUse.ArtifactAddress.getFileAddress, ...
-                    outputDirectory); 
+                    outputDirectory);
                 fprintf('***Import complete for ''%s''.\n', ...
                     artifactToUse.ArtifactAddress.getFileAddress);
                 %% set the pass and warn based on report
@@ -116,7 +114,7 @@ classdef ImportXMI < padv.Task
                 outputFiles = ...
                     [outputProjectPath+"_report.txt",...
                     outputProjectPath+"_report.mat"];
-                
+
                 warnState = warning('off', 'Slvnv:slreq:illegalDataForMATFile');
                 cleanupWarning = onCleanup(@() warning(warnState));
                 save(outputFiles(2),"report");
@@ -141,8 +139,7 @@ classdef ImportXMI < padv.Task
                     artifactToUse.ArtifactAddress.getFileAddress);
             end
             %% remove tools from path
-            path(oldPath);
-            openProject(project.RootFolder);
+            obj.reopenProject();
             %% setup output path if task passed
             if taskResult.Status == padv.TaskStatus.Pass
                 taskResult.OutputPaths = ...
