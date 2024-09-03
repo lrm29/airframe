@@ -69,16 +69,56 @@ classdef ExportArchitecture < padv.Task & XMIImporterCI.utilities.PathManager
 
             %% determine paths for later
             outputPath = this.resolvePath(this.OutputDirectory);
+            % ensure there is an empty directory
+            if exist(outputPath,"dir")
+                % we know it exists so clear it
+                rmdir(outputPath,"s")
+            end
+            mkdir(outputPath);
 
             %% now load the imported project
             [importedPath,~,~] = fileparts(archiveFilePath);
             importedPath = fullfile(this.Project.RootFolder,importedPath);
             this.leaveProject();
             % need to open the generated project
-            importedProject = openProject(importedPath);
+            openProject(importedPath);
 
+            %% find architectures and setup the export
+            q = padv.builtin.query.FindArtifacts("ArtifactType","zc_file");
+            exportArtifacts = q.run();
+
+            %% do the exports
+            XMIFiles = strings(size(exportArtifacts));
+            for i = 1:numel(exportArtifacts)
+                model = systemcomposer.loadModel(exportArtifacts(i).Alias);
+                XMIFiles(i) = string(fullfile(outputPath, ...
+                    string(model.Name)+".xml"));
+                try
+                    SysMLConnector.export(model, char(XMIFiles(i)));
+                catch ME
+                    disp(ME.message);
+                    disp(ME.getReport());
+                    for j = 1:numel(ME.stack)
+                        disp(ME.stack(j));
+                    end
+                    taskResult.Status = padv.TaskStatus.Fail;
+                end
+                % close the model
+                model.close();
+            end
             %% go back
             this.reopenProject();
+            %% record output files
+            if taskResult.Status == padv.TaskStatus.Pass
+                XMIFiles = ...
+                    XMIFiles(arrayfun(@(x) exist(x,"file"),XMIFiles) == 2);
+                if ~isempty(XMIFiles)
+                    taskResult.OutputPaths = XMIFiles;
+                end
+                taskResult.ResultValues.Pass = numel(XMIFiles);
+                taskResult.ResultValues.fail = ...
+                    numel(exportArtifacts)-numel(XMIFiles);
+            end
         end
     end
 end
