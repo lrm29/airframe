@@ -105,6 +105,8 @@ classdef ExportArchitecture < padv.Task & XMIImporterCI.utilities.PathManager
                 end
                 % close the model
                 model.close();
+                % close all requirements incase this loaded them
+                slreq.clear();
             end
             %% go back
             this.reopenProject();
