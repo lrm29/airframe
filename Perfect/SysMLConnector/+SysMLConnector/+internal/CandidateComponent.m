@@ -2,6 +2,8 @@ classdef CandidateComponent < SysMLConnector.internal.CandidateElement
     properties
         Name = "";
         ParentArchitecture;
+        
+        DeferredParentArchitecture;
 
         ReferenceArchExtElementID = ""
         
@@ -17,6 +19,10 @@ classdef CandidateComponent < SysMLConnector.internal.CandidateElement
         
         ZCElement = [];
     end
+
+    properties (Dependent)
+        BuildName
+    end
     
     methods
         function this = CandidateComponent(name, parArch, extID, refCompID)
@@ -25,6 +31,11 @@ classdef CandidateComponent < SysMLConnector.internal.CandidateElement
             this.ReferenceArchExtElementID = refCompID;
             this.ParentArchitecture = parArch;
             this.ValidRequirementLinkTarget = true;
+        end
+
+        function name = get.BuildName(this)
+            % No restrictions on component names so it is used directly.
+            name = this.Name;
         end
         
         function addConnector(this, refArchPort, conn)

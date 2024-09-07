@@ -22,9 +22,9 @@ classdef Message < SysMLConnector.internal.CandidateInteraction.Element
                 ExternalID=SysMLConnector.internal.utils.getExtID(umlMessage), ...
                 Parent=parent);
             messageObj.From = SysMLConnector.internal.CandidateInteraction.Message.getEndPoint( ...
-                parent.Interaction,umlMessage.sendEvent);
+                parent.Interaction,umlMessage, 'sendEvent');
             messageObj.To = SysMLConnector.internal.CandidateInteraction.Message.getEndPoint( ...
-                parent.Interaction,umlMessage.receiveEvent);
+                parent.Interaction,umlMessage, 'receiveEvent');
             messageObj.ValidRequirementLinkTarget = false;
         end
 
@@ -34,7 +34,7 @@ classdef Message < SysMLConnector.internal.CandidateInteraction.Element
 
     methods (Static)
         validateEndPoint(endPoint);
-        endPoint = getEndPoint(candidateInteraction,event);
+        endPoint = getEndPoint(candidateInteraction, messageOrEvent, eventName);
     end
 end
 

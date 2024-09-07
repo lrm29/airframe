@@ -1,5 +1,6 @@
 classdef Element < SysMLConnector.internal.CandidateElement & ...
-        SysMLConnector.internal.CandidateStateMachine.Stateflow
+        SysMLConnector.internal.CandidateStateMachine.Stateflow & ...
+        SysMLConnector.internal.CandidateStateMachine.Printable
     %ELEMENT basic element of a state machine
     
     properties (SetAccess=protected)

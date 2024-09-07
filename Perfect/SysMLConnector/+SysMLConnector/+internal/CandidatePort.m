@@ -40,8 +40,14 @@ classdef CandidatePort < SysMLConnector.internal.CandidateElement
         function addConnector(this, conn)
             this.Connectors = [this.Connectors conn];
         end
+
+        function fullPath = getFullPath(this)
+            fullPath = this.ParentArch.getFullPath + "/" + this.Name;
+        end
         
-        function setInvalid(this, invalidReason)
+        function thisNotImported = setInvalid(this, invalidReason)
+            thisNotImported = this.createNotImported('Port', invalidReason);
+
             this.Valid = false;
             this.InvalidReason = invalidReason;
         end
@@ -52,6 +58,11 @@ classdef CandidatePort < SysMLConnector.internal.CandidateElement
         end
         
         function setComputedDir(this)
+            if this.Replaced
+                % This port is replaced so ignore it.
+                return;
+            end
+
             if ~isempty(this.Interface)
                 intfDir = this.Interface.Direction;
                 compDir = intfDir;
@@ -62,8 +73,11 @@ classdef CandidatePort < SysMLConnector.internal.CandidateElement
                         compDir = "in";
                     end
                 end
+                
                 if this.Valid && ~this.Interface.Valid
-                    this.setInvalid("Interface not valid");
+                    notImported = this.setInvalid("Port interface not valid");
+                    message = sprintf('%s for port ''%s''.', notImported.Reason, this.ExtElementID);
+                    SysMLConnector.internal.StatusMonitor.publishEvent('SetPortDirection', 'Ports', message);
                 end
             else
                 if this.IsConjugated 
@@ -72,8 +86,8 @@ classdef CandidatePort < SysMLConnector.internal.CandidateElement
                     compDir = "in";
                 end
             end
+
             this.ComputedDir = compDir;
-            assert(~this.Valid || this.Replaced || compDir == "in" || compDir == "out");
         end
         
         function fixFanInConnectors(this)

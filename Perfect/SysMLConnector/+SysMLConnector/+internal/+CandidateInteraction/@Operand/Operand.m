@@ -19,7 +19,15 @@ classdef Operand < SysMLConnector.internal.CandidateInteraction.Element & ...
                 Parent=parent);
             % get the guard
             if ~isempty(umlOperand.guard)
-                operandObj.Guard = umlOperand.guard.specification.value;
+                guardSpecification = umlOperand.guard.specification;
+
+                if isa(guardSpecification, 'umlmm.OpaqueExpression')
+                    if ~ismissing(guardSpecification.body)
+                        operandObj.Guard = guardSpecification.body.at(1);
+                    end
+                else
+                     operandObj.Guard = umlOperand.guard.specification.value;
+                end
             elseif ~ismissing(parent.DefaultGuard)
                 operandObj.Guard = parent.DefaultGuard;
             end

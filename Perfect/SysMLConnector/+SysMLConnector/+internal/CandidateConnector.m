@@ -47,8 +47,14 @@ classdef CandidateConnector < SysMLConnector.internal.CandidateElement
             
             this.Derived = isDerived;
         end
+
+        function fullPath = getFullPath(this)
+            fullPath = this.ParentComp.getFullPath + "/";
+        end
         
-        function setEndComps(this, end1P, end1C, end1RC, end2P, end2C, end2RC)
+        function notImported = setEndComps(this, end1P, end1C, end1RC, end2P, end2C, end2RC)
+            notImported = [];
+
             this.End1APort = end1P;
             this.End1Comp = end1C;
             this.End1RefArch = end1RC;
@@ -58,16 +64,24 @@ classdef CandidateConnector < SysMLConnector.internal.CandidateElement
             this.End2RefArch = end2RC;
             
             if ~this.End1APort.Valid || ~this.End2APort.Valid
-                this.setInvalid("End port(s) not valid");
+                notImported = this.setInvalid("End port(s) not valid");
             end
+
             if (~isempty(this.End1Comp) && ~this.End1Comp.Valid) || ...
                     (~isempty(this.End2Comp) && ~this.End2Comp.Valid)
-                this.setInvalid("End components not valid");
+                notImported = this.setInvalid("End components not valid");
+            end
+
+            if ~isempty(notImported)
+                message = sprintf('%s for connector ''%s''.', notImported.Reason, this.ExtElementID);
+                SysMLConnector.internal.StatusMonitor.publishEvent('setEndComps', 'Connectors', message);
             end
         end
         
         
-        function setInvalid(this, invalidReason)
+        function thisNotImported = setInvalid(this, invalidReason)
+            thisNotImported = this.createNotImported('Connector', invalidReason);
+
             this.Valid = false;
             this.InvalidReason = invalidReason;
         end
@@ -123,7 +137,9 @@ classdef CandidateConnector < SysMLConnector.internal.CandidateElement
                     end
                 end
                 if inv
-                    this.setInvalid("Ports not complements");
+                    notImported = this.setInvalid("Ports not complements");
+                    message = sprintf('%s for connector ''%s''.', notImported.Reason, this.ExtElementID);
+                    SysMLConnector.internal.StatusMonitor.publishEvent('ValidateConnector', 'Connectors', message);
                 end
             end
         end
@@ -158,7 +174,7 @@ classdef CandidateConnector < SysMLConnector.internal.CandidateElement
                     % The ports cannot be connected, probably because of
                     % incompatible directions.
                     port = SysMLConnector.internal.CandidateElement.idMap("lookup", this.End2RefPortExtElementID);
-                    e2Pname = "[Aport]." + port.BuildName;
+                    e2Pname = sprintf("[Aport].%s ", port.BuildName);
                 end
             else
                 if ~isempty(this.End2Comp.ReferenceArch)

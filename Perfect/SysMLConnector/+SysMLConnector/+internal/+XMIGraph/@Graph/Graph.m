@@ -2,6 +2,7 @@ classdef Graph < SysMLConnector.internal.XMIGraph.Node
     properties
         Profiles
         IDMap
+        TypeMap
     end
 
     properties (Hidden)
@@ -10,6 +11,13 @@ classdef Graph < SysMLConnector.internal.XMIGraph.Node
 
     methods  (Access=protected)
         function graphObj = Graph(name, structure)
+            arguments
+                name      = ''
+                structure = ''
+            end
+            % If name and structure are empty, the XMI parsing failed and
+            % this object is just a stub.
+
             graphObj@SysMLConnector.internal.XMIGraph.Node(structure);
             graphObj.ID = name;
             [~, graphObj.Name] = fileparts(name);
@@ -35,9 +43,43 @@ classdef Graph < SysMLConnector.internal.XMIGraph.Node
                 if strcmp(element.Type, 'uml:Profile')
                     graphObj.Profiles = [graphObj.Profiles element];
                 end
+            else
+                element.Type = 'undefined';
             end
 
-            graphObj.IDMap(element.ID) = element;
+            if (graphObj.IDMap.numEntries > 0) && isKey(graphObj.IDMap, element.ID)
+                % Track elements with duplicate IDs.
+                existingElement = graphObj.IDMap(element.ID);
+                existingElement.Duplicates = [existingElement.Duplicates element];
+                element.DuplicateOf = existingElement;
+            else
+                graphObj.IDMap(element.ID) = element;
+            end
+
+            % Used for quick search by type.
+            if (graphObj.TypeMap.numEntries > 0) && isKey(graphObj.TypeMap, element.Type)
+                existingElements = graphObj.TypeMap(element.Type);
+                existingElements = [existingElements{1}];
+            else
+                existingElements = [];
+            end
+
+            graphObj.TypeMap(element.Type) = {[existingElements element]};
+        end
+
+        function elements = getElementsByType(graphObj, xmiType)
+            elements = [];
+            try %#ok<TRYNC> do not slow this down with extra checks. If it does not work, return empty.
+                if (nargin < 2) || isempty(xmiType)
+                    elements = graphObj.TypeMap.values;
+                else
+                    elements = graphObj.TypeMap(xmiType);
+                end
+
+                if ~isempty(elements)
+                    elements = [elements{:}];
+                end
+            end
         end
 
         function element = lookup(graphObj, elementID)
@@ -48,8 +90,9 @@ classdef Graph < SysMLConnector.internal.XMIGraph.Node
         end
 
         function register(graphObj)
-            graphObj.Graph = graphObj;
-            graphObj.IDMap = dictionary;
+            graphObj.Graph   = graphObj;
+            graphObj.IDMap   = dictionary;
+            graphObj.TypeMap = dictionary;
         end
     end
 

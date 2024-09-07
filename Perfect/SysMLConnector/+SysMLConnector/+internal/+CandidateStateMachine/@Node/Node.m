@@ -34,7 +34,7 @@ classdef Node < SysMLConnector.internal.CandidateStateMachine.GraphicalElement &
                 parent
             end
             nodeObj@SysMLConnector.internal.CandidateStateMachine.GraphicalElement(...
-                externalElementID,parent);
+                externalElementID,parent);            
             %% TODO: enable linking
         end
 

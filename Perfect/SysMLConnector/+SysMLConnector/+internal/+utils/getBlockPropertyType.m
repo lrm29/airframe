@@ -112,8 +112,10 @@ function [propertyType, propertyTypeName] = getBlockPropertyType(property, optio
     
                     if ismissing(propertyTypeElement)
                         propertyType = '';
-                    else
+                    elseif hasProperty(propertyTypeElement, 'hrefAttribute') 
                         propertyType = getProperty(propertyTypeElement, 'hrefAttribute');
+                    elseif hasProperty(propertyTypeElement, 'xmi_idrefAttribute') 
+                        propertyType = getProperty(propertyTypeElement, 'xmi_idrefAttribute');
                     end
                 end
             else

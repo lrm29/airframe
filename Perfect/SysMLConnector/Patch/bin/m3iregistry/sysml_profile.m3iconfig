@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<m3i:Configuration xmlns:m3i="http://schema.mathworks.com/spec/M3I/config">
+    <m3i:Domain>
+        <name>SysML</name>
+        <canonicalUri>http://www.omg.org/spec/SysML/20100301/SysML-profile</canonicalUri>
+        <compatibleUri>https://www.omg.org/spec/SysML/20240101</compatibleUri>
+        <compatibleUri>http://www.omg.org/spec/SysML/20161101/SysML</compatibleUri>
+		<compatibleUri>http://www.omg.org/spec/SysML/20150709/SysML</compatibleUri>
+		<compatibleUri>http://www.omg.org/spec/SysML/20131201/SysML</compatibleUri>
+		<compatibleUri>http://www.omg.org/spec/SysML/20120401/SysML</compatibleUri>
+        <compatibleUri>http://www.omg.org/spec/SysML/20120322/SysML</compatibleUri>
+        <compatibleUri>http://www.omg.org/spec/SysML/20181001/SysML</compatibleUri>
+        <module>sysml_profile</module>
+        <matlabInterface>sysml_profile_mi</matlabInterface>		
+        <prefix>sysml</prefix>
+        <entryPoint>SysML_getConfiguration</entryPoint>
+    </m3i:Domain>
+</m3i:Configuration>

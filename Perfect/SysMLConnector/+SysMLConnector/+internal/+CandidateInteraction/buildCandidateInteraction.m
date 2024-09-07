@@ -38,15 +38,8 @@ function [candidateInteraction, notImported] = buildCandidateInteraction(element
         umlLifelineName = strtrim(strjoin(umlLifelineNameParts, ' '));
 
         lifelineID = SysMLConnector.internal.utils.getExtID(umlLifeline);
-        lifeline = addLifeline(candidateInteraction, umlLifelineName, lifelineID);
-        lifeline.ReferenceElementID = referenceID;
-
-        if ~isempty(referenceID)
-            % Capture the link between the lifeline and the referenced
-            % element as an allocation.
-            allocationID = sprintf('%s_%s', lifelineID, referenceID);
-            SysMLConnector.internal.CandidateAllocation.Allocation(lifelineID, referenceID, Name='', ExternalID=allocationID);
-        end
+        
+        addLifeline(candidateInteraction, umlLifelineName, lifelineID, referenceID);
     end
 
     %% Collect Fragment Data
@@ -57,7 +50,9 @@ function [candidateInteraction, notImported] = buildCandidateInteraction(element
             candidateInteraction.addFragment(umlFragment);
         end
         % add the not imported to the output
-        notImported = [notImported, candidateInteraction.Fragments.NotImported];
+        if ~isempty(candidateInteraction.Fragments)
+            notImported = [notImported, candidateInteraction.Fragments.NotImported];
+        end
     end
 end
 
