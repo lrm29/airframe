@@ -4,7 +4,7 @@ classdef Interaction < SysMLConnector.internal.CandidateInteraction.Element & ..
         Lifelines
         RootFragment
         Messages
-        LifeLineMap = dictionary();
+        LifelineMap = dictionary();
         Fragments
         MessageMap = dictionary();
     end
@@ -31,6 +31,43 @@ classdef Interaction < SysMLConnector.internal.CandidateInteraction.Element & ..
             
             if ~isempty(this.ModelZCElement)
                 linkTarget = this.ModelZCElement.SimulinkHandle;
+            end
+        end
+
+        function lifeline = getLifeline(this, lifelineExtID, umlElement) 
+            % Get the lifeline from the interaction, create it if it does
+            % not exist. umlElement is only used as a recovery heuristic
+            % when the lifeline does not resolve.
+            if (this.LifelineMap.numEntries > 0) && isKey(this.LifelineMap, lifelineExtID)
+                lifeline = this.LifelineMap(lifelineExtID);
+            elseif nargin > 2
+                % Back-up heuristic to try to resolve the lifeline (mainly
+                % for EA which does not always include all the lifelines in
+                % the XMI).
+
+                % Check if this heuristic already ran. The derived lifeline
+                % needs to be tagged with this interaction ID to prevent
+                % conflicts across the full import.
+                derivedLifelineID = [char(this.ExtElementID) '___' char(lifelineExtID)];
+
+                lifeline = this.getLifeline(derivedLifelineID);
+
+                if isempty(lifeline)
+                    % The derived lifeline has not been created yet so
+                    % create it.
+                    g = SysMLConnector.internal.XMIGraph.Graph.getGraph(umlElement.rootModel.uri);
+                    xmiElement = g.lookup(lifelineExtID);
+    
+                    if ~isempty(xmiElement) && ~ismissing(xmiElement.Name)
+                        name = xmiElement.Name;
+                    else
+                        name = 'lifeline';
+                    end
+
+                    lifeline = addLifeline(this, name, derivedLifelineID, char(lifelineExtID));
+                end
+            else
+                lifeline = SysMLConnector.internal.CandidateInteraction.Lifeline.empty;
             end
         end
 
@@ -70,10 +107,21 @@ classdef Interaction < SysMLConnector.internal.CandidateInteraction.Element & ..
             Simulink.BlockDiagram.arrangeSystem(this.ZCElement.Name);
         end
 
-        function lifeline = addLifeline(this, name, externalID)
+        function lifeline = addLifeline(this, name, externalID, referenceID)
             lifeline = SysMLConnector.internal.CandidateInteraction.Lifeline(name, externalID, this);
             this.Lifelines = [this.Lifelines lifeline];
-            this.LifeLineMap(externalID) = lifeline;
+            this.LifelineMap(externalID) = lifeline;
+
+            if nargin > 3
+                lifeline.ReferenceElementID = referenceID;
+    
+                if ~isempty(referenceID)
+                    % Capture the link between the lifeline and the referenced
+                    % element as an allocation.
+                    allocationID = sprintf('%s_%s', externalID, referenceID);
+                    SysMLConnector.internal.CandidateAllocation.Allocation(externalID, referenceID, Name='', ExternalID=allocationID);
+                end
+            end
         end
 
         function linkPackage(this)            

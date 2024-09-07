@@ -1,5 +1,6 @@
 classdef StateMachine < SysMLConnector.internal.CandidateElement & ...
-        SysMLConnector.internal.CandidateStateMachine.RegionContainer
+        SysMLConnector.internal.CandidateStateMachine.RegionContainer &...
+        SysMLConnector.internal.CandidateStateMachine.Printable
     %STATEMACHINE represents a state machine imported from SysML
 
     properties (SetAccess=protected)

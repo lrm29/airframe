@@ -1,4 +1,4 @@
-classdef (Abstract) Stateflow < handle
+classdef Stateflow < handle
     %STATEFLOW base class for classes that link to Stateflow
     
     properties (Abstract,SetAccess=protected)

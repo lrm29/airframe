@@ -151,6 +151,7 @@ classdef UMLVisitor < m3i.Visitor
             ppID = SysMLConnector.internal.utils.getUMLPackageParentID(element);
             
             cID =  this.getExtID(element);
+
             aName = string(element.name);
             if aName == ""
                 % If architecture has no name, create a default name
@@ -180,10 +181,15 @@ classdef UMLVisitor < m3i.Visitor
                 if ~isa(property, 'umlmm.Port') && ...
                         ~isempty(property.type) && ...
                         this.isBlock(this.getSysMLStereotype(property.type))
-                    cID = this.getExtID(property);
-                    thisArch.addChildComponent(...
-                        string(property.name), ...
-                        cID, this.getExtID(property.type));
+                    if strcmpi(property.aggregation.toString, 'composite')
+                        cID = this.getExtID(property);
+                        thisArch.addChildComponent(...
+                            string(property.name), ...
+                            cID, this.getExtID(property.type));
+                    else
+                        addNotImported(this, property, "BlockProperty", ...
+                                               sprintf("The aggregation type of '%s' is not supported. Part properties must have an aggregation type of 'composite'.", property.aggregation.toString));
+                    end
                 elseif ~isa(property, 'umlmm.Port')
                     elTypeName = "";
                     elType = "";
@@ -237,6 +243,38 @@ classdef UMLVisitor < m3i.Visitor
             
             % Process child connectors
             visitChildren(this, element.ownedConnector, thisArch);    
+
+            if strcmp(SysMLConnector.internal.StatusMonitor.getSourceTool, 'EA')
+                % EA sometimes stores connector information in the diagram
+                % section instead, so go check that.
+                xmiNode = SysMLConnector.internal.utils.getNode(element);
+                
+                structureDiagrams = xmiNode.Graph.getElementsByType('umldi:UMLCompositeStructureDiagram');
+                structureDiagramIndices = arrayfun(@(diagram) strcmp(diagram.getProperty('modelElementAttribute'), thisArch.ExtElementID), structureDiagrams);
+                if any(structureDiagramIndices)
+                    if ~isempty(thisArch.ChildConnectors)
+                        existingConnectorIDs = [thisArch.ChildConnectors.ExtElementID];
+                    else
+                        existingConnectorIDs = "";
+                    end
+
+                    structureDiagrams = structureDiagrams(structureDiagramIndices);
+                    for structureDiagram = structureDiagrams
+                        if hasProperty(structureDiagram, 'ownedElement')
+                            for ownedElement = structureDiagram.getProperty('ownedElement')
+                                if hasProperty(ownedElement, 'modelElementAttribute')
+                                    modelElement = structureDiagram.Graph.lookup(ownedElement.getProperty('modelElementAttribute'));
+                                    if strcmp(modelElement.Type, 'uml:Connector') && ~ismember(modelElement.ID, existingConnectorIDs)
+                                        existingConnectorIDs = [existingConnectorIDs modelElement.ID]; %#ok<AGROW>
+                                        % Cache it for now and add it later if it does not show up during generalization merging.
+                                        thisArch.DeferredConnectors = [thisArch.DeferredConnectors modelElement.ID];
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
             
             % Process nested classes
             visitChildren(this, element.nestedClassifier);
@@ -407,8 +445,13 @@ classdef UMLVisitor < m3i.Visitor
                         end
                     end
                     
-                    intf.addElement(string(pA.name), this.getExtID(pA), ...
-                                    "unset", elTypeName, elType, elDim);
+                    if isa(intf, 'SysMLConnector.internal.CandidateValueType')
+                        addNotImported(this, pA, "ValueTypeElementsUnsupported", ...
+                                               "ValueTypes do not support elements. If needed, use interfaces with flow properties instead.");
+                    else
+                        intf.addElement(string(pA.name), this.getExtID(pA), ...
+                                        "unset", elTypeName, elType, elDim);
+                    end
                 end
             end
             
@@ -645,7 +688,7 @@ classdef UMLVisitor < m3i.Visitor
             
             ret = [];
         end
-        
+
         function ret = visitumlmmAbstraction(this, element)
             className = this.getSysMLStereotype(element);
             if className == "SysML.DeriveReqt" || ...
@@ -699,6 +742,40 @@ classdef UMLVisitor < m3i.Visitor
             
             ret = [];
         end
+
+        function ret = visitumlmmAssociation(this, element)
+            ret = [];
+
+            try
+                if element.ownedEnd.size == 2
+                    associationSource = element.ownedEnd.at(1);
+                    associationTarget = element.ownedEnd.at(2);
+    
+                    if isa(associationSource, 'umlmm.Property') ...
+                          && isa(associationTarget, 'umlmm.Property') ...
+                          && strcmp(associationSource.aggregation.toString, 'composite')
+                        % source is a reference part property of target
+                        part = associationSource;
+                        partStereotype = this.getSysMLStereotype(part.type);
+                        partParent = associationTarget.type;
+                        partParentStereotype = this.getSysMLStereotype(partParent);
+    
+                        if this.isBlock(partStereotype) && this.isBlock(partParentStereotype)
+                            candidateComponent = SysMLConnector.internal.CandidateComponent(part.name, [], this.getExtID(part), this.getExtID(part.type));
+                            candidateComponent.DeferredParentArchitecture = this.getExtID(partParent);
+    
+                            return;
+                        end
+                    end
+                end
+
+                % Else not imported.
+                addNotImported(this, element, "Association", sprintf("Unsupported association type."));  
+
+            catch ME
+                addNotImported(this, element, "Association", sprintf("Unexpected error: %s", ME.identifier));  
+            end
+        end
         
         function ret = visitumlmmClass(this,element)
             cStypeStr = this.getSysMLStereotype(element);
@@ -716,50 +793,77 @@ classdef UMLVisitor < m3i.Visitor
             end
             ret = [];
         end
+
+        function portType = getSupportedPortType(this, portElement)
+            % This heuristic tries to figure out the port type for
+            % specified or under-specified ports. It will return empty if
+            % the port type is not supported.
+
+            portType = this.getSysMLStereotype(portElement);
+
+            if any(strcmpi(portType, ["SysML.ProxyPort" "SysML.FullPort" "SysML.FlowPort"]))
+                % Port is fully specified and supported so check is
+                % complete.
+                return;
+            end
+
+            % Port is unspecified so try to figure out the type using
+            % heuristics.
+            portDataType = portElement.type;
+            portDataTypeStereotype = "";
+            
+            if ~isempty(portDataType)
+                portDataTypeStereotype = this.getSysMLStereotype(portDataType);              
+            end
+
+            if this.isBlock(portDataTypeStereotype)
+                % Assume port is a Full Port when typed by a SysML
+                % Block
+                portType = "SysML.FullPort";
+            elseif portDataTypeStereotype == "SysML.InterfaceBlock"
+                % Assume port is a Full Port when typed by a SysML
+                % Block
+                portType = "SysML.ProxyPort";
+            else
+                % Unable to infer port type or port is of unsupported type.
+                portType = string.empty;
+            end
+        end
          
         function ret = visitumlmmPort(this,element,thisArch)
 
-            ret = [];
+            ret = false;
             
             % Process port type
-            pType = element.type;
-            pTypeStype = "";
-            pTypeID = "";
-            if ~isempty(pType)
-                pTypeStype = this.getSysMLStereotype(pType);
-                pTypeID = this.getExtID(pType);                
+            portDataType = element.type;
+            portDataTypeStereotype = "";
+            portDataTypeExtID = "";
+            if ~isempty(portDataType)
+                portDataTypeStereotype = this.getSysMLStereotype(portDataType);
+                portDataTypeExtID = this.getExtID(portDataType);                
             end
 
             % Ensure port is a supported port type explicitly or implied
-            pStrName = this.getSysMLStereotype(element);
-            if pStrName ~= "SysML.ProxyPort" && pStrName ~= "SysML.FullPort" ...
-                    && pStrName ~= "SysML.FlowPort"
-
-                if this.isBlock(pTypeStype)
-                    % Assume port is a Full Port when typed by a SysML
-                    % Block
-                    pStrName = "SysML.FullPort";
-                elseif pTypeStype == "SysML.InterfaceBlock"
-                    % Assume port is a Full Port when typed by a SysML
-                    % Block
-                    pStrName = "SysML.ProxyPort";
-                else
-                    % Unable to infer port type.
-                    addNotImported(this, element, "Port", "Not a proxy port or full port");
-                    return;
-                end
+            portStereotype = getSupportedPortType(this, element);
+            if isempty(portStereotype)
+                % Unable to infer port type.
+                addNotImported(this, element, "Port", "Not a proxy port or full port");
+                return;
             end
             
-            if (pStrName == "SysML.FullPort") && (pTypeStype ~= "SysML.InterfaceBlock")
+            % The port has passed the import checks so this function will return true.
+            ret = true;
+
+            if (portStereotype == "SysML.FullPort") && (portDataTypeStereotype ~= "SysML.InterfaceBlock")
                 % Create child component for Full Port
                 cID = this.getExtID(element);
                 thisArch.addChildComponent(...
                     string(element.name), ...
-                    cID, pTypeID);
+                    cID, portDataTypeExtID);
             else
                 % Full Port typed by interface, Proxy Port, Flow Port
                 isConj = false;
-                if pStrName == "SysML.FlowPort"
+                if portStereotype == "SysML.FlowPort"
                     [~,sType] = this.getSysMLStereotype(element);
                     sDir = sType.getOne('direction');
                     sDir = string(sDir.toString);
@@ -770,68 +874,86 @@ classdef UMLVisitor < m3i.Visitor
                     isConj = element.isConjugated;                    
                 end
 
-                if (pTypeStype ~= "SysML.InterfaceBlock")
+                if (portDataTypeStereotype ~= "SysML.InterfaceBlock")
                     % Incompatible port interface type.
-                    pTypeID = "";
+                    portDataTypeExtID = "";
                 end
 
                 thisArch.addPort(string(element.name), isConj, ...
-                                 this.getExtID(element), pTypeID, [], false);
+                                 this.getExtID(element), portDataTypeExtID, [], false);
             end
         end
-        
+
         function ret = visitumlmmConnector(this,element,thisArch)
-            
-            cEnd1 = element.end.at(1);
-            cEnd2 = element.end.at(2);
+            connectorEnds = [element.end.at(1) element.end.at(2)];
         
-            cEnd1PID = "";
-            cEnd2PID = "";
-            if ~isempty(cEnd1.partWithPort)
-                cEnd1PID = this.getExtID(cEnd1.partWithPort);
-            end
-            if ~isempty(cEnd2.partWithPort)
-                cEnd2PID = this.getExtID(cEnd2.partWithPort);
-            end
-            
-            p1Valid = true; % assume
-            if isa(cEnd1.role, 'umlmm.Port') 
-                pStrName = this.getSysMLStereotype(cEnd1.role);
-                if pStrName ~= "SysML.ProxyPort" && pStrName ~= "SysML.FlowPort"
-                    p1Valid = false;
+            cEndPIDs   = ["" ""];
+            portsValid = false([1 2]);
+            xmiNode    = [];
+            propNames  = ["startAttribute" "endAttribute"];
+
+            try
+                for cEndIdx = 1:2
+                    if ~isempty(connectorEnds(cEndIdx).partWithPort)
+                        cEndPIDs(cEndIdx) = this.getExtID(connectorEnds(cEndIdx).partWithPort);
+                    end
+    
+                    if strcmp(cEndPIDs(cEndIdx), "") && strcmp(SysMLConnector.internal.StatusMonitor.getSourceTool, 'EA')
+                        % Recovery heuristic for EA which stores connector
+                        % information in the UML Diagram section of the XMI.
+    
+                        if isempty(xmiNode)
+                            xmiNode = SysMLConnector.internal.utils.getNode(element);
+                        end
+        
+                        try %#ok<TRYNC> Do not try to reconcile failed heuristics.
+                            if ~isempty(xmiNode) 
+                                if hasProperty(xmiNode, propNames(cEndIdx))
+                                    componentPortID = getProperty(xmiNode, propNames(cEndIdx));
+                                    componentPortNode = xmiNode.Graph.lookup(componentPortID);
+        
+                                    if ~isempty(componentPortNode)
+                                        cEndPIDs(cEndIdx) = componentPortNode.Owner.ID;
+                                    end
+                                end
+                            end
+                        end
+                    end
+    
+                    connectorEndRole = connectorEnds(cEndIdx).role;
+                    if isa(connectorEndRole, 'umlmm.Port') 
+                        % Check if the port is valid
+                        portType = getSupportedPortType(this, connectorEndRole);
+    
+                        if ~isempty(portType)
+                            portsValid(cEndIdx) = true;
+                        end
+                    end
                 end
-            else
-                p1Valid = false;
-            end
-            p2Valid = true; % assume
-            if isa(cEnd2.role, 'umlmm.Port') 
-                pStrName = this.getSysMLStereotype(cEnd2.role);
-                if pStrName ~= "SysML.ProxyPort" && pStrName ~= "SysML.FlowPort"
-                    p2Valid = false;
+               
+                if all(portsValid) && ...
+                        this.isBlock(this.getSysMLStereotype(connectorEnds(1).role.owner)) && ...
+                        this.isBlock(this.getSysMLStereotype(connectorEnds(2).role.owner))
+    
+                    thisArch.addChildConnector(this.getExtID(element), ...
+                                               cEndPIDs(1), this.getExtID(connectorEnds(1).role), this.getExtID(connectorEnds(1).role.owner), ...
+                                               cEndPIDs(2), this.getExtID(connectorEnds(2).role), this.getExtID(connectorEnds(2).role.owner), ...
+                                               false);
+                
+                else
+                    addNotImported(this, element, "Connector", ...
+                                   "Not connecting flow ports");        
                 end
-            else
-                p2Valid = false;
-            end
-           
-            if p1Valid && p2Valid && ...
-                    this.isBlock(this.getSysMLStereotype(cEnd1.role.owner)) && ...
-                    this.isBlock(this.getSysMLStereotype(cEnd2.role.owner))
-                thisArch.addChildConnector(this.getExtID(element), ...
-                                           cEnd1PID, this.getExtID(cEnd1.role), ...
-                                           this.getExtID(cEnd1.role.owner), ...
-                                           cEnd2PID, this.getExtID(cEnd2.role), ...
-                                           this.getExtID(cEnd2.role.owner), false);
-            
-            else
+            catch ME
                 addNotImported(this, element, "Connector", ...
-                               "Not connecting flow ports");        
+                                   sprintf("Connector visit failed with error %s(%s:%i)", ME.identifier, ME.stack(1).name, ME.stack(1).line)); 
             end
+
             ret = [];
         end
 
         function ret = visitumlmmActivity(this, element)
             ret = [];
-            %fprintf('visited activity: %s\n', element.name);
 
             % uml:Activity -- Create candidate activity diagram
             ppID = SysMLConnector.internal.utils.getUMLPackageParentID(element);
@@ -843,13 +965,17 @@ classdef UMLVisitor < m3i.Visitor
             visitChildren(this, element.ownedBehavior);
         end
 
+        function ret = visitumlmmClassifier(this, element)
+            ret = [];
+            addNotImported(this, element, "UML Classifier", ...
+                               "Unsupported type for import.");
+        end
+
         function newEnum = visitumlmmEnumeration(this, element)
             newEnum = visitEnumeration(this, element);
         end
 
         function ret = visitumlmmInteraction(this, element)
-            % Import any behaviors but still log the sequence diagram
-            % itself as not imported.
             ret = [];
             
             ppID = SysMLConnector.internal.utils.getUMLPackageParentID(element);
