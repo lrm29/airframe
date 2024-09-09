@@ -340,6 +340,8 @@ classdef Builder < handle
             fid = fopen(filePath, 'w');
             cleanup = onCleanup(@()fclose(fid));
             fprintf(fid, element.BuildFileContent);
+
+            this.RootProject.addFile(filePath);
         end
         
         function slMdlHdl = createSimulinkModel(this, candArch)
@@ -972,8 +974,8 @@ classdef Builder < handle
                 linkPackage(candidateAllocationSet);
                 
                 candidateAllocationSet.Builder = this;
-                candidateAllocationSet.BuildName = candidateAllocationSet.Name;
-            
+                candidateAllocationSet.BuildName = this.getModelName(candidateAllocationSet.Name);
+                
                 publish(candidateAllocationSet);
 
                 if ~isempty(candidateAllocationSet.ParentPackage)

@@ -22,6 +22,10 @@ classdef CandidatePort < SysMLConnector.internal.CandidateElement
     
         ZCElement = [];
     end
+
+    properties (Dependent)
+        ParentPackageExtElementID
+    end
     
     methods
         function this = CandidatePort(parArch, portName, extID, ...
@@ -35,6 +39,14 @@ classdef CandidatePort < SysMLConnector.internal.CandidateElement
             this.Interface = intf;
             this.Derived = isDerived;
             this.ValidRequirementLinkTarget = true;
+        end
+
+        function elementID = get.ParentPackageExtElementID(this)
+            try
+                elementID = this.ParentArch.ParentPackageExtElementID;
+            catch
+                elementID = [];
+            end
         end
         
         function addConnector(this, conn)

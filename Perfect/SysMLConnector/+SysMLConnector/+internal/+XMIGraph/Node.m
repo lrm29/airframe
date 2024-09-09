@@ -1,102 +1,133 @@
 classdef Node < handle & matlab.mixin.CustomDisplay
     properties
-        Owner
-        Graph
-        Name
-        Type
-        ID
-        Properties
-        Duplicates
-        DuplicateOf
+        % The -1 is an indicator to fetch the value (set on first
+        % access for performance).
+        Owner = -1
+        Graph = []
+        Name  = -1
+        Type  = -1
+        ID    = -1
+        Duplicates  = -1
+        DuplicateOf = -1
     end
 
     properties (Hidden)
+        MWID
         Struct
+        OwnedPropertyNames = -1
+        PropertyNames = -1
+        Properties  = -1
+        XMIInitialized = false
+    end
+
+    methods (Access=?SysMLConnector.internal.XMIGraph.Graph)
+        function nodeObj = Node(graph, elementID)
+            if nargin > 0
+                if isempty(graph)
+                    nodeObj.Graph = nodeObj;
+                else
+                    nodeObj.Graph = graph;
+                end
+
+                nodeObj.MWID = elementID;    
+            end
+        end
     end
 
     methods
-        function nodeObj = Node(structure, options)
-            arguments
-                structure
-                options.Owner = []
-            end
-            nodeObj.Properties = dictionary;
+        function id = get.ID(nodeObj)
+            initializeXMI(nodeObj);
 
-            % Allow empty for use as a stub when the XMI parsing fails.
-            if ~isempty(structure) 
-                nodeObj.Struct = structure;
-                nodeObj.Owner = options.Owner;
-    
-                register(nodeObj);
-    
-                nodeObj.visitChildren;
+            id = nodeObj.ID;
+        end
+
+        function duplicates = get.Duplicates(nodeObj)
+            initializeXMI(nodeObj);
+
+            duplicates = nodeObj.Duplicates;
+        end
+
+        function duplicateOf = get.DuplicateOf(nodeObj)
+            initializeXMI(nodeObj);
+
+            duplicateOf = nodeObj.DuplicateOf;
+        end
+
+        function name = get.Name(nodeObj)
+            if ~ischar(nodeObj.Name)
+                if isfield(nodeObj.Struct, 'nameAttribute')
+                    nameID = nodeObj.Struct.nameAttribute;
+                    nodeObj.Name = nodeObj.Graph.lookupByMWID(nameID);
+                else
+                    nodeObj.Name = '';
+                end
             end
+
+            name = nodeObj.Name;
+        end
+
+        function type = get.Type(nodeObj)
+            if ~ischar(nodeObj.Type)
+                if isfield(nodeObj.Struct, 'xmi_typeAttribute')
+                    typeID = nodeObj.Struct.xmi_typeAttribute;
+                    nodeObj.Type = nodeObj.Graph.lookupByMWID(typeID);
+                else
+                    nodeObj.Type = 'undefined';
+                end
+            end
+
+            type = nodeObj.Type;
+        end
+
+        function owner = get.Owner(nodeObj)
+            if nodeObj.Owner == -1
+                owner = nodeObj.Graph.getOwner(nodeObj);
+                nodeObj.Owner = owner;
+            end
+
+            owner = nodeObj.Owner;
         end
 
         function register(nodeObj)
-            nodeObj.Graph = nodeObj.Owner.Graph;
-            nodeObj.Graph.addElement(nodeObj);
+            nodeObj.Graph.register(nodeObj);
         end
 
-        function visitChildren(nodeObj)
-            structProperties = string(fieldnames(nodeObj.Struct)');
-            structProperties = setdiff(structProperties, {'xmi_idAttribute', 'nameAttribute', 'xmi_typeAttribute'});
+        function initializeXMI(nodeObj)
+            if ~nodeObj.XMIInitialized
+                % Set initialized now to prevent recursion.
+                nodeObj.XMIInitialized = true;
+                % Initialize the property fields
+                nodeObj.ID = '';
+                nodeObj.Duplicates = SysMLConnector.internal.XMIGraph.Node.empty;
+                nodeObj.DuplicateOf = SysMLConnector.internal.XMIGraph.Node.empty;
 
-            for propertyName = structProperties
-                propertyValue = nodeObj.Struct.(propertyName);
-                if isstruct(propertyValue)
-                    propertyValues = propertyValue;
-                    propertyValue = SysMLConnector.internal.XMIGraph.Node.empty(0, numel(propertyValues));
-                    for propertyValueIdx = 1:numel(propertyValues)
-                        propertyValue(propertyValueIdx) = SysMLConnector.internal.XMIGraph.Node(propertyValues(propertyValueIdx), Owner=nodeObj);
-                    end
+                if isfield(nodeObj.Struct, 'xmi_idAttribute')
+                    xmiID = nodeObj.Struct.xmi_idAttribute;
+                    xmiIDValue = nodeObj.Graph.lookupByMWID(xmiID);
+                    nodeObj.ID = xmiIDValue;
+                    nodeObj.Graph.addElementsByXMI(xmiIDValue);
                 end
-
-                if ~isempty(nodeObj.DuplicateOf)
-                    % This element is a duplicate of another element so add
-                    % the property to the other element also.
-                    addProperty(nodeObj.DuplicateOf, propertyName, propertyValue);
-                end
-
-                addProperty(nodeObj, propertyName, propertyValue);
             end
         end
 
-        function addProperty(nodeObj, propertyName, propertyValue)
-            if (nodeObj.Properties.numEntries > 0) && isKey(nodeObj.Properties, propertyName)
-                try
-                    existingValue = nodeObj.Properties{propertyName};
-                    
-                    if isequal(propertyValue, existingValue)
-                        % The is the ideal case. If the property exists
-                        % already then it is because there are duplicate
-                        % XMI IDs in the imported file so if the properties
-                        % have the same value, leave as-is, it is just
-                        % redundant data.
-                        return;
-                    end
+        function initializeProperties(nodeObj)
+            if ~isa(nodeObj.Properties, 'dictionary')
+                nodeObj.PropertyNames = fieldnames(nodeObj.Struct)';
+                nodeObj.OwnedPropertyNames = nodeObj.PropertyNames;
 
-                    
-                    % The values are different so try to concatenate them.
-                    nodeObj.Properties(propertyName) = {nodeObj.Properties{propertyName} propertyValue};
-                catch
-                    % They can't so put them in a cell array.
-                    existingProperties = nodeObj.Properties{propertyName};
-                    if ~iscell(existingProperties)
-                        existingProperties = {existingProperties};
-                    end
-
-                    newProperties = {{existingProperties {propertyValue}}};
-
-                    nodeObj.Properties(propertyName) = newProperties;
+                for duplicateIdx = 1:numel(nodeObj.Duplicates)
+                    nodeObj.PropertyNames = [nodeObj.PropertyNames fieldnames(nodeObj.Duplicates(duplicateIdx).Struct)'];
                 end
-            else
-                nodeObj.Properties(propertyName) = {propertyValue};
+
+                nodeObj.Properties = dictionary;
             end
         end
 
-        function tf = hasProperty(nodeObj, propertyName)
-            tf = (nodeObj.Properties.numEntries > 0) && isKey(nodeObj.Properties, propertyName);
+        function [tf, isOwned] = hasProperty(nodeObj, propertyName)
+            initializeProperties(nodeObj);
+
+            tf = ismember(propertyName, nodeObj.PropertyNames);
+            isOwned = ismember(propertyName, nodeObj.OwnedPropertyNames);
         end
 
         function propertyValue = getProperty(nodeObj, propertyName, propertyIdx)
@@ -105,14 +136,46 @@ classdef Node < handle & matlab.mixin.CustomDisplay
                 propertyName {SysMLConnector.internal.utils.mustBeValidStructFieldName}
                 propertyIdx = []
             end
+            initializeProperties(nodeObj);
 
-            try
-                propertyValue = nodeObj.Properties{propertyName};
+            [hasProp, isOwned] = hasProperty(nodeObj, propertyName);
 
-                if iscell(propertyValue) && isscalar(propertyValue)
-                    propertyValue = propertyValue{1};
+            if hasProp
+                if nodeObj.Properties.numEntries == 0 || ~isKey(nodeObj.Properties, propertyName)
+                    % Property has not been initialized yet so initialize
+                    % it now.
+
+                    if isOwned
+                        propertyValueIDs = nodeObj.Struct.(propertyName);
+                        propertyValue = arrayfun(@(valueID) nodeObj.Graph.lookupByMWID(valueID), propertyValueIDs);
+                    else
+                        propertyValue = [];
+                        
+                        for duplicateIdx = 1:numel(nodeObj.Duplicates)
+                            duplicate = nodeObj.Duplicates(duplicateIdx);
+
+                            [~, isOwnedByDuplicate] = hasProperty(duplicate, propertyName);
+
+                            if isOwnedByDuplicate
+                                propertyValue = duplicate.getProperty(propertyName, propertyIdx);                                
+                            end
+                        end
+
+                        if isempty(propertyValue)
+                            % If it was not on the duplicate then something is
+                            % wrong.
+                            error('SysMLConnector:internal:XMIGraph:Node:UnretrievableProperty', 'Property ''%s'' could not be retrieved.', propertyName);
+                        end
+                    end
+
+                    % Cache for faster retrieval next time
+                    nodeObj.Properties(propertyName) = {propertyValue};
+
+                else
+                    propertyValue = nodeObj.Properties(propertyName);
+                    propertyValue = [propertyValue{:}];
                 end
-            catch
+            else
                 error('SysMLConnector:internal:XMIGraph:Node:UndefinedProperty', 'Property ''%s'' does not exist.', propertyName);
             end
 
@@ -131,6 +194,8 @@ classdef Node < handle & matlab.mixin.CustomDisplay
             if ~isscalar(nodeObj)
                 groups = getPropertyGroups@matlab.mixin.CustomDisplay(nodeObj);
             else
+                nodeObj.Graph.initializeElement(nodeObj);
+
                 propertyNames = string(properties(nodeObj)');
                 propertyNames = setdiff(propertyNames, 'Properties');
 
@@ -139,10 +204,9 @@ classdef Node < handle & matlab.mixin.CustomDisplay
                     propList.(propertyName) = nodeObj.(propertyName);
                 end
 
-                if nodeObj.Properties.numEntries > 0
-                    for propertyName = string(nodeObj.Properties.keys)'
-                        propList.("p_" + propertyName) = getProperty(nodeObj, propertyName);
-                    end
+                for propertyName = nodeObj.PropertyNames
+                    propertyName = string(propertyName); %#ok<FXSET>
+                    propList.("p_" + propertyName) = getProperty(nodeObj, propertyName);
                 end
 
                 groups = matlab.mixin.util.PropertyGroup(propList);

@@ -53,6 +53,9 @@ classdef ImportXMI < padv.Task
             taskResult = padv.TaskResult;
             taskResult.Status = padv.TaskStatus.Pass;
             project = currentProject;
+            
+            % Hard reset between import calls.
+            SysMLConnector.cleanEnvironment;
 
             %% check for open SLDD files
             % can cause errors
