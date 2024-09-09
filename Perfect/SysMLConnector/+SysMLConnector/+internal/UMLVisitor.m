@@ -263,7 +263,10 @@ classdef UMLVisitor < m3i.Visitor
                         if hasProperty(structureDiagram, 'ownedElement')
                             for ownedElement = structureDiagram.getProperty('ownedElement')
                                 if hasProperty(ownedElement, 'modelElementAttribute')
-                                    modelElement = structureDiagram.Graph.lookup(ownedElement.getProperty('modelElementAttribute'));
+                                    modelElements = structureDiagram.Graph.lookup(ownedElement.getProperty('modelElementAttribute'));
+                                    % Only use the first if there are
+                                    % duplicates.
+                                    modelElement = modelElements(1);
                                     if strcmp(modelElement.Type, 'uml:Connector') && ~ismember(modelElement.ID, existingConnectorIDs)
                                         existingConnectorIDs = [existingConnectorIDs modelElement.ID]; %#ok<AGROW>
                                         % Cache it for now and add it later if it does not show up during generalization merging.
@@ -547,9 +550,11 @@ classdef UMLVisitor < m3i.Visitor
                             elseif isa(prop.type, 'umlmm.DataType')
                                 propType = this.visitValueType(prop.type);
                                 propTypeName = "Dtype:" + string(prop.type.name);
+                            elseif isa(prop.type, 'umlmm.Class') && strcmp(this.getSysMLStereotype(prop.type), 'SysML.InterfaceBlock')
+                                propTypeName = string(prop.type.name);
                             else
                                 addNotImported(this, prop.type, "UnsupportedFlowType", ...
-                                               "Interface flow property is not a primitive type or signal");
+                                               "Interface flow property is not a primitive type, interface block, value type, or signal");
                             end
                         else
                             [propType, propTypeName] = SysMLConnector.internal.utils.getBlockPropertyType(prop);
@@ -595,11 +600,10 @@ classdef UMLVisitor < m3i.Visitor
             
         end
         
-        function visitInterface(this, element)
+        function intf = visitInterface(this, element)
             intf = SysMLConnector.internal.CandidateInterface(...
                 string(element.name), this.getExtID(element), ...
                 "INTERFACEBLOCK");
-            %debugPrintInterface(this, element);
             recVisitInterfaceSuperClass(this, element, intf, strings(0));
         end
 
@@ -888,6 +892,8 @@ classdef UMLVisitor < m3i.Visitor
             connectorEnds = [element.end.at(1) element.end.at(2)];
         
             cEndPIDs   = ["" ""];
+            connectorComponents = {[], []};
+            connectorPorts = {[], []};
             portsValid = false([1 2]);
             xmiNode    = [];
             propNames  = ["startAttribute" "endAttribute"];
@@ -920,10 +926,35 @@ classdef UMLVisitor < m3i.Visitor
                         end
                     end
     
-                    connectorEndRole = connectorEnds(cEndIdx).role;
-                    if isa(connectorEndRole, 'umlmm.Port') 
-                        % Check if the port is valid
-                        portType = getSupportedPortType(this, connectorEndRole);
+                    connectorPorts{cEndIdx} = connectorEnds(cEndIdx).role;
+                    connectorComponents{cEndIdx} = connectorEnds(cEndIdx).role.owner;
+                    
+                    if ~isa(connectorPorts{cEndIdx}, 'umlmm.Port') ...
+                            || ~this.isBlock(this.getSysMLStereotype(connectorComponents{cEndIdx}))
+                        % This is a heuristic to try to resolve the
+                        % connector a different way using the propertyPath
+                        % attribute.
+                        [stereotypeName, stereotype] = this.getSysMLStereotype(connectorEnds(cEndIdx));
+                        if strcmp(stereotypeName, 'SysML.NestedConnectorEnd')
+                            % Walk the property path looking for the
+                            % first block.
+                            for pathIdx = 1:stereotype.propertyPath.size
+                                pathObject = stereotype.propertyPath.at(pathIdx);
+                                
+                                if ~isempty(getSupportedPortType(this, pathObject)) ...
+                                        && this.isBlock(this.getSysMLStereotype(pathObject.owner))
+                                    connectorPorts{cEndIdx} = pathObject;
+                                    connectorComponents{cEndIdx} = pathObject.owner;
+                                    break;
+                                end
+                            end
+                        end
+                    end
+
+                    if isa(connectorPorts{cEndIdx}, 'umlmm.Port') ...
+                        && this.isBlock(this.getSysMLStereotype(connectorComponents{cEndIdx}))
+                        % Check if the port is valid                        
+                        portType = getSupportedPortType(this, connectorPorts{cEndIdx});
     
                         if ~isempty(portType)
                             portsValid(cEndIdx) = true;
@@ -931,13 +962,10 @@ classdef UMLVisitor < m3i.Visitor
                     end
                 end
                
-                if all(portsValid) && ...
-                        this.isBlock(this.getSysMLStereotype(connectorEnds(1).role.owner)) && ...
-                        this.isBlock(this.getSysMLStereotype(connectorEnds(2).role.owner))
-    
+                if all(portsValid)    
                     thisArch.addChildConnector(this.getExtID(element), ...
-                                               cEndPIDs(1), this.getExtID(connectorEnds(1).role), this.getExtID(connectorEnds(1).role.owner), ...
-                                               cEndPIDs(2), this.getExtID(connectorEnds(2).role), this.getExtID(connectorEnds(2).role.owner), ...
+                                               cEndPIDs(1), this.getExtID(connectorPorts{1}), this.getExtID(connectorComponents{1}), ...
+                                               cEndPIDs(2), this.getExtID(connectorPorts{2}), this.getExtID(connectorComponents{2}), ...
                                                false);
                 
                 else

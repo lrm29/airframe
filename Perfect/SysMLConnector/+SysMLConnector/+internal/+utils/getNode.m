@@ -10,7 +10,8 @@ function node = getNode(umlElement)
         foundNode = xmiGraph.lookup(nodeID);
 
         if ~isempty(foundNode)
-            node = foundNode;
+            % In the case of duplicates, only return the first
+            node = foundNode(1);
         end
     end  
 

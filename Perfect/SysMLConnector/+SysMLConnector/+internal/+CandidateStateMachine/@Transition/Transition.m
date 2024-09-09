@@ -24,7 +24,6 @@ classdef Transition < SysMLConnector.internal.CandidateStateMachine.GraphicalEle
             end
             transitionObj@SysMLConnector.internal.CandidateStateMachine.GraphicalElement(...
                 SysMLConnector.internal.utils.getExtID(element),parent);
-            %% parse element
             if ~isempty(element.source)
                 try
                     transitionObj.Source = parent.Subvertexes(...

@@ -29,6 +29,10 @@ classdef CandidateConnector < SysMLConnector.internal.CandidateElement
         
         Derived = false;
     end
+
+    properties (Dependent)
+        ParentPackageExtElementID
+    end
     
     methods
         function this = CandidateConnector(parComp, extID, end1CompID, end1RefPortID, ...
@@ -46,6 +50,14 @@ classdef CandidateConnector < SysMLConnector.internal.CandidateElement
             this.End2RefPortArchExtElementID = end2RefPortArchID;
             
             this.Derived = isDerived;
+        end
+
+        function elementID = get.ParentPackageExtElementID(this)
+            try
+                elementID = this.ParentComp.ParentPackageExtElementID;
+            catch
+                elementID = [];
+            end
         end
 
         function fullPath = getFullPath(this)

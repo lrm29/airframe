@@ -22,7 +22,7 @@ classdef Allocation < SysMLConnector.internal.CandidateAllocation.Element
         end
 
         function allocationSetName = get.AllocationSetName(this)
-            allocationSetName = sprintf('%sTo%s_Allocations', SysMLConnector.internal.utils.getModelName(this.Source.ZCElement), ...
+            allocationSetName = sprintf('Allocs_%sTo%s', SysMLConnector.internal.utils.getModelName(this.Source.ZCElement), ...
                                                               SysMLConnector.internal.utils.getModelName(this.Target.ZCElement));
         end
 

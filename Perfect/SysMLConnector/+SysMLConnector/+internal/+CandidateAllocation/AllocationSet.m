@@ -27,16 +27,10 @@ classdef AllocationSet < SysMLConnector.internal.CandidateAllocation.Element
 
         function doPublish(this, varargin)
             if isempty(this.BuildName)
-                this.BuildName = matlab.lang.makeValidName(this.Name);
-                % Deconflict filenames
-                files = dir(pwd);
-                [~, fileNames] = fileparts({files.name});
-                this.BuildName = SysMLConnector.internal.utils.nextName(fileNames, this.BuildName);    
+                this.BuildName = this.Builder.getModelName(this.Name);
             end
-            
-            modelName = this.BuildName;
 
-            this.ZCElement = systemcomposer.allocation.createAllocationSet(modelName, this.BuildSource, this.BuildTarget);
+            this.ZCElement = systemcomposer.allocation.createAllocationSet(this.BuildName, this.BuildSource, this.BuildTarget);
 
             % Immediately add it to the list so that it gets closed when
             % the builder is deleted, even if the build fails.
@@ -61,7 +55,11 @@ classdef AllocationSet < SysMLConnector.internal.CandidateAllocation.Element
                 % Derived allocation set. Set the package to match the
                 % source.
                 source = this.Scenarios(1).Allocations(1).Source;
-                if isa(source, 'SysMLConnector.internal.CandidateArchitecture')
+                
+                if isa(source, 'SysMLConnector.internal.CandidateArchitecture') ...
+                        || isa(source, 'SysMLConnector.internal.CandidateComponent') ...
+                        || isa(source, 'SysMLConnector.internal.CandidatePort') ...
+                        || isa(source, 'SysMLConnector.internal.CandidateConnector')
                     this.ParentPackageExtElementID = source.ParentPackageExtElementID;
                 else
                     this.ParentPackageExtElementID = source.Model.ParentPackageExtElementID;

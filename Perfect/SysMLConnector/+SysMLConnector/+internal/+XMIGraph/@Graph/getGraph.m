@@ -10,7 +10,7 @@ function graphObj = getGraph(name, options)
             graphDB = dictionary;
         end
 
-        if options.Refresh || isequal(graphDB.numEntries, 0) || ~isKey(graphDB, name)
+        if options.Refresh || isequal(graphDB.numEntries, 0) || (~isKey(graphDB, name) || ~isvalid(graphDB(name)))
             if options.Refresh && ~isequal(graphDB.numEntries, 0) && isKey(graphDB, name)
                 delete(graphDB(name));
             end

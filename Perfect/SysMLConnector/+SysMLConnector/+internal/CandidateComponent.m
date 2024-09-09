@@ -22,6 +22,7 @@ classdef CandidateComponent < SysMLConnector.internal.CandidateElement
 
     properties (Dependent)
         BuildName
+        ParentPackageExtElementID
     end
     
     methods
@@ -31,6 +32,14 @@ classdef CandidateComponent < SysMLConnector.internal.CandidateElement
             this.ReferenceArchExtElementID = refCompID;
             this.ParentArchitecture = parArch;
             this.ValidRequirementLinkTarget = true;
+        end
+
+        function elementID = get.ParentPackageExtElementID(this)
+            try
+                elementID = this.ParentArchitecture.ParentPackageExtElementID;
+            catch
+                elementID = [];
+            end
         end
 
         function name = get.BuildName(this)
