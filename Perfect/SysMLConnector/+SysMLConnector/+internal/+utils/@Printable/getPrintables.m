@@ -1,7 +1,7 @@
 function printables = getPrintables(item)
 % checks what item is and tries to extract printable elements
 printables = [];
-if isa(item,"SysMLConnector.internal.CandidateStateMachine.Printable")
+if isa(item,"SysMLConnector.internal.utils.Printable")
     printables = item;
 elseif iscell(item)
     % if it is a cell

@@ -2,7 +2,7 @@ function printableProperties = getPrintableProperties(this)
 %GETPRINTABLEPROPERTIES helper function to find which properties are
 %printable
 arguments
-    this SysMLConnector.internal.CandidateStateMachine.Printable
+    this SysMLConnector.internal.utils.Printable
 end
 printableProperties = string(properties(this));
 % remove excluded properties
@@ -15,7 +15,7 @@ end
 function printable = isPrintable(this,propertyName)
 % determines if property named is printable
 arguments
-    this SysMLConnector.internal.CandidateStateMachine.Printable
+    this SysMLConnector.internal.utils.Printable
     propertyName string
 end
 printable = false;

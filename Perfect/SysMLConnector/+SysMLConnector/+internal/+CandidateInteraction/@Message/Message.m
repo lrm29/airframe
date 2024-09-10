@@ -5,10 +5,6 @@ classdef Message < SysMLConnector.internal.CandidateInteraction.Element
         StartFragment
         EndFragment
     end
-
-    properties (SetAccess=protected)% Build Properties
-        Built = false;
-    end
     
     methods
         function messageObj = Message(parent,umlMessage)
@@ -26,10 +22,14 @@ classdef Message < SysMLConnector.internal.CandidateInteraction.Element
             messageObj.To = SysMLConnector.internal.CandidateInteraction.Message.getEndPoint( ...
                 parent.Interaction,umlMessage, 'receiveEvent');
             messageObj.ValidRequirementLinkTarget = false;
+            %% setup exclusions for printing
+            messageObj.ExcludedProperties = [messageObj.ExcludedProperties,...
+                "StartFragment","EndFragment"];
         end
 
         doPublish(this, varargin);
         registerFragment(this, fragment);
+        print(this,printer);
     end
 
     methods (Static)

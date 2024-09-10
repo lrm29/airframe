@@ -29,8 +29,6 @@ else
             this.To.ZCElement,toPort.Name, ...
             this.Name);
     end
-    %% do some record keeping
-    this.Built = true;
 end
 end
 

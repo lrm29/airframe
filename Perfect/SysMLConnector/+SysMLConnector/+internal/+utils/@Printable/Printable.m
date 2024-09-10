@@ -14,13 +14,14 @@ classdef Printable < handle
     methods
         print(this,printer);
         shallowPrint(this,printer);
-        idString = getPrintID(this);
         shortPrint(this,printer);
-        infoString = getInfoString(this);
     end
 
     methods (Access=protected)
         printableProperties = getPrintableProperties(this);
+        infoString = getInfoString(this);
+        idString = getPrintID(this);
+        shortString = getShortPrintString(this);
     end
 
     methods (Access=protected,Static)

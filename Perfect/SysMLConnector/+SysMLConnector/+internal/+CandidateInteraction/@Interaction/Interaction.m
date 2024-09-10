@@ -28,13 +28,13 @@ classdef Interaction < SysMLConnector.internal.CandidateInteraction.Element & ..
 
         function linkTarget = getLinkTarget(this)
             linkTarget = [];
-            
+
             if ~isempty(this.ModelZCElement)
                 linkTarget = this.ModelZCElement.SimulinkHandle;
             end
         end
 
-        function lifeline = getLifeline(this, lifelineExtID, umlElement) 
+        function lifeline = getLifeline(this, lifelineExtID, umlElement)
             % Get the lifeline from the interaction, create it if it does
             % not exist. umlElement is only used as a recovery heuristic
             % when the lifeline does not resolve.
@@ -57,7 +57,7 @@ classdef Interaction < SysMLConnector.internal.CandidateInteraction.Element & ..
                     % create it.
                     g = SysMLConnector.internal.XMIGraph.Graph.getGraph(umlElement.rootModel.uri);
                     xmiElement = g.lookup(lifelineExtID);
-    
+
                     if ~isempty(xmiElement) && ~ismissing(xmiElement.Name)
                         name = xmiElement.Name;
                     else
@@ -79,15 +79,15 @@ classdef Interaction < SysMLConnector.internal.CandidateInteraction.Element & ..
         end
 
         function doPublish(this, varargin)
-            
+
             if isempty(this.BuildName)
                 this.BuildName = matlab.lang.makeValidName(this.Name);
                 % Deconflict filenames
                 files = dir(pwd);
                 [~, fileNames] = fileparts({files.name});
-                this.BuildName = SysMLConnector.internal.utils.nextName(fileNames, this.BuildName);    
+                this.BuildName = SysMLConnector.internal.utils.nextName(fileNames, this.BuildName);
             end
-            
+
             modelName = this.BuildName;
 
             % Create as software architecture to model call/response via
@@ -114,7 +114,7 @@ classdef Interaction < SysMLConnector.internal.CandidateInteraction.Element & ..
 
             if nargin > 3
                 lifeline.ReferenceElementID = referenceID;
-    
+
                 if ~isempty(referenceID)
                     % Capture the link between the lifeline and the referenced
                     % element as an allocation.
@@ -124,7 +124,7 @@ classdef Interaction < SysMLConnector.internal.CandidateInteraction.Element & ..
             end
         end
 
-        function linkPackage(this)            
+        function linkPackage(this)
             compPkg = SysMLConnector.internal.CandidateElement.idMap(...
                 "lookup", this.ParentPackageExtElementID);
 
@@ -145,10 +145,8 @@ classdef Interaction < SysMLConnector.internal.CandidateInteraction.Element & ..
         end
 
         function doPrint(this, printer)
-            % Only Lifelines for now.
-            printer.openScope("Lifelines");
-            arrayfun(@(elem) print(elem, printer), this.Lifelines);
-            printer.closeScope("Lifelines");
+            % Print all that is printable
+            this.print(printer);
         end
 
         function postPrint(this, printer)
