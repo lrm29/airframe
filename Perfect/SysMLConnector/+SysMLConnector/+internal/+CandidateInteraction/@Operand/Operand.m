@@ -39,4 +39,8 @@ classdef Operand < SysMLConnector.internal.CandidateInteraction.Element & ...
             end
         end
     end
+
+    methods (Access=protected)
+        infoString = getInfoString(this);
+    end
 end

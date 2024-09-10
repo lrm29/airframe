@@ -1,7 +1,7 @@
 function idString = getPrintID(this)
 %GETPRINTID generates an identifier for the printable item
 arguments
-    this SysMLConnector.internal.CandidateStateMachine.Printable
+    this SysMLConnector.internal.utils.Printable
 end
 type = string(class(this));
 type = strsplit(type,".");

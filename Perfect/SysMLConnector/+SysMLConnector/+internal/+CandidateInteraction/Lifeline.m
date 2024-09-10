@@ -26,5 +26,9 @@ classdef Lifeline < SysMLConnector.internal.CandidateInteraction.Element
                 linkTarget = this.ZCElement.RelatedElements.SimulinkHandle;
             end
         end
+
+        function print(this,printer)
+            this.shortPrint(printer);
+        end
     end
 end

@@ -4,6 +4,10 @@ arguments
     this SysMLConnector.internal.Builder
     candStateMachine SysMLConnector.internal.CandidateStateMachine.StateMachine
 end
+SysMLConnector.internal.StatusMonitor.publishEvent('BuildStateMachine', ...
+                candStateMachine.ExtElementID, ...
+                'Building state machine %s (%i of %i).', ...
+                candStateMachine.Name, this.getStateMachineIdx, this.StateMachineCount);
 stateMachineName = this.getModelName(candStateMachine.Name);
 stateMachineMdl = candStateMachine.build(stateMachineName);
 candProj = candStateMachine.ParentPackage;

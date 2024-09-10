@@ -50,6 +50,7 @@ classdef Builder < handle
         ProfileCount
         RequirementCount
         RequirementLinkCount
+        StateMachineCount
     end
     
     properties (Access=private)
@@ -64,6 +65,7 @@ classdef Builder < handle
         ProfileIdx         = 0
         RequirementIdx     = 0
         RequirementLinkIdx = 0
+        StateMachineIdx    = 0
     end
  
     methods
@@ -416,7 +418,10 @@ classdef Builder < handle
         end
 
         function interactionMdl = createInteraction(this, candInteraction)
-            SysMLConnector.internal.StatusMonitor.publishEvent('BuildInteraction', candInteraction.ExtElementID, 'Building interaction %s (%i of %i).', candInteraction.Name, this.getInteractionIdx, this.InteractionCount);
+            SysMLConnector.internal.StatusMonitor.publishEvent('BuildInteraction', ...
+                candInteraction.ExtElementID, ...
+                'Building interaction %s (%i of %i).', ...
+                candInteraction.Name, this.getInteractionIdx, this.InteractionCount);
 
             archMdlName = this.getModelName(candInteraction.Name);
             candInteraction.BuildName = archMdlName;
@@ -1141,7 +1146,10 @@ classdef Builder < handle
         end
 
 
-        function updateBuildCounts(builder, activityCount, allocationCount, architectureCount, interactionCount, packageCount, profileCount, requirementCount, requirementLinkCount)
+        function updateBuildCounts(builder, activityCount, allocationCount, ...
+                architectureCount, interactionCount, packageCount,...
+                profileCount, requirementCount, requirementLinkCount,...
+                stateMachineCount)
             % This is set by the import function and used by the status monitor.
             builder.ActivityCount        = activityCount;
             builder.AllocationCount      = allocationCount;
@@ -1151,6 +1159,7 @@ classdef Builder < handle
             builder.ProfileCount         = profileCount;
             builder.RequirementCount     = requirementCount;
             builder.RequirementLinkCount = requirementLinkCount;
+            builder.StateMachineCount = stateMachineCount;
         end
 
         function index = getActivityIdx(this)
@@ -1176,6 +1185,14 @@ classdef Builder < handle
         function index = getInteractionIdx(this)
             this.InteractionIdx = this.InteractionIdx + 1;
             index = this.InteractionIdx;
+        end
+
+        function index = getStateMachineIdx(this)
+            arguments
+                this SysMLConnector.internal.Builder
+            end
+            this.StateMachineIdx = this.StateMachineIdx + 1;
+            index = this.StateMachineIdx;
         end
 
         function index = getInterfaceIdx(this)

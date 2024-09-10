@@ -10,10 +10,6 @@ classdef Fragment < SysMLConnector.internal.CandidateInteraction.Element & ...
         NotImported = []
     end
 
-    properties (SetAccess=protected) %Build Properties
-        Build = false
-    end
-
     methods 
         function fragmentObj = Fragment(parent,interaction,element)
             %FRAGMENT Construct an instance of this class
@@ -32,6 +28,9 @@ classdef Fragment < SysMLConnector.internal.CandidateInteraction.Element & ...
                     "Fragments are not supported before R2024b.");
                 return;
             end            
+            %% update print settings
+            fragmentObj.ExcludedProperties = ...
+                [fragmentObj.ExcludedProperties,"Interaction"];
             %% Parse the content of the fragment
             if isa(element,"umlmm.MessageOccurrenceSpecification")
                 % means this gives order to a message
@@ -82,5 +81,10 @@ classdef Fragment < SysMLConnector.internal.CandidateInteraction.Element & ...
         end
 
         doPublish(this, varargin);
+        print(this,printer);
+    end
+
+    methods (Access=protected)
+        infoString = getInfoString(this);
     end
 end

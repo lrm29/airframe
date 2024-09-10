@@ -10,8 +10,6 @@ if isMATLABReleaseOlderThan("R2024b")
     % before R2024b the API needed does not exist
     return;
 else
-    % mark that this was built
-    this.Build = true;
     if isempty(this.Type)
         % this is a message fragment
         % publish the message if not already build

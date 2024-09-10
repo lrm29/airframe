@@ -1,7 +1,7 @@
 function print(this,printer)
 %PRINT prints state machine component
 arguments
-    this SysMLConnector.internal.CandidateStateMachine.Printable
+    this SysMLConnector.internal.utils.Printable
     printer SysMLConnector.internal.Printer
 end
 if isscalar(this)
