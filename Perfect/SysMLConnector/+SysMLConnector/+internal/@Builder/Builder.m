@@ -125,6 +125,7 @@ classdef Builder < handle
 
                 this.ProjectSLDD = systemcomposer.createDictionary(ddFile);
             end
+            this.ProjectSLDD.save;
 
             this.ProjectSLDDPath = ddFile;
             this.RootProject.addFile(ddFile);
@@ -425,22 +426,24 @@ classdef Builder < handle
 
             archMdlName = this.getModelName(candInteraction.Name);
             candInteraction.BuildName = archMdlName;
-            publish(candInteraction);
-            interactionMdl  = candInteraction.ZCElement.Model;
+
+            % Create as software architecture to model call/response via
+            % client-server ports.
+            interactionMdl = systemcomposer.createModel(archMdlName, "SoftwareArchitecture");
             slHandle = interactionMdl.SimulinkHandle;
-            
+
             candProj = candInteraction.ParentPackage;
             archMdlPath = this.ProjectPath + ...
                 candProj.ZCProjectFolder + filesep + archMdlName + ".slx";
-            this.AllModelPaths = [this.AllModelPaths archMdlPath];
-
             save_system(slHandle, archMdlPath);
 
-            this.RootProject.addFile(archMdlPath);
-
+            this.AllModelPaths = [this.AllModelPaths archMdlPath];
             this.ArchModelExtIDMap(candInteraction.ExtElementID) = slHandle;
-        
+
+            this.RootProject.addFile(archMdlPath);
             this.Stats.NumInteractions = this.Stats.NumInteractions + 1;
+
+            publish(candInteraction, interactionMdl);
         end
 
         stateMachineMdl = createStateMachine(this,candStateMachine);
@@ -1042,19 +1045,8 @@ classdef Builder < handle
         end
         
         function createReqLinks(this, candReqLinks)
-            
-            allMdls = this.ArchModelExtIDMap.values;
             originalWarnState = warning('off', 'Slvnv:oslc:LinkExists');
             cleanup = onCleanup(@() warning(originalWarnState));
-            
-            numModels = length(allMdls);
-            for k = 1:numModels
-                modelHandle = allMdls{k};
-                modelName = get_param(modelHandle, 'Name');
-                SysMLConnector.internal.StatusMonitor.publishEvent('BuilderSaveModelsBeforeLinking', modelName, 'Saving all models before adding requirement links, %s (%i of %i).', modelName, k, numModels);
-                save_system(modelHandle, '', ...
-                            'SaveDirtyReferencedModels', 'on');
-            end
             
             for k = 1:length(candReqLinks)
                 thisLink = candReqLinks{k};

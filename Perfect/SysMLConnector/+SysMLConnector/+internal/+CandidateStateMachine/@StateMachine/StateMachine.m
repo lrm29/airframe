@@ -40,11 +40,17 @@ classdef StateMachine < SysMLConnector.internal.CandidateElement & ...
         finishBuild(this,builder);
         modelHandle = build(this,name);
 
-    function Built = get.Built(this)
-        arguments
-            this SysMLConnector.internal.CandidateStateMachine.StateMachine
+        function Built = get.Built(this)
+            arguments
+                this SysMLConnector.internal.CandidateStateMachine.StateMachine
+            end
+            Built = ~isempty(this.StateflowObj);
         end
-        Built = ~isempty(this.StateflowObj);
     end
+
+    methods (Access={?SysMLConnector.internal.Builder})
+        function setBuildName(this, buildName)
+            this.BuildName = buildName;
+        end
     end
 end
