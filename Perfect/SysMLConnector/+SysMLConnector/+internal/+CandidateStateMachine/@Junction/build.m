@@ -3,7 +3,11 @@ function build(this)
 arguments
     this SysMLConnector.internal.CandidateStateMachine.Junction
 end
+try
 this.StateflowObj = Stateflow.Junction(this.Parent.StateflowObj);
+catch ME
+    rethrow(ME)
+end
 this.storeID();
 % handle special cases
 switch this.Type
