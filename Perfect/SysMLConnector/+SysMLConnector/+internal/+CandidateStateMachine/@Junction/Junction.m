@@ -19,7 +19,7 @@ classdef Junction < SysMLConnector.internal.CandidateStateMachine.Node
                 parent SysMLConnector.internal.CandidateStateMachine.Stateflow
             end
             junctionObj@SysMLConnector.internal.CandidateStateMachine.Node(...
-                SysMLConnector.internal.utils.getExtID(element),parent);
+                element,parent);
             junctionObj.Type = element.kind;
         end
 

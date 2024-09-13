@@ -10,14 +10,14 @@ classdef GraphicalElement < SysMLConnector.internal.CandidateStateMachine.Elemen
     end
 
     methods
-        function graphicElementObj = GraphicalElement(externalElementID,parent)
+        function graphicElementObj = GraphicalElement(element,parent)
             %GRAPHICALELEMENT Construct an instance of this class
             arguments
-                externalElementID {mustBeText}
+                element
                 parent
             end
             graphicElementObj@SysMLConnector.internal.CandidateStateMachine.Element(...
-                externalElementID,parent);
+                element,parent);
         end
     end
 

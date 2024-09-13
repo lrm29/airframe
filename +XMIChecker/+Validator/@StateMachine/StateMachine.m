@@ -1,4 +1,4 @@
-classdef StateMachine < XMIChecker.Validator.Validator
+classdef StateMachine < XMIChecker.Validator.Default
     %STATEMACHINE validates a state machine
     
     methods
@@ -9,7 +9,7 @@ classdef StateMachine < XMIChecker.Validator.Validator
                 xmidb SysMLConnector.internal.CandidateAD.internal.XMIDatabase
                 foundElements dictionary
             end
-            stateMachineValidatorObj@XMIChecker.Validator.Validator(candidate);
+            stateMachineValidatorObj@XMIChecker.Validator.Default(candidate,xmidb,foundElements);
             stateMachineValidatorObj.processBuildableFlag(candidate.Built);
         end
     end

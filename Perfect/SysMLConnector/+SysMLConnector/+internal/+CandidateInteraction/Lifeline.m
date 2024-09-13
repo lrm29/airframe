@@ -1,4 +1,5 @@
-classdef Lifeline < SysMLConnector.internal.CandidateInteraction.Element
+classdef Lifeline < SysMLConnector.internal.CandidateInteraction.Element & ...
+        SysMLConnector.internal.CandidateInteraction.RelatedElementCommentable
     properties
         FullPath
         Children
