@@ -186,6 +186,7 @@ classdef UMLVisitor < m3i.Visitor
                         thisArch.addChildComponent(...
                             string(property.name), ...
                             cID, this.getExtID(property.type));
+                        visitChildren(this,property.ownedComment);
                     else
                         addNotImported(this, property, "BlockProperty", ...
                                                sprintf("The aggregation type of '%s' is not supported. Part properties must have an aggregation type of 'composite'.", property.aggregation.toString));
@@ -795,7 +796,8 @@ classdef UMLVisitor < m3i.Visitor
                 addNotImported(this, element, "Class", ...
                                "Not a Block, InterfaceBlock, or Requirement");
             end
-            ret = [];
+            ret = [];            
+            visitChildren(this,element.ownedComment);
         end
 
         function portType = getSupportedPortType(this, portElement)
@@ -1038,6 +1040,8 @@ classdef UMLVisitor < m3i.Visitor
             addNotImported(this, element, "Use Case", ...
                                "Use Case import not supported.");
         end
+
+        ret = visitumlmmComment(~,element);
     end    
 
 end

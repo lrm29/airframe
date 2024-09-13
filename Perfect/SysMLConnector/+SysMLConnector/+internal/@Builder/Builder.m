@@ -35,6 +35,8 @@ classdef Builder < handle
         NotImported = []; % Stuff that failed to build should get added here.
         BuildComplete = false; % if false, then delete method knows the import did not exit cleanly.
         Stats 
+
+        DebugMode = false
     end
 
     properties (SetAccess=private)
@@ -51,6 +53,7 @@ classdef Builder < handle
         RequirementCount
         RequirementLinkCount
         StateMachineCount
+        CommentCount
     end
     
     properties (Access=private)
@@ -66,6 +69,7 @@ classdef Builder < handle
         RequirementIdx     = 0
         RequirementLinkIdx = 0
         StateMachineIdx    = 0
+        CommentIdx         = 0
     end
  
     methods
@@ -248,7 +252,9 @@ classdef Builder < handle
             catch ME
                 % do not break the build, just warn to let us know we
                 % missed a property assignment.
-                warning(ME.identifier, '%s', getReport(ME));
+                if this.DebugMode
+                    warning(ME.identifier, '%s', getReport(ME));
+                end
             end
         end
         
@@ -1141,7 +1147,7 @@ classdef Builder < handle
         function updateBuildCounts(builder, activityCount, allocationCount, ...
                 architectureCount, interactionCount, packageCount,...
                 profileCount, requirementCount, requirementLinkCount,...
-                stateMachineCount)
+                stateMachineCount,commentCount)
             % This is set by the import function and used by the status monitor.
             builder.ActivityCount        = activityCount;
             builder.AllocationCount      = allocationCount;
@@ -1151,7 +1157,8 @@ classdef Builder < handle
             builder.ProfileCount         = profileCount;
             builder.RequirementCount     = requirementCount;
             builder.RequirementLinkCount = requirementLinkCount;
-            builder.StateMachineCount = stateMachineCount;
+            builder.StateMachineCount    = stateMachineCount;
+            builder.CommentCount         = commentCount;
         end
 
         function index = getActivityIdx(this)
@@ -1211,5 +1218,7 @@ classdef Builder < handle
             this.RequirementLinkIdx = this.RequirementLinkIdx + 1;
             index = this.RequirementLinkIdx;
         end
+
+        createComment(this,candComment);
     end
 end

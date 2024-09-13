@@ -1,6 +1,6 @@
 classdef Element < SysMLConnector.internal.CandidateElement & ...
         SysMLConnector.internal.CandidateStateMachine.Stateflow & ...
-        SysMLConnector.internal.utils.Printable
+        SysMLConnector.internal.utils.Printable 
     %ELEMENT basic element of a state machine
     
     properties (SetAccess=protected)
@@ -9,15 +9,17 @@ classdef Element < SysMLConnector.internal.CandidateElement & ...
     end
     
     methods
-        function elementObj = Element(externalElementID,parent)
+        function elementObj = Element(element,parent)
             %ELEMENT Construct an instance of this class
             arguments
-                externalElementID {mustBeText}
+                element
                 parent 
             end
             elementObj@SysMLConnector.internal.CandidateElement( ...
-                externalElementID);
+                SysMLConnector.internal.utils.getExtID(element));
             elementObj.Parent = parent;
+            %% check for comments
+            elementObj.initializeComments(element);
         end
 
         storeID(this);

@@ -1,4 +1,4 @@
-classdef Transition < XMIChecker.Validator.Validator
+classdef Transition < XMIChecker.Validator.Default
     %TRANSITION validates state machine transitions
     
     methods
@@ -9,7 +9,7 @@ classdef Transition < XMIChecker.Validator.Validator
                 xmidb SysMLConnector.internal.CandidateAD.internal.XMIDatabase
                 foundElements dictionary
             end
-            transitionValidatorObj@XMIChecker.Validator.Validator(candidate);
+            transitionValidatorObj@XMIChecker.Validator.Default(candidate,xmidb,foundElements);
             transitionValidatorObj.processBuildableFlag(candidate.Built);
         end
     end

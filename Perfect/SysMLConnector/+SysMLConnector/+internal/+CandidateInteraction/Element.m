@@ -9,7 +9,7 @@ classdef Element < SysMLConnector.internal.CandidateElement & ...
         ReferenceElementID
     end
 
-    properties
+    properties (SetAccess=protected)
         ZCElement
     end
 
