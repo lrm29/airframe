@@ -4,6 +4,7 @@ classdef Message < SysMLConnector.internal.CandidateInteraction.Element
         To 
         StartFragment
         EndFragment
+        Invalid = false;
     end
     
     methods
