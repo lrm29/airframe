@@ -1,6 +1,7 @@
 classdef StateMachine < SysMLConnector.internal.CandidateElement & ...
         SysMLConnector.internal.CandidateStateMachine.RegionContainer &...
-        SysMLConnector.internal.utils.Printable
+        SysMLConnector.internal.utils.Printable & ...
+        SysMLConnector.internal.CandidateStateMachine.Stateflow
     %STATEMACHINE represents a state machine imported from SysML
 
     properties (SetAccess=protected)
@@ -26,7 +27,9 @@ classdef StateMachine < SysMLConnector.internal.CandidateElement & ...
                 SysMLConnector.internal.utils.getExtID(element));
             stateMachineObj.Name = element.name;
             stateMachineObj.ParentPackageExtElementID = parentPackageExtElementID;
-            % now to parse the regions
+            %% check for comments
+            stateMachineObj.initializeComments(element);
+            %% now to parse the regions
             stateMachineObj.Regions = SysMLConnector.internal.CandidateStateMachine.Region.empty(element.region.size,0);
             for i = 1:element.region.size
                 stateMachineObj.Regions(i) = ...

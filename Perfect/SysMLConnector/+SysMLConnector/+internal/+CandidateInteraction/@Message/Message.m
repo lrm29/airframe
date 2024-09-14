@@ -1,9 +1,11 @@
-classdef Message < SysMLConnector.internal.CandidateInteraction.Element
+classdef Message < SysMLConnector.internal.CandidateInteraction.Element & ...
+        SysMLConnector.internal.CandidateInteraction.RelatedElementCommentable
     properties (SetAccess=protected)
         From 
         To 
         StartFragment
         EndFragment
+        Invalid = false;
     end
     
     methods
@@ -25,6 +27,8 @@ classdef Message < SysMLConnector.internal.CandidateInteraction.Element
             %% setup exclusions for printing
             messageObj.ExcludedProperties = [messageObj.ExcludedProperties,...
                 "StartFragment","EndFragment"];
+            %% check for comments
+            messageObj.initializeComments(umlMessage);
         end
 
         doPublish(this, varargin);

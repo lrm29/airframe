@@ -1,4 +1,6 @@
-classdef Element < SysMLConnector.internal.CandidateElement & matlab.mixin.SetGetExactNames
+classdef Element < SysMLConnector.internal.CandidateElement & ...
+        matlab.mixin.SetGetExactNames & ...
+        SysMLConnector.internal.CandidateComment.Commentable
     properties
         Name (1,:) char
         Parent
@@ -83,6 +85,8 @@ classdef Element < SysMLConnector.internal.CandidateElement & matlab.mixin.SetGe
         function setZCName(this, newName)
             SysMLConnector.internal.CandidateAD.internal.setName(this.ZCElement, newName);
         end
+
+        appendComment(this,comment);
     end
     methods (Sealed)
         function print(this, printer)           

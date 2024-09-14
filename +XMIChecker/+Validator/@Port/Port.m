@@ -1,4 +1,4 @@
-classdef Port < XMIChecker.Validator.Validator
+classdef Port < XMIChecker.Validator.Default
     %PORT validator for ports within a state machine
     
     methods
@@ -9,7 +9,7 @@ classdef Port < XMIChecker.Validator.Validator
                 xmidb SysMLConnector.internal.CandidateAD.internal.XMIDatabase
                 foundElements dictionary
             end
-            portObj@XMIChecker.Validator.Validator(candidate);
+            portObj@XMIChecker.Validator.Default(candidate,xmidb,foundElements);
             portObj.processBuildableFlag(candidate.Built);
         end
     end

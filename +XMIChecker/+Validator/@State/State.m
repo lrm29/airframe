@@ -1,4 +1,4 @@
-classdef State < XMIChecker.Validator.Validator
+classdef State < XMIChecker.Validator.Default
     %STATE validator for state element within a state machine 
     
     methods
@@ -9,7 +9,7 @@ classdef State < XMIChecker.Validator.Validator
                 xmidb SysMLConnector.internal.CandidateAD.internal.XMIDatabase
                 foundElements dictionary
             end
-            stateObj@XMIChecker.Validator.Validator(candidate);
+            stateObj@XMIChecker.Validator.Default(candidate,xmidb,foundElements);
             stateObj.processBuildableFlag(candidate.Built);
         end
     end

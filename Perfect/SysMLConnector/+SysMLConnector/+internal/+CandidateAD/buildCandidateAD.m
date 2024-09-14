@@ -22,8 +22,14 @@ function [candidateAD, notImported] = buildCandidateAD(adStruct, candidateAD)
     % Keep track of the parameter index to resolve activity referencing.
     parameterIdx = 0;
 
+    % check for comments
+    SysMLConnector.internal.CandidateComment.Commentable.checkForComments(adStruct);
+
     for nodeIdx = 1:adStruct.node.size
         nodeStruct = adStruct.node.at(nodeIdx);
+
+        % check for comments on the node 
+        SysMLConnector.internal.CandidateComment.Commentable.checkForComments(nodeStruct);
 
         nodeName = '';
         behavior = false;

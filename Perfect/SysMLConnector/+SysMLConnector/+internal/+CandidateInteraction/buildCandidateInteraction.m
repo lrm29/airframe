@@ -5,6 +5,9 @@ function [candidateInteraction, notImported] = buildCandidateInteraction(element
     for lifelineIdx = 1:element.lifeline.size
         umlLifeline = element.lifeline.at(lifelineIdx);
 
+        % check for comments
+        SysMLConnector.internal.CandidateComment.Commentable.checkForComments(umlLifeline);
+
         umlLifelineNameIdx = 1;
         umlLifelineNameParts = {};
 
@@ -41,6 +44,9 @@ function [candidateInteraction, notImported] = buildCandidateInteraction(element
         
         addLifeline(candidateInteraction, umlLifelineName, lifelineID, referenceID);
     end
+
+    %% check for comments
+    SysMLConnector.internal.CandidateComment.Commentable.checkForComments(element);
 
     %% Collect Fragment Data
     if ~isMATLABReleaseOlderThan("R2024b")
