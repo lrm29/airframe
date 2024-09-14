@@ -27,6 +27,8 @@ classdef StateMachine < SysMLConnector.internal.CandidateElement & ...
                 SysMLConnector.internal.utils.getExtID(element));
             stateMachineObj.Name = element.name;
             stateMachineObj.ParentPackageExtElementID = parentPackageExtElementID;
+            %% enable requirement linking
+            stateMachineObj.ValidRequirementLinkTarget = true;
             %% check for comments
             stateMachineObj.initializeComments(element);
             %% now to parse the regions
@@ -42,6 +44,7 @@ classdef StateMachine < SysMLConnector.internal.CandidateElement & ...
         prelimBuild(this,builder);
         finishBuild(this,builder);
         modelHandle = build(this,name);
+        linkTarget = getLinkTarget(this);
 
         function Built = get.Built(this)
             arguments
