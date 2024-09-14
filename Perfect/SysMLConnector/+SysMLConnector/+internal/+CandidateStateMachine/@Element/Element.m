@@ -18,11 +18,14 @@ classdef Element < SysMLConnector.internal.CandidateElement & ...
             elementObj@SysMLConnector.internal.CandidateElement( ...
                 SysMLConnector.internal.utils.getExtID(element));
             elementObj.Parent = parent;
+            %% enable requirement linking
+            elementObj.ValidRequirementLinkTarget = true;
             %% check for comments
             elementObj.initializeComments(element);
         end
 
         storeID(this);
+        linkTarget = getLinkTarget(this);
     end
 
     methods (Abstract)
