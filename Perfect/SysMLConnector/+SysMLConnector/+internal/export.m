@@ -53,12 +53,13 @@ function export(models, xmiFilename, options)
     tmpDname = tempname;
     mkdir(tmpDname);
     startDir = cd(tmpDname);
+    cleanupStartDir = onCleanup(@() cd(startDir));
     
-    xmiLoc = string(fileparts(which('systemcomposer.SysMLConnector.internal.import')));
+    xmiLoc = string(fileparts(which('SysMLConnector.internal.import')));
     unzip(xmiLoc + filesep + "xmi" + filesep + "supportFiles.zip", tmpDname);
     sysmlMod = reader.read("SysML.xmi");
     sysmlprofile=sysmlMod.content.at(1);
-    cd(startDir);
+    delete(cleanupStartDir);
     rmdir(tmpDname, 's');
     
     %% Create base model
