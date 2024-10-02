@@ -27,14 +27,14 @@ classdef Node < SysMLConnector.internal.CandidateStateMachine.GraphicalElement &
     end
 
     methods
-        function nodeObj = Node(externalElementID,parent)
+        function nodeObj = Node(element,parent)
             %NODE Construct an instance of this class
             arguments
-                externalElementID {mustBeText}
+                element
                 parent
             end
             nodeObj@SysMLConnector.internal.CandidateStateMachine.GraphicalElement(...
-                externalElementID,parent);
+                element,parent);            
             %% TODO: enable linking
         end
 

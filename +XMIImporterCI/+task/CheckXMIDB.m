@@ -194,6 +194,9 @@ classdef CheckXMIDB < padv.Task & XMIImporterCI.utilities.PathManager
                 taskResult.ResultValues.Pass = sum(cellfun(@(v) v.pass,validators));
                 taskResult.ResultValues.Warn = sum(cellfun(@(v) v.warn,validators));
                 taskResult.ResultValues.Fail = sum(cellfun(@(v) v.fail,validators));
+                % add fails for anything with no result
+                taskResult.ResultValues.Fail = taskResult.ResultValues.Fail + ...
+                    sum(cellfun(@(v) v.pass==0&&v.fail==0&&v.warn==0,validators));
                 %% TODO: need to find all the escapes
                 % that is the elements imported but not repoted
                 % these are additional warnings

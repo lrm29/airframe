@@ -19,11 +19,16 @@ this.Parent.addConnectionPoint(this.ConnectionPoints);
 % expect this to be 1
 this.Regions = ...
     SysMLConnector.internal.CandidateStateMachine.Region.empty(element.region.size,0);
+if isempty(this.ConnectionPoints)
+    portJunctions = SysMLConnector.internal.CandidateStateMachine.PortJunction.empty();
+else
+    portJunctions = [this.ConnectionPoints.Junction];
+end
 for i = 1:element.region.size
     this.Regions(i) = ...
         SysMLConnector.internal.CandidateStateMachine.Region(...
         element.region.at(i),this,...
-        [this.ConnectionPoints.Junction]);
+        portJunctions);
 end
 if element.region.size > 1
     warning("SysMLConnector:internal:CandidateStateMachine:State:parseState",...
@@ -55,15 +60,15 @@ function labelString = parseBehavior(element)
 arguments
     element
 end
+labelString = strings(0);
 switch class(element)
     case "umlmm.OpaqueBehavior"
-        if ~isempty(element.body)
+        if element.body.size > 0
             labelString = string(element.body.at(1)) + newline;
         end
     case "umlmm.Activity"
         labelString = string(element.name) + newline;
     otherwise
-        labelString = strings(0);
         warning("SysMLConnector:internal:CandidateStateMachine:State:parseState",...
             "A state was found with an unsupported behavior type of %s, please contact MathWorks.",...
             class(element));

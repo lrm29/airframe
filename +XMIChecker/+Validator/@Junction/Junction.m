@@ -1,4 +1,4 @@
-classdef Junction < XMIChecker.Validator.Validator
+classdef Junction < XMIChecker.Validator.Default
     %JUNCTION state machine element validator
 
     methods
@@ -9,7 +9,7 @@ classdef Junction < XMIChecker.Validator.Validator
                 xmidb SysMLConnector.internal.CandidateAD.internal.XMIDatabase
                 foundElements dictionary
             end
-            junctionValidatorObj@XMIChecker.Validator.Validator(candidate);
+            junctionValidatorObj@XMIChecker.Validator.Default(candidate,xmidb,foundElements);
             junctionValidatorObj.processBuildableFlag(candidate.Built);
         end
     end

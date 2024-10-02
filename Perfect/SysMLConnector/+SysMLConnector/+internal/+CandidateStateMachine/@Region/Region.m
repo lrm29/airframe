@@ -21,7 +21,7 @@ classdef Region < SysMLConnector.internal.CandidateStateMachine.Element
                     = SysMLConnector.internal.CandidateStateMachine.PortJunction.empty
             end
             regionObj@SysMLConnector.internal.CandidateStateMachine.Element(...
-                SysMLConnector.internal.utils.getExtID(element),parent);
+                element,parent);
             %% parse the subvertexes
             for i = 1:element.subvertex.size
                 umlSubvertex = element.subvertex.at(i);

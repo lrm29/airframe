@@ -16,4 +16,5 @@ if isempty(startingSubvertex)
     startingSubvertex = subvertexes(1);
 end
 arrayfun(@(ss) ss.arrange(),startingSubvertex);
+this.Built = true;
 end

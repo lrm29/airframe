@@ -5,7 +5,14 @@ arguments
     options.force = false
 end
 %% call to generate pipeline
-pipeline = citools.utilities.generateYaml(force=options.force,Tags="long-jobs");
+if isunix
+    pipeline = citools.utilities.generateYaml(force=options.force, ...
+        Tags=getenv("TAGS"), ...
+        matlabLaunchCmd="xvfb-run --auto-servernum --server-num=1 mw -using B"+citools.utilities.getVersion()+"d matlab");
+else
+    pipeline = citools.utilities.generateYaml(force=options.force,Tags=getenv("TAGS"));
+end
+
 %% need to add wokrflow info
 files = dir(pipeline.GeneratedPipelineDirectory);
 files = files(~[files.isdir]);

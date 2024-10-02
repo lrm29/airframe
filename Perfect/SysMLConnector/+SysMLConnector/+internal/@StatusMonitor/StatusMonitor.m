@@ -2,6 +2,7 @@ classdef StatusMonitor < handle
     properties
         EventLog
         EventIndex
+        SourceTool
     end
     
     properties (SetAccess=private)
@@ -29,6 +30,20 @@ classdef StatusMonitor < handle
 
     methods (Static)
         statusMonitor = getStatusMonitor;
+
+        function sourceTool = getSourceTool
+            statusMonitor = SysMLConnector.internal.StatusMonitor.getStatusMonitor;
+            sourceTool = statusMonitor.SourceTool;
+        end
+
+        function setSourceTool(sourceTool)
+            arguments
+                sourceTool (1,:) char
+            end
+
+            statusMonitor = SysMLConnector.internal.StatusMonitor.getStatusMonitor;
+            statusMonitor.SourceTool = sourceTool;
+        end
 
         function addCancelRequestCallback(callback)
             statusMonitor = SysMLConnector.internal.StatusMonitor.getStatusMonitor;

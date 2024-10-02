@@ -17,6 +17,7 @@
         <CallbackFcn>SysMLConnector.app</CallbackFcn>
     </App>
     <!--Opt-->
+    <Patch>Patch</Patch>
     <PostPullFcn>PostPullFcn</PostPullFcn>
     <PreRemoveFcn>PreRemoveFcn</PreRemoveFcn>
     <Remove>DocSrc</Remove>
@@ -41,4 +42,5 @@
     <Word>sfnew</Word>
     <Word>Subvertexes</Word>
     <Word>subvertexes</Word>
+    <Word>umlElement</Word>
 </ProductSupportPackage>

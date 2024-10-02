@@ -23,31 +23,36 @@ classdef Transition < SysMLConnector.internal.CandidateStateMachine.GraphicalEle
                 parent SysMLConnector.internal.CandidateStateMachine.Region
             end
             transitionObj@SysMLConnector.internal.CandidateStateMachine.GraphicalElement(...
-                SysMLConnector.internal.utils.getExtID(element),parent);
-            try
-                transitionObj.Source = parent.Subvertexes(...
-                    SysMLConnector.internal.utils.getExtID(element.source));
-            catch ME
-                if strcmp('MATLAB:dictionary:ScalarKeyNotFound',ME.identifier)
-                    warning( ...
-                        "SysMLConnector:internal:CandidateStateMachine:Transition",...
-                        "Transition connects to unsupported element with ID %s.", ...
+                element,parent);
+            %% parse element
+            if ~isempty(element.source)
+                try
+                    transitionObj.Source = parent.Subvertexes(...
                         SysMLConnector.internal.utils.getExtID(element.source));
-                else
-                    rethrow(ME);
+                catch ME
+                    if strcmp('MATLAB:dictionary:ScalarKeyNotFound',ME.identifier)
+                        warning( ...
+                            "SysMLConnector:internal:CandidateStateMachine:Transition",...
+                            "Transition connects to unsupported element with ID %s.", ...
+                            SysMLConnector.internal.utils.getExtID(element.source));
+                    else
+                        rethrow(ME);
+                    end
                 end
             end
-            try
-                transitionObj.Target = parent.Subvertexes(...
-                    SysMLConnector.internal.utils.getExtID(element.target));
-            catch ME
-                if strcmp('MATLAB:dictionary:ScalarKeyNotFound',ME.identifier)
-                    warning( ...
-                        "SysMLConnector:internal:CandidateStateMachine:Transition",...
-                        "Transition connects to unsupported element with ID %s.", ...
-                        SysMLConnector.internal.utils.getExtID(element.source));
-                else
-                    rethrow(ME);
+            if ~isempty(element.target)
+                try
+                    transitionObj.Target = parent.Subvertexes(...
+                        SysMLConnector.internal.utils.getExtID(element.target));
+                catch ME
+                    if strcmp('MATLAB:dictionary:ScalarKeyNotFound',ME.identifier)
+                        warning( ...
+                            "SysMLConnector:internal:CandidateStateMachine:Transition",...
+                            "Transition connects to unsupported element with ID %s.", ...
+                            SysMLConnector.internal.utils.getExtID(element.target));
+                    else
+                        rethrow(ME);
+                    end
                 end
             end
             % only add transitions to connected elements if both exist
@@ -95,9 +100,9 @@ classdef Transition < SysMLConnector.internal.CandidateStateMachine.GraphicalEle
                             "["+string(element.guard.specification.body.at(1)+"]");
                         if element.guard.specification.body.size > 1
                             warning( ...
-                            "SysMLConnector:internal:CandidateStateMachine:Transition",...
-                            "Guard contained %d body elements, this is not expected please contact MathWorks.", ...
-                            element.guard.specification.body.size);
+                                "SysMLConnector:internal:CandidateStateMachine:Transition",...
+                                "Guard contained %d body elements, this is not expected please contact MathWorks.", ...
+                                element.guard.specification.body.size);
                         end
                     end
                 end
@@ -159,6 +164,7 @@ classdef Transition < SysMLConnector.internal.CandidateStateMachine.GraphicalEle
 
         build(this);
         arrange(this,options);
+        print(this,printer);
         %% TODO: add align label to position the label
     end
 end

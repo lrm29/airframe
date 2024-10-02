@@ -1,13 +1,11 @@
-classdef Message < SysMLConnector.internal.CandidateInteraction.Element
+classdef Message < SysMLConnector.internal.CandidateInteraction.Element & ...
+        SysMLConnector.internal.CandidateInteraction.RelatedElementCommentable
     properties (SetAccess=protected)
         From 
         To 
         StartFragment
         EndFragment
-    end
-
-    properties (SetAccess=protected)% Build Properties
-        Built = false;
+        Invalid = false;
     end
     
     methods
@@ -22,19 +20,25 @@ classdef Message < SysMLConnector.internal.CandidateInteraction.Element
                 ExternalID=SysMLConnector.internal.utils.getExtID(umlMessage), ...
                 Parent=parent);
             messageObj.From = SysMLConnector.internal.CandidateInteraction.Message.getEndPoint( ...
-                parent.Interaction,umlMessage.sendEvent);
+                parent.Interaction,umlMessage, 'sendEvent');
             messageObj.To = SysMLConnector.internal.CandidateInteraction.Message.getEndPoint( ...
-                parent.Interaction,umlMessage.receiveEvent);
+                parent.Interaction,umlMessage, 'receiveEvent');
             messageObj.ValidRequirementLinkTarget = false;
+            %% setup exclusions for printing
+            messageObj.ExcludedProperties = [messageObj.ExcludedProperties,...
+                "StartFragment","EndFragment"];
+            %% check for comments
+            messageObj.initializeComments(umlMessage);
         end
 
         doPublish(this, varargin);
         registerFragment(this, fragment);
+        print(this,printer);
     end
 
     methods (Static)
         validateEndPoint(endPoint);
-        endPoint = getEndPoint(candidateInteraction,event);
+        endPoint = getEndPoint(candidateInteraction, messageOrEvent, eventName);
     end
 end
 

@@ -35,6 +35,8 @@ classdef Builder < handle
         NotImported = []; % Stuff that failed to build should get added here.
         BuildComplete = false; % if false, then delete method knows the import did not exit cleanly.
         Stats 
+
+        DebugMode = false
     end
 
     properties (SetAccess=private)
@@ -50,6 +52,8 @@ classdef Builder < handle
         ProfileCount
         RequirementCount
         RequirementLinkCount
+        StateMachineCount
+        CommentCount
     end
     
     properties (Access=private)
@@ -64,6 +68,8 @@ classdef Builder < handle
         ProfileIdx         = 0
         RequirementIdx     = 0
         RequirementLinkIdx = 0
+        StateMachineIdx    = 0
+        CommentIdx         = 0
     end
  
     methods
@@ -123,6 +129,7 @@ classdef Builder < handle
 
                 this.ProjectSLDD = systemcomposer.createDictionary(ddFile);
             end
+            this.ProjectSLDD.save;
 
             this.ProjectSLDDPath = ddFile;
             this.RootProject.addFile(ddFile);
@@ -245,7 +252,9 @@ classdef Builder < handle
             catch ME
                 % do not break the build, just warn to let us know we
                 % missed a property assignment.
-                warning(ME.identifier, '%s', getReport(ME));
+                if this.DebugMode
+                    warning(ME.identifier, '%s', getReport(ME));
+                end
             end
         end
         
@@ -340,6 +349,8 @@ classdef Builder < handle
             fid = fopen(filePath, 'w');
             cleanup = onCleanup(@()fclose(fid));
             fprintf(fid, element.BuildFileContent);
+
+            this.RootProject.addFile(filePath);
         end
         
         function slMdlHdl = createSimulinkModel(this, candArch)
@@ -414,26 +425,31 @@ classdef Builder < handle
         end
 
         function interactionMdl = createInteraction(this, candInteraction)
-            SysMLConnector.internal.StatusMonitor.publishEvent('BuildInteraction', candInteraction.ExtElementID, 'Building interaction %s (%i of %i).', candInteraction.Name, this.getInteractionIdx, this.InteractionCount);
+            SysMLConnector.internal.StatusMonitor.publishEvent('BuildInteraction', ...
+                candInteraction.ExtElementID, ...
+                'Building interaction %s (%i of %i).', ...
+                candInteraction.Name, this.getInteractionIdx, this.InteractionCount);
 
             archMdlName = this.getModelName(candInteraction.Name);
             candInteraction.BuildName = archMdlName;
-            publish(candInteraction);
-            interactionMdl  = candInteraction.ZCElement.Model;
+
+            % Create as software architecture to model call/response via
+            % client-server ports.
+            interactionMdl = systemcomposer.createModel(archMdlName, "SoftwareArchitecture");
             slHandle = interactionMdl.SimulinkHandle;
-            
+
             candProj = candInteraction.ParentPackage;
             archMdlPath = this.ProjectPath + ...
                 candProj.ZCProjectFolder + filesep + archMdlName + ".slx";
-            this.AllModelPaths = [this.AllModelPaths archMdlPath];
-
             save_system(slHandle, archMdlPath);
 
-            this.RootProject.addFile(archMdlPath);
-
+            this.AllModelPaths = [this.AllModelPaths archMdlPath];
             this.ArchModelExtIDMap(candInteraction.ExtElementID) = slHandle;
-        
+
+            this.RootProject.addFile(archMdlPath);
             this.Stats.NumInteractions = this.Stats.NumInteractions + 1;
+
+            publish(candInteraction, interactionMdl);
         end
 
         stateMachineMdl = createStateMachine(this,candStateMachine);
@@ -972,8 +988,8 @@ classdef Builder < handle
                 linkPackage(candidateAllocationSet);
                 
                 candidateAllocationSet.Builder = this;
-                candidateAllocationSet.BuildName = candidateAllocationSet.Name;
-            
+                candidateAllocationSet.BuildName = this.getModelName(candidateAllocationSet.Name);
+                
                 publish(candidateAllocationSet);
 
                 if ~isempty(candidateAllocationSet.ParentPackage)
@@ -1035,19 +1051,8 @@ classdef Builder < handle
         end
         
         function createReqLinks(this, candReqLinks)
-            
-            allMdls = this.ArchModelExtIDMap.values;
             originalWarnState = warning('off', 'Slvnv:oslc:LinkExists');
             cleanup = onCleanup(@() warning(originalWarnState));
-            
-            numModels = length(allMdls);
-            for k = 1:numModels
-                modelHandle = allMdls{k};
-                modelName = get_param(modelHandle, 'Name');
-                SysMLConnector.internal.StatusMonitor.publishEvent('BuilderSaveModelsBeforeLinking', modelName, 'Saving all models before adding requirement links, %s (%i of %i).', modelName, k, numModels);
-                save_system(modelHandle, '', ...
-                            'SaveDirtyReferencedModels', 'on');
-            end
             
             for k = 1:length(candReqLinks)
                 thisLink = candReqLinks{k};
@@ -1139,7 +1144,10 @@ classdef Builder < handle
         end
 
 
-        function updateBuildCounts(builder, activityCount, allocationCount, architectureCount, interactionCount, packageCount, profileCount, requirementCount, requirementLinkCount)
+        function updateBuildCounts(builder, activityCount, allocationCount, ...
+                architectureCount, interactionCount, packageCount,...
+                profileCount, requirementCount, requirementLinkCount,...
+                stateMachineCount,commentCount)
             % This is set by the import function and used by the status monitor.
             builder.ActivityCount        = activityCount;
             builder.AllocationCount      = allocationCount;
@@ -1149,6 +1157,8 @@ classdef Builder < handle
             builder.ProfileCount         = profileCount;
             builder.RequirementCount     = requirementCount;
             builder.RequirementLinkCount = requirementLinkCount;
+            builder.StateMachineCount    = stateMachineCount;
+            builder.CommentCount         = commentCount;
         end
 
         function index = getActivityIdx(this)
@@ -1176,6 +1186,14 @@ classdef Builder < handle
             index = this.InteractionIdx;
         end
 
+        function index = getStateMachineIdx(this)
+            arguments
+                this SysMLConnector.internal.Builder
+            end
+            this.StateMachineIdx = this.StateMachineIdx + 1;
+            index = this.StateMachineIdx;
+        end
+
         function index = getInterfaceIdx(this)
             this.InterfaceIdx = this.InterfaceIdx + 1;
             index = this.InterfaceIdx;
@@ -1200,5 +1218,7 @@ classdef Builder < handle
             this.RequirementLinkIdx = this.RequirementLinkIdx + 1;
             index = this.RequirementLinkIdx;
         end
+
+        createComment(this,candComment);
     end
 end
