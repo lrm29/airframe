@@ -14,6 +14,8 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
         ChildComponents = [];
         ChildConnectors = [];
 
+        Redefined = "";
+
         DeferredConnectors = [];
 
         Parameters = [];
@@ -143,23 +145,35 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
     methods (Access = private)
         
         function mergeInGeneralization(this, otherArch)
-        % Copy over all components, ports, and connectors of 
+        % Copy over all parameters, components, ports, and connectors of 
         % the 'general' Architecture.            
             otherArchComps = otherArch.CompMapFromExtElementID.values;
             for k = 1:length(otherArchComps)
-                this.addChildComponent(...
-                    otherArchComps{k}.Name, ...
-                    otherArchComps{k}.ExtElementID, ...
-                    otherArchComps{k}.ReferenceArchExtElementID);
+                if ~ismember(otherArchComps{k}.ExtElementID, this.Redefined)
+                    this.addChildComponent(...
+                        otherArchComps{k}.Name, ...
+                        otherArchComps{k}.ExtElementID, ...
+                        otherArchComps{k}.ReferenceArchExtElementID);
+                end
             end
             
             otherArchPorts = otherArch.PortMapFromExtElementID.values;
             for k = 1:length(otherArchPorts)
                 otherPort = otherArchPorts{k};
-                this.addPort(...
-                    otherPort.Name, otherPort.IsConjugated, ...
-                    otherPort.ExtElementID, otherPort.InterfaceExtElementID, ...
-                    otherPort.Interface, true);
+                if ~ismember(otherPort.ExtElementID, this.Redefined)
+                    this.addPort(...
+                        otherPort.Name, otherPort.IsConjugated, ...
+                        otherPort.ExtElementID, otherPort.InterfaceExtElementID, ...
+                        otherPort.Interface, true);
+                end
+            end
+
+            otherArchParameters = otherArch.Parameters;
+            for k = 1:length(otherArchParameters)
+                otherParameter = otherArchParameters(k);
+                if ~ismember(otherParameter.ExtElementID, this.Redefined)
+                    cloneParameter(otherParameter, this);
+                end
             end
             
             this.copyChildConnectors(otherArch.ChildConnectors);
@@ -489,12 +503,18 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
         function pName = getPortName(this, portID)
             pName = this.PortMapFromExtElementID(portID).Name;
         end
+
+        function redefine(this, property, redefinitionID)
+            property.Redefines = redefinitionID;
+            this.Redefined = [this.Redefined string(redefinitionID)];
+        end
         
         function cComp = addChildComponent(this, compName, extID, refCompID)
             cComp = SysMLConnector.internal.CandidateComponent(...
                 compName, this, extID, refCompID);
+    
             this.ChildComponents = [this.ChildComponents cComp];
-
+    
             assert(~isKey(this.CompMapFromExtElementID, extID));
             this.CompMapFromExtElementID(extID) = cComp;
         end
@@ -542,13 +562,18 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
             this.ReferencingComps = [this.ReferencingComps refComp];
         end
 
-        function addParameter(this, paramName, paramType, paramTypeName, paramDim, paramDefValue)
-            newPrm.Name = string(paramName);
-            newPrm.Type = paramType;
-            newPrm.TypeName = paramTypeName;
-            newPrm.Dim = string(paramDim);
-            newPrm.DefaultValue = string(paramDefValue);
-            this.Parameters = [this.Parameters newPrm]; 
+        function parameter = addParameter(this, extID, paramName, paramType, paramTypeName, paramDim, paramDefValue)
+
+            parameter = SysMLConnector.internal.CandidateParameter(extID);
+            parameter.ParentArch = this;
+
+            parameter.Name = string(paramName);
+            parameter.Type = paramType;
+            parameter.TypeName = paramTypeName;
+            parameter.Dim = string(paramDim);
+            parameter.DefaultValue = string(paramDefValue);
+
+            this.Parameters = [this.Parameters parameter]; 
         end
         
         function notImported = mergeGeneralizations(this)
@@ -796,7 +821,7 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
             % Validate connectors
             cConns = this.ChildConnectors;
             for c = 1:length(cConns)
-                cConns(c).validate();
+                notImported = [notImported cConns(c).validate()]; %#ok<AGROW>
             end
         end
         
