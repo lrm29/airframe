@@ -3,6 +3,7 @@ classdef ImportXMI < padv.Task
 
     properties (SetAccess=protected)
         Nice
+        Debug
     end
 
     methods
@@ -29,6 +30,8 @@ classdef ImportXMI < padv.Task
                     IncludePath="Perfect");
                 % nice option to supress failures during development
                 options.Nice = false;
+                % adding option for debug
+                options.Debug = ~isempty(getenv("DEBUG"));
             end
             % add self to the dependency list
             options.InputDependencyQuery = XMIImporterCI.query.multiQuery(...
@@ -42,6 +45,7 @@ classdef ImportXMI < padv.Task
                 InputDependencyQuery=options.InputDependencyQuery);
             obj.OutputDirectory = options.OutputDirectory;
             obj.Nice = options.Nice;
+            obj.Debug = options.Debug;
         end
 
         function taskResult = run(obj,inputArtifacts)
@@ -49,6 +53,9 @@ classdef ImportXMI < padv.Task
             taskResult = padv.TaskResult;
             taskResult.Status = padv.TaskStatus.Pass;
             project = currentProject;
+            
+            % Hard reset between import calls.
+            SysMLConnector.cleanEnvironment;
 
             %% check for open SLDD files
             % can cause errors
@@ -106,7 +113,7 @@ classdef ImportXMI < padv.Task
                     artifactToUse.ArtifactAddress.getFileAddress);
                 report = SysMLConnector.internal.import( ...
                     artifactToUse.ArtifactAddress.getFileAddress, ...
-                    outputDirectory); 
+                    outputDirectory,DebugMode=obj.Debug); 
                 fprintf('***Import complete for ''%s''.\n', ...
                     artifactToUse.ArtifactAddress.getFileAddress);
                 %% set the pass and warn based on report

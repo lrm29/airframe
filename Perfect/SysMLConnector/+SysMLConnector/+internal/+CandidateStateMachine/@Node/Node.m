@@ -7,13 +7,13 @@ classdef Node < SysMLConnector.internal.CandidateStateMachine.GraphicalElement &
         StateflowObj
         IncomingTransitions
         OutgoingTransitions
-        IsStart = false
         ArrangeCount = 0;
     end
 
     properties (SetAccess=protected,Dependent)
         ConnectionCount
         OClocksInUse
+        IsStart
     end
 
     properties (SetAccess=protected,Abstract,Dependent)
@@ -27,14 +27,14 @@ classdef Node < SysMLConnector.internal.CandidateStateMachine.GraphicalElement &
     end
 
     methods
-        function nodeObj = Node(externalElementID,parent)
+        function nodeObj = Node(element,parent)
             %NODE Construct an instance of this class
             arguments
-                externalElementID {mustBeText}
+                element
                 parent
             end
             nodeObj@SysMLConnector.internal.CandidateStateMachine.GraphicalElement(...
-                externalElementID,parent);
+                element,parent);            
             %% TODO: enable linking
         end
 
@@ -63,6 +63,13 @@ classdef Node < SysMLConnector.internal.CandidateStateMachine.GraphicalElement &
                         this.OutgoingTransitions(i).SourceOClock)) = true;
                 end
             end
+        end
+
+        function IsStart = get.IsStart(this)
+            arguments
+                this SysMLConnector.internal.CandidateStateMachine.Node
+            end
+            IsStart = isempty(this.IncomingTransitions);
         end
 
         addIncomingTransition(this,transition);

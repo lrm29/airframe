@@ -10,17 +10,27 @@ function graphObj = getGraph(name, options)
             graphDB = dictionary;
         end
 
-        if options.Refresh || isequal(graphDB.numEntries, 0) || ~isKey(graphDB, name)
+        if options.Refresh || isequal(graphDB.numEntries, 0) || (~isKey(graphDB, name) || ~isvalid(graphDB(name)))
             if options.Refresh && ~isequal(graphDB.numEntries, 0) && isKey(graphDB, name)
                 delete(graphDB(name));
             end
 
-            structure = readstruct(name);
+            try
+                structure = readstruct(name);
+            catch topME
+                % If readstruct fails, try using a back-up parser that is
+                % slower.
+                try
+                    structure = SysMLConnector.internal.utils.auxParseXML(name);
+                catch
+                    rethrow(topME);
+                end
+            end
 
             try
                 graphDB(name) = SysMLConnector.internal.XMIGraph.Graph(name, structure);
             catch
-                graphDB(name) = SysMLConnector.internal.XMIGraph.Graph.empty;
+                graphDB(name) = SysMLConnector.internal.XMIGraph.Graph;
             end
         end
 

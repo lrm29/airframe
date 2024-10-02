@@ -10,7 +10,7 @@ classdef Fragment < XMIChecker.Validator.Default
                 foundElements dictionary
             end
             obj@XMIChecker.Validator.Default(candidate,xmidb,foundElements);
-            obj.processBuildableFlag(candidate.Build);
+            obj.processBuildableFlag(candidate.Built);
         end
     end
 end

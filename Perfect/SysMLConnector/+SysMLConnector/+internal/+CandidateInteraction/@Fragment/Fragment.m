@@ -1,4 +1,4 @@
-classdef Fragment < SysMLConnector.internal.CandidateInteraction.Element & ...
+classdef Fragment < SysMLConnector.internal.CandidateInteraction.AnnotatedCommentable & ...
         SysMLConnector.internal.CandidateInteraction.OperandReporter
     properties (SetAccess=protected)
         Message = []
@@ -10,10 +10,6 @@ classdef Fragment < SysMLConnector.internal.CandidateInteraction.Element & ...
         NotImported = []
     end
 
-    properties (SetAccess=protected) %Build Properties
-        Build = false
-    end
-
     methods 
         function fragmentObj = Fragment(parent,interaction,element)
             %FRAGMENT Construct an instance of this class
@@ -22,16 +18,17 @@ classdef Fragment < SysMLConnector.internal.CandidateInteraction.Element & ...
                 interaction SysMLConnector.internal.CandidateInteraction.Interaction
                 element 
             end
-            fragmentObj@SysMLConnector.internal.CandidateInteraction.Element( ...
-                Name="", ...
-                ExternalID=SysMLConnector.internal.utils.getExtID(element), ...
-                Parent=parent);
+            fragmentObj@SysMLConnector.internal.CandidateInteraction.AnnotatedCommentable( ...
+                parent,element);
             fragmentObj.Interaction = interaction;
             if isMATLABReleaseOlderThan("R2024b")
-                warning("SysMLConnector:internal:CandidateInteraction:Fragement",...
+                warning("SysMLConnector:internal:CandidateInteraction:Fragment",...
                     "Fragments are not supported before R2024b.");
                 return;
             end            
+            %% update print settings
+            fragmentObj.ExcludedProperties = ...
+                [fragmentObj.ExcludedProperties,"Interaction"];
             %% Parse the content of the fragment
             if isa(element,"umlmm.MessageOccurrenceSpecification")
                 % means this gives order to a message
@@ -47,9 +44,7 @@ classdef Fragment < SysMLConnector.internal.CandidateInteraction.Element & ...
                         fragmentObj,element.message);
                 end
                 % need the lifeline to register with the message
-                fragmentObj.Lifeline = interaction.LifeLineMap( ...
-                    SysMLConnector.internal.utils.getExtID( ...
-                    element.covered.at(1)));
+                fragmentObj.Lifeline = SysMLConnector.internal.CandidateInteraction.Message.getEndPoint(interaction,element);
                 % now register
                 fragmentObj.Message.registerFragment(fragmentObj);
             elseif isa(element,"umlmm.CombinedFragment")
@@ -57,7 +52,7 @@ classdef Fragment < SysMLConnector.internal.CandidateInteraction.Element & ...
                 fragmentObj.Type = systemcomposer.interaction.internal.fragmentTypeStrToEnum(...
                     element.interactionOperator.toString());
                 if fragmentObj.Type == -1
-                    warning("SysMLConnector:internal:CandidateInteraction:Fragement", ...
+                    warning("SysMLConnector:internal:CandidateInteraction:Fragment", ...
                         "Unsupported fragment type %s.", ...
                         element.interactionOperator.toString());
                 else
@@ -75,14 +70,19 @@ classdef Fragment < SysMLConnector.internal.CandidateInteraction.Element & ...
                     end
                 end
             else
-                warning("SysMLConnector:internal:CandidateInteraction:Fragement", ...
+                warning("SysMLConnector:internal:CandidateInteraction:Fragment", ...
                     "Unsupported fragment type %s",class(element));
                 fragmentObj.NotImported = fragmentObj.createNotImported( ...
                     "Sequence Diagram Fragment",...
-                    sprintf("Unsupported fragement type %s.",class(element)));
+                    sprintf("Unsupported fragment type %s.",class(element)));
             end
         end
 
         doPublish(this, varargin);
+        print(this,printer);
+    end
+
+    methods (Access=protected)
+        infoString = getInfoString(this);
     end
 end

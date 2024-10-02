@@ -3,12 +3,15 @@ function build(this)
 arguments
     this SysMLConnector.internal.CandidateStateMachine.Junction
 end
+try
 this.StateflowObj = Stateflow.Junction(this.Parent.StateflowObj);
+catch ME
+    rethrow(ME)
+end
+this.storeID();
 % handle special cases
 switch this.Type
-    case "initial"
-        % this is the node to start arranging from
-        this.IsStart = true;
+    case umlmm.PseudostateKind.Initial
         % initial node needs a default transition
         defaultTransition = Stateflow.Transition(this.Parent.StateflowObj);
         defaultTransition.Destination = this.StateflowObj;

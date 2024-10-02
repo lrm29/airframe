@@ -1,4 +1,4 @@
-classdef Transition < XMIChecker.Validator.Utilities.Fake
+classdef Transition < XMIChecker.Validator.Default
     %TRANSITION validates state machine transitions
     
     methods
@@ -9,8 +9,8 @@ classdef Transition < XMIChecker.Validator.Utilities.Fake
                 xmidb SysMLConnector.internal.CandidateAD.internal.XMIDatabase
                 foundElements dictionary
             end
-            %% TODO: make real validator
-            transitionValidatorObj@XMIChecker.Validator.Utilities.Fake(candidate);
+            transitionValidatorObj@XMIChecker.Validator.Default(candidate,xmidb,foundElements);
+            transitionValidatorObj.processBuildableFlag(candidate.Built);
         end
     end
 end

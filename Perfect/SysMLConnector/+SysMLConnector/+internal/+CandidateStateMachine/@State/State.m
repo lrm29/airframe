@@ -1,8 +1,11 @@
-classdef State < SysMLConnector.internal.CandidateStateMachine.Node
+classdef State < SysMLConnector.internal.CandidateStateMachine.Node & ...
+        SysMLConnector.internal.CandidateStateMachine.RegionContainer
     %STATE represents a Stateflow state
 
     properties (SetAccess=protected)
         Name
+        ConnectionPoints SysMLConnector.internal.CandidateStateMachine.Port ...
+            = SysMLConnector.internal.CandidateStateMachine.Port.empty
     end
 
     properties (SetAccess=protected,Dependent)
@@ -19,7 +22,7 @@ classdef State < SysMLConnector.internal.CandidateStateMachine.Node
                 parent SysMLConnector.internal.CandidateStateMachine.Region
             end
             stateObj@SysMLConnector.internal.CandidateStateMachine.Node(...
-                SysMLConnector.internal.utils.getExtID(element),parent);
+                element,parent);
             switch class(element)
                 case "umlmm.State"
                     stateObj.parseState(element);

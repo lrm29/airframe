@@ -103,7 +103,7 @@ classdef CandidatePackage < SysMLConnector.internal.CandidateElement
             for k = 1:length(this.BuildChildPackages)
                 this.BuildChildPackages(k).print(printer)
             end
-            
+            arrayfun(@(sm) sm.print(printer),this.StateMachines);
             printer.closeScope("Package: " + this.Name);
         end
         

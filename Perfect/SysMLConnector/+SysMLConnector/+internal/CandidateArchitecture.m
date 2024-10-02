@@ -14,6 +14,8 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
         ChildComponents = [];
         ChildConnectors = [];
 
+        DeferredConnectors = [];
+
         Parameters = [];
         
         ParentPackage = [];        
@@ -98,7 +100,7 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
         end
         
         function newConn = addDerivedConnector(thisArch, comp1, aPort1, ...
-            comp2, aPort2, connID)
+                                                         comp2, aPort2, connID)
             
             comp1ID = "";
             if ~isempty(comp1)
@@ -130,7 +132,7 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
             end
             
             newConn.setEndComps(aPort1, comp1, aPort1.ParentArch, ...
-                                        aPort2, comp2, aPort2.ParentArch);
+                                aPort2, comp2, aPort2.ParentArch);
             
             % Set that the ends are already checked and set to avoid rechecking
             newConn.EndsChecked = true;
@@ -160,48 +162,69 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
                     otherPort.Interface, true);
             end
             
-            otherArchConns = otherArch.ChildConnectors;
-            for k = 1:length(otherArchConns)
-                otherConn = otherArchConns(k);
-                this.addChildConnector(...
-                    otherConn.ExtElementID, ...
-                    otherConn.End1CompExtElementID, ...
-                    otherConn.End1RefPortExtElementID, ...
-                    otherConn.End1RefPortArchExtElementID, ...
-                    otherConn.End2CompExtElementID, ...
-                    otherConn.End2RefPortExtElementID, ...
-                    otherConn.End2RefPortArchExtElementID, true);
-            end
+            this.copyChildConnectors(otherArch.ChildConnectors);
             
             this.Generalizations = [this.Generalizations otherArch];
             otherArch.Specializations = ...
                 [otherArch.Specializations, this];
         end
         
-        
         function [endComp, endAPort, nonSibling] = ...
-                checkConnectorEnd(this, thisConn, endCompID, endPortID)
+                checkConnectorEnd(this, thisConn, ...
+                                       endCompID, endPortID, endArchID)
             
             endComp = [];
             nonSibling = false; % assume
             endAPort = [];
+
             if endCompID == ""
-                % Architecture port connector
-                archPort = this.PortMapFromExtElementID(endPortID);
-                archPort.addConnector(thisConn);
-                endAPort = archPort;
+                % Architecture port connector or unresolved deferred
+                % connector. First, assume architecture port.
+                archPort = this.getCachedPortFromExtElementID(endPortID);
+    
+                if ~isempty(archPort)
+                    archPort.addConnector(thisConn);
+                    endAPort = archPort;
+                end
             else
                 endComp = this.findChildComponent(endCompID);
-                if ~isempty(endComp)
-                    endAPort = ...
-                        endComp.ReferenceArch.PortMapFromExtElementID(endPortID);
-                    if endComp.ParentArchitecture ~= this
-                        % Handle connection of non sibling Components
-                        nonSibling = true;
-                    else
-                        endComp.addConnector(endAPort, thisConn);
+            end
+
+            % Second try to resolved connector based on EA diagram information.
+            if endCompID == ""  && ...
+                    isempty(endAPort) && ...                    
+                    strcmp(SysMLConnector.internal.StatusMonitor.getSourceTool, 'EA') && ...
+                    ~isempty(this.ChildComponents)
+
+                childCompArchIdx = strcmp(endArchID, [this.ChildComponents.ReferenceArchExtElementID]);
+                if any(childCompArchIdx)
+                    endComp = this.ChildComponents(childCompArchIdx);
+
+                    if sum(childCompArchIdx) > 1
+                        endComp = endComps(1);
+                        message = sprintf('Duplicate ends were detected for connector ''%s'' in architecture ''%s''. It is recommended that you manually review the import result.', thisConn.ExtElementID, this.Name);
+                        SysMLConnector.internal.StatusMonitor.publishEvent('DuplicateConnectorEnds', 'Connectors', message);
                     end
                 end
+            end
+
+            if ~isempty(endComp)
+                endAPort = ...
+                    endComp.ReferenceArch.getCachedPortFromExtElementID(endPortID);
+                if endComp.ParentArchitecture ~= this
+                    % Handle connection of non sibling Components
+                    nonSibling = true;
+                elseif ~isempty(endAPort)
+                    endComp.addConnector(endAPort, thisConn);
+                end
+            end
+        end
+
+        function port = getCachedPortFromExtElementID(this, portExtElementID)
+            port = [];
+
+            if isKey(this.PortMapFromExtElementID, portExtElementID)
+                port = this.PortMapFromExtElementID(portExtElementID);
             end
         end
     
@@ -475,6 +498,18 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
             assert(~isKey(this.CompMapFromExtElementID, extID));
             this.CompMapFromExtElementID(extID) = cComp;
         end
+
+        function addDeferredChildComponents(this, deferredChildComponents)
+            for componentIndex = 1:numel(deferredChildComponents)
+                deferredComponent = deferredChildComponents(componentIndex);
+                deferredComponent.ParentArchitecture = this;
+
+                this.ChildComponents = [this.ChildComponents deferredComponent];
+    
+                assert(~isKey(this.CompMapFromExtElementID, deferredComponent.ExtElementID));
+                this.CompMapFromExtElementID(deferredComponent.ExtElementID) = deferredComponent;
+            end
+        end
         
         function cConn = addChildConnector(...
             this, extID, end1CompID, ...
@@ -484,6 +519,23 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
                 this, extID,  end1CompID, end1RefPortID, end1RefPortCompID, ...
                 end2CompID, end2RefPortID, end2RefPortCompID, isDerived);
             this.ChildConnectors = [this.ChildConnectors cConn];
+        end
+
+        function connectors = copyChildConnectors(this, childConnectors)
+            % copy child connectors from another architecture to this one.
+            connectors = SysMLConnector.internal.CandidateConnector.empty(0, length(childConnectors));
+
+            for connectorIndex = 1:length(childConnectors)
+                otherConnector = childConnectors(connectorIndex);
+                connectors(connectorIndex) = this.addChildConnector(...
+                    otherConnector.ExtElementID, ...
+                    otherConnector.End1CompExtElementID, ...
+                    otherConnector.End1RefPortExtElementID, ...
+                    otherConnector.End1RefPortArchExtElementID, ...
+                    otherConnector.End2CompExtElementID, ...
+                    otherConnector.End2RefPortExtElementID, ...
+                    otherConnector.End2RefPortArchExtElementID, true);
+            end
         end
         
         function addReferencingComp(this, refComp)
@@ -499,7 +551,9 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
             this.Parameters = [this.Parameters newPrm]; 
         end
         
-        function mergeGeneralizations(this)
+        function notImported = mergeGeneralizations(this)
+            notImported = [];
+
             if ~this.GenMerged
                 genIDs = this.GeneralizationExtElementIDs;
                 for k = 1:length(genIDs)
@@ -508,14 +562,48 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
 
                     if isa(genArch, 'SysMLConnector.internal.CandidateArchitecture')
                         if ~genArch.GenMerged
-                            genArch.mergeGeneralizations();
+                            notImportedArch = genArch.mergeGeneralizations();
+                            notImported = [notImported notImportedArch]; %#ok<AGROW>
                         end
                         this.mergeInGeneralization(genArch);
                     end
                 end
-                
-                this.GenMerged = true;
+
+                if strcmp(SysMLConnector.internal.StatusMonitor.getSourceTool, 'EA')
+                    % Check for deferred connectors from the diagrams that were not
+                    % added
+                    if ~isempty(this.DeferredConnectors)
+                        message = sprintf('Merging deferred connectors into architecture ''%s''.', this.Name);
+                        SysMLConnector.internal.StatusMonitor.publishEvent('AddDeferredConnectors', 'Connectors', message);
+
+                        newConnectors = unique(this.DeferredConnectors);
+                        if ~isempty(this.ChildConnectors)
+                            childConnectorIDs = [this.ChildConnectors.ExtElementID];
+                            newConnectors = setdiff(newConnectors, childConnectorIDs);
+                        end
+
+                        for deferredConnectorID = newConnectors
+                            sourceConnector = SysMLConnector.internal.CandidateElement.idMap('lookup', deferredConnectorID);
+                            
+                            if isempty(sourceConnector)
+                                notImportedConnector.Type = 'InheritedConnector';
+                                notImportedConnector.Reason = 'Connector Not Found';
+                                notImportedConnector.Stereotype = 'SysML.Connector';
+                                notImportedConnector.ElementID = deferredConnectorID;
+                                notImportedConnector.Element = getFullPath(this);
+                                notImported = [notImported notImportedConnector]; %#ok<AGROW>
+
+                                message = sprintf('Deferred connector source not found for ''%s''.', deferredConnectorID);
+                                SysMLConnector.internal.StatusMonitor.publishEvent('DeferredConnectorNotFound', 'Connectors', message);
+                            else
+                                this.copyChildConnectors(sourceConnector);
+                            end
+                        end
+                    end
+                end
             end
+                
+            this.GenMerged = true;
         end
         
         function linkComponentsPortsPackage(this)
@@ -576,7 +664,7 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
                         newPortO = this.addPort(...
                             thisPort.Name + oStr, ...
                             thisPort.IsConjugated, ...
-                            this.ExtElementID + "BidirConnPort" + this.DerivedPortIdx, ...
+                            thisPort.ExtElementID + "BidirConnPort" + this.DerivedPortIdx, ...
                             "", thisPort.Interface.DerivedOutInterface, true);
                         this.DerivedPortIdx = this.DerivedPortIdx + 1;
                 
@@ -593,8 +681,10 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
             end
         end
         
-        function linkAndExpandConnectors(this)
+        function notImported = linkAndExpandConnectors(this)
             % Link connectors to comps and validate
+            notImported = [];
+
             cConns = this.ChildConnectors;
             for c = 1:length(cConns)
                 thisConn = cConns(c);
@@ -604,18 +694,26 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
                         this.checkConnectorEnd(...
                             thisConn, ...
                             thisConn.End1CompExtElementID, ...
-                            thisConn.End1RefPortExtElementID);
+                            thisConn.End1RefPortExtElementID, ...
+                            thisConn.End1RefPortArchExtElementID);
                     [end2Comp, end2APort, nonSibling2] = ...
                         this.checkConnectorEnd(...
                             thisConn, ...
                             thisConn.End2CompExtElementID, ...
-                            thisConn.End2RefPortExtElementID);
+                            thisConn.End2RefPortExtElementID, ...
+                            thisConn.End2RefPortArchExtElementID);
+
                     if ~isempty(end1APort) && ~isempty(end2APort)
-                        thisConn.setEndComps(...
+                        thisConnNotImported = thisConn.setEndComps(...
                             end1APort, end1Comp, end1APort.ParentArch, ...
                             end2APort, end2Comp, end2APort.ParentArch);
+
+                        notImported = [notImported thisConnNotImported]; %#ok<AGROW>
                     else
-                        thisConn.Valid = false;
+                        message = sprintf('The ends of connector ''%s'' could not be resolved.', thisConn.ExtElementID);
+                        SysMLConnector.internal.StatusMonitor.publishEvent('LinkConnectors', 'Connectors', message);
+
+                        notImported = [notImported thisConn.setInvalid(message)]; %#ok<AGROW>
                     end
                 else
                     nonSibling1 = false;
@@ -632,26 +730,60 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
                     % Handle bidirectional connectors that need to be expanded
                     if thisConn.End1APort.Replaced || thisConn.End2APort.Replaced
                         if thisConn.End1APort.Replaced && thisConn.End2APort.Replaced
-                            newConn1 = this.addDerivedConnector(...
-                                this,thisConn.End1Comp, ...
-                                thisConn.End1APort.Replacements(1), ...
-                                thisConn.End2Comp, ...
-                                thisConn.End2APort.Replacements(1), ...
-                                thisConn.ExtElementID);
-                            newConn2 = this.addDerivedConnector(...
-                                this,thisConn.End1Comp, ...
-                                thisConn.End1APort.Replacements(2), ...
-                                thisConn.End2Comp, ...
-                                thisConn.End2APort.Replacements(2), ...
-                                thisConn.ExtElementID);
-                            thisConn.setReplacements([newConn1 newConn2]);
+                            % Make sure the ports are complements of each
+                            % other.
+                            derivedConnectors = SysMLConnector.internal.CandidateConnector.empty(0, 2);
                             
-                            if newConn1.Valid && (nonSibling1 || nonSibling2)
-                                this.handleNonSiblingConnector(newConn1);
-                                this.handleNonSiblingConnector(newConn2);
+                            if strcmp(thisConn.End1APort.Replacements(1).ComputedDir, "in")
+                                conn(1).TargetPort      = thisConn.End1APort.Replacements(1);
+                                conn(1).TargetComponent = thisConn.End1Comp;
+
+                                conn(2).SourcePort      = thisConn.End1APort.Replacements(2);
+                                conn(2).SourceComponent = thisConn.End1Comp;
+                            else
+                                conn(1).SourcePort      = thisConn.End1APort.Replacements(1);
+                                conn(1).SourceComponent = thisConn.End1Comp;
+
+                                conn(2).TargetPort      = thisConn.End1APort.Replacements(2);
+                                conn(2).TargetComponent = thisConn.End1Comp;
+                            end
+
+                            if strcmp(thisConn.End2APort.Replacements(1).ComputedDir, "in")
+                                conn(2).TargetPort      = thisConn.End2APort.Replacements(1);
+                                conn(2).TargetComponent = thisConn.End2Comp;
+
+                                conn(1).SourcePort      = thisConn.End2APort.Replacements(2);
+                                conn(1).SourceComponent = thisConn.End2Comp;
+                            else
+                                conn(2).SourcePort      = thisConn.End2APort.Replacements(1);
+                                conn(2).SourceComponent = thisConn.End2Comp;
+
+                                conn(1).TargetPort      = thisConn.End2APort.Replacements(2);
+                                conn(1).TargetComponent = thisConn.End2Comp;
+                            end
+
+                            for idx = 1:2
+                                derivedConnectors(idx) = this.addDerivedConnector(...
+                                        this, ...
+                                        conn(idx).SourceComponent, ...
+                                        conn(idx).SourcePort, ...
+                                        conn(idx).TargetComponent, ...
+                                        conn(idx).TargetPort, ...
+                                        thisConn.ExtElementID);
+                            end
+
+                            thisConn.setReplacements(derivedConnectors);
+                            
+                            if derivedConnectors(1).Valid && (nonSibling1 || nonSibling2)
+                                this.handleNonSiblingConnector(derivedConnectors(1));
+                                this.handleNonSiblingConnector(derivedConnectors(2));
                             end
                         else
-                            thisConn.setInvalid("Only one conn port was expanded to two for bidirectional interfaces");
+                            message = sprintf('Only one conn port was expanded to two for bidirectional interfaces for connector ''%s''.', thisConn.ExtElementID);
+
+                            SysMLConnector.internal.StatusMonitor.publishEvent('LinkConnectors', 'Connectors', message);
+
+                            notImported = [notImported thisConn.setInvalid('Connector', message)]; %#ok<AGROW>
                         end
                         
                     elseif (nonSibling1 || nonSibling2)
@@ -726,6 +858,10 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
                 end
             end
         end
+
+        function fullPath = getFullPath(this)
+            fullPath = this.getPostLinkFullPath;
+        end
             
         function fPath = getPostLinkFullPath(this)
             fPath = this.Name;
@@ -734,7 +870,6 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
                 fPath = pOwn.Name + "/" + fPath;
                 pOwn = pOwn.ParentPackage;
             end
-            
         end
         
         function emp = isEmptyAndUnlinked(this)
@@ -999,13 +1134,13 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
                 if thisConn.Valid && ~thisConn.Replaced
                     if isempty(thisConn.End1Comp)
                         % Arch port
-                        port1 = this.PortMapFromExtElementID(thisConn.End1RefPortExtElementID);
+                        port1 = this.getCachedPortFromExtElementID(thisConn.End1RefPortExtElementID);
                         port1Dir = port1.ComputedDir;
                         zcPort1 = port1.ZCElement;
                         port1Arch = true;
                     else
                         % Comp port
-                        port1 = thisConn.End1RefArch.PortMapFromExtElementID(thisConn.End1RefPortExtElementID);
+                        port1 = thisConn.End1RefArch.getCachedPortFromExtElementID(thisConn.End1RefPortExtElementID);
                         port1Name = port1.BuildName;
                         port1Dir = port1.ComputedDir;
                         zcPort1 = thisConn.End1Comp.ZCElement.getPort(char(port1Name));
@@ -1013,11 +1148,11 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
                     end
                     if isempty(thisConn.End2Comp)
                         % Arch port
-                        port2 = this.PortMapFromExtElementID(thisConn.End2RefPortExtElementID);
+                        port2 = this.getCachedPortFromExtElementID(thisConn.End2RefPortExtElementID);
                         zcPort2 = port2.ZCElement;
                     else
                         % Comp port
-                        port2 = thisConn.End2RefArch.PortMapFromExtElementID(thisConn.End2RefPortExtElementID);
+                        port2 = thisConn.End2RefArch.getCachedPortFromExtElementID(thisConn.End2RefPortExtElementID);
                         port2Name = port2.BuildName;
                         zcPort2 = thisConn.End2Comp.ZCElement.getPort(char(port2Name));
                     end

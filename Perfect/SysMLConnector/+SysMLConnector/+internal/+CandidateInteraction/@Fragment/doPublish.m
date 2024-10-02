@@ -10,23 +10,23 @@ if isMATLABReleaseOlderThan("R2024b")
     % before R2024b the API needed does not exist
     return;
 else
-    % mark that this was built
-    this.Build = true;
     if isempty(this.Type)
         % this is a message fragment
         % publish the message if not already build
-        if ~this.Message.Built
+        if ~this.Message.Built && ~this.Message.Invalid
             this.Message.publish();
         end
         %% link the fragment to the message event
-        if this.Message.StartFragment == this
-            this.ZCElement = this.Message.ZCElement.Start;
-        elseif this.Message.EndFragment == this
-            this.ZCElement = this.Message.ZCElement.End;
-        else
-            warning("SysMLConnector:internal:CandidateInteraction:Fragement",...
+        if this.Message.Built
+            if this.Message.StartFragment == this
+                this.ZCElement = this.Message.ZCElement.Start;
+            elseif this.Message.EndFragment == this
+                this.ZCElement = this.Message.ZCElement.End;
+            else
+                warning("SysMLConnector:internal:CandidateInteraction:Fragment",...
                     "Fragment %s could not be linked to either end of message %s.",...
                     this.ExtElementID,this.Message.ExtElementID);
+            end
         end
     elseif isempty(this.Message)
         % this is an interesting fragment
@@ -36,7 +36,7 @@ else
         % publish the operands owned by this fragment
         arrayfun(@publish,this.Operands);
     else
-        error("SysMLConnector:internal:CandidateInteraction:Fragement",...
+        error("SysMLConnector:internal:CandidateInteraction:Fragment",...
             "Fragment with externalID %s has messages and contains other operands!",...
             this.ExtElementID);
     end

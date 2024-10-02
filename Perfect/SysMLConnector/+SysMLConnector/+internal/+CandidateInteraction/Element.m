@@ -1,4 +1,7 @@
-classdef Element < SysMLConnector.internal.CandidateElement & matlab.mixin.SetGetExactNames
+classdef Element < SysMLConnector.internal.CandidateElement & ...
+        matlab.mixin.SetGetExactNames & ...
+        SysMLConnector.internal.utils.Printable
+   
     properties
         Name (1,:) char
         Parent
@@ -6,7 +9,7 @@ classdef Element < SysMLConnector.internal.CandidateElement & matlab.mixin.SetGe
         ReferenceElementID
     end
 
-    properties
+    properties (SetAccess=protected)
         ZCElement
     end
 
@@ -14,6 +17,10 @@ classdef Element < SysMLConnector.internal.CandidateElement & matlab.mixin.SetGe
         QualifiedName
         ElementType
         ReferenceElement
+    end
+
+    properties (Dependent,SetAccess=protected)
+        Built
     end
     
     methods
@@ -30,6 +37,10 @@ classdef Element < SysMLConnector.internal.CandidateElement & matlab.mixin.SetGe
             elementObj.ValidRequirementLinkTarget = true;
 
             setModel(elementObj);
+
+            % update print exclusions
+            elementObj.ExcludedProperties = [elementObj.ExcludedProperties,...
+                "Model"];
         end
 
         function referenceElement = get.ReferenceElement(this)
@@ -50,6 +61,13 @@ classdef Element < SysMLConnector.internal.CandidateElement & matlab.mixin.SetGe
             else
                 qualifiedName = this.ZCElement.Name;
             end
+        end
+
+        function built = get.Built(this)
+            arguments
+                this SysMLConnector.internal.CandidateInteraction.Element
+            end
+            built = ~isempty(this.ZCElement);
         end
 
         function doPublish(this, target) %#ok<INUSD>
@@ -91,14 +109,6 @@ classdef Element < SysMLConnector.internal.CandidateElement & matlab.mixin.SetGe
         end
     end
     methods (Sealed)
-        function print(this, printer)           
-            prePrint(this, printer);
-
-            doPrint(this, printer);
-
-            postPrint(this, printer);
-        end
-
         function publish(this, target)
             %fprintf('publishing: \n  %s\n  %s\n\n', class(this), this.getFullPath);
 

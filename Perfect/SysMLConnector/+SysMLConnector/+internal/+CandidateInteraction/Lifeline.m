@@ -1,4 +1,5 @@
-classdef Lifeline < SysMLConnector.internal.CandidateInteraction.Element
+classdef Lifeline < SysMLConnector.internal.CandidateInteraction.Element & ...
+        SysMLConnector.internal.CandidateInteraction.RelatedElementCommentable
     properties
         FullPath
         Children
@@ -25,6 +26,10 @@ classdef Lifeline < SysMLConnector.internal.CandidateInteraction.Element
             if ~isempty(this.ZCElement)
                 linkTarget = this.ZCElement.RelatedElements.SimulinkHandle;
             end
+        end
+
+        function print(this,printer)
+            this.shortPrint(printer);
         end
     end
 end

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="windows-1252"?>
+<uml:Profile xmlns:uml="http://www.omg.org/spec/UML/20110701" xmlns:xmi="http://www.omg.org/spec/XMI/20110701" xmi:id="DC2E2319-E" nsPrefix="QuadcopterProfile" name="QuadcopterProfile" metamodelReference="mmref01" URI="http://www.mathworks.com/schemas/QuadcopterProfile.xml">
+	<ownedComment xmi:type="uml:Comment" xmi:id="comment01" annotatedElement="DC2E2319-E">
+		<body> Version:1.0</body>
+	</ownedComment>
+	<packageImport xmi:id="mmref01">
+		<importedPackage href="http://www.omg.org/spec/UML/20110701"/>
+	</packageImport>
+	<packagedElement xmi:type="uml:Stereotype" xmi:id="RadioComponent" name="RadioComponent">
+		<generalization xmi:type="uml:Generalization" xmi:id="RadioComponent_PhysicalComponent_generalization" general="PhysicalComponent"/>
+		<ownedAttribute xmi:type="uml:Property" xmi:id="RadioComponent-FrequencyBand" name="FrequencyBand">
+			<type href="http://www.omg.org/spec/UML/20110701/UML.xmi#String"/>
+		</ownedAttribute>
+	</packagedElement>
+	<packagedElement xmi:type="uml:Stereotype" xmi:id="ReviewRequirement" name="ReviewRequirement">
+		<generalization xmi:type="uml:Generalization" xmi:id="ReviewRequirement_SysML1.4::requirement_generalization" general="SysML1.4::requirement"/>
+		<ownedAttribute xmi:type="uml:Property" xmi:id="ReviewRequirement-ReviewCompleted" name="ReviewCompleted">
+			<type href="http://www.omg.org/spec/UML/20110701/UML.xmi#String"/>
+		</ownedAttribute>
+	</packagedElement>
+	<packagedElement xmi:type="uml:Stereotype" xmi:id="DistanceRequirement" name="DistanceRequirement">
+		<generalization xmi:type="uml:Generalization" xmi:id="DistanceRequirement_ReviewRequirement_generalization" general="ReviewRequirement"/>
+		<ownedAttribute xmi:type="uml:Property" xmi:id="DistanceRequirement-DistanceValue" name="DistanceValue">
+			<type href="http://www.omg.org/spec/UML/20110701/UML.xmi#String"/>
+		</ownedAttribute>
+	</packagedElement>
+	<packagedElement xmi:type="uml:Stereotype" xmi:id="PhysicalComponent" name="PhysicalComponent">
+		<ownedAttribute xmi:type="uml:Property" xmi:id="PhysicalComponent-base_Class" name="base_Class" association="Class_PhysicalComponent">
+			<type href="http://www.omg.org/spec/UML/20110701/UML.xmi#Class"/>
+		</ownedAttribute>
+		<ownedAttribute xmi:type="uml:Property" xmi:id="PhysicalComponent-Cost" name="Cost">
+			<type href="http://www.omg.org/spec/UML/20110701/UML.xmi#String"/>
+		</ownedAttribute>
+		<ownedAttribute xmi:type="uml:Property" xmi:id="PhysicalComponent-Weight" name="Weight">
+			<type href="http://www.omg.org/spec/UML/20110701/UML.xmi#String"/>
+		</ownedAttribute>
+		<ownedAttribute xmi:type="uml:Property" xmi:id="PhysicalComponent-Power" name="Power">
+			<type href="http://www.omg.org/spec/UML/20110701/UML.xmi#String"/>
+		</ownedAttribute>
+	</packagedElement>
+	<packagedElement xmi:type="uml:Extension" xmi:id="Class_PhysicalComponent" name="A_Class_PhysicalComponent" memberEnd="extension_PhysicalComponent PhysicalComponent-base_Class">
+		<ownedEnd xmi:id="extension_PhysicalComponent" name="extension_PhysicalComponent" type="PhysicalComponent" isComposite="true" lower="0" upper="1" memberEnd="extension_PhysicalComponent PhysicalComponent-base_Class"/>
+	</packagedElement>
+</uml:Profile>

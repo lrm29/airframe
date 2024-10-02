@@ -3,7 +3,8 @@ classdef Region < SysMLConnector.internal.CandidateStateMachine.Element
 
     properties (SetAccess=protected)
         Subvertexes dictionary = dictionary()
-        Transitions
+        Transitions SysMLConnector.internal.CandidateStateMachine.Transition ...
+            = SysMLConnector.internal.CandidateStateMachine.Transition.empty
     end
 
     properties (Dependent,SetAccess=protected)
@@ -11,14 +12,16 @@ classdef Region < SysMLConnector.internal.CandidateStateMachine.Element
     end
     
     methods
-        function regionObj = Region(element,parent)
+        function regionObj = Region(element,parent,portJunctions)
             %REGION Construct an instance of this class
             arguments
                 element umlmm.Region
-                parent SysMLConnector.internal.CandidateStateMachine.StateMachine
+                parent SysMLConnector.internal.CandidateStateMachine.RegionContainer
+                portJunctions SysMLConnector.internal.CandidateStateMachine.PortJunction ...
+                    = SysMLConnector.internal.CandidateStateMachine.PortJunction.empty
             end
             regionObj@SysMLConnector.internal.CandidateStateMachine.Element(...
-                SysMLConnector.internal.utils.getExtID(element),parent);
+                element,parent);
             %% parse the subvertexes
             for i = 1:element.subvertex.size
                 umlSubvertex = element.subvertex.at(i);
@@ -40,19 +43,21 @@ classdef Region < SysMLConnector.internal.CandidateStateMachine.Element
                             class(umlSubvertex));
                 end
                 if ~isempty(subvertex)
-                    regionObj.Subvertexes(...
-                        SysMLConnector.internal.utils.getExtID(umlSubvertex)) = ...
-                        subvertex;
+                    regionObj.Subvertexes(subvertex.ExtElementID) = subvertex;
                 end
             end
+            %% add port junctions if any
+            if ~isempty(portJunctions)
+                regionObj.Subvertexes([portJunctions.ExtElementID]) = portJunctions;
+            end
             %% now parse the transitions
-            regionObj.Transitions = cell(size(element.transition.size,1));
+            regionObj.Transitions = ...
+                SysMLConnector.internal.CandidateStateMachine.Transition.empty(element.transition.size,0);
             for i = 1:element.transition.size
-                regionObj.Transitions{i} = ...
+                regionObj.Transitions(i) = ...
                     SysMLConnector.internal.CandidateStateMachine.Transition(...
                     element.transition.at(i),regionObj);
             end
-            regionObj.Transitions = [regionObj.Transitions{:}];
         end
 
         function value = get.StateflowObj(this)
@@ -63,6 +68,7 @@ classdef Region < SysMLConnector.internal.CandidateStateMachine.Element
         end
 
         build(this);
+        addConnectionPoint(this,connectionPoint);
     end
 end
 

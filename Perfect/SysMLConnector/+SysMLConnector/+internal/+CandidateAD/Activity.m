@@ -46,7 +46,7 @@ classdef Activity < SysMLConnector.internal.CandidateAD.Node
                 arrayfun(@(pin)  publish(pin,  this), this.Pins);
                 arrayfun(@(parameter)  publish(parameter,  this), this.Reference.Parameters);
                 
-                if ~SysMLConnector.internal.CandidateAD.internal.isRecursive(this)
+                if ~SysMLConnector.internal.CandidateAD.internal.isRecursive(this, target)
                     arrayfun(@(node) publish(node, this), this.Reference.Nodes);
                     arrayfun(@(flow) publish(flow, this), this.Reference.Flows);
                     
@@ -54,6 +54,9 @@ classdef Activity < SysMLConnector.internal.CandidateAD.Node
                     systemPath = SysMLConnector.internal.CandidateAD.internal.getArchitecturePeer(this.ZCElement).getQualifiedName;
                     Simulink.BlockDiagram.arrangeSystem(systemPath);
                     warning(warnState);
+                else
+                    recursionPath = sprintf('%s/%s', target.getFullPath, this.Name);
+                    SysMLConnector.internal.StatusMonitor.publishEvent('RecursionDetected', recursionPath, 'Recursion removed for activity %s in parent %s.', target.getFullPath, this.Name);
                 end
             end
         end
