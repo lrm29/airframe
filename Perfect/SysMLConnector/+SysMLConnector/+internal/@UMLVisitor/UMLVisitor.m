@@ -193,10 +193,12 @@ classdef UMLVisitor < m3i.Visitor
                         this.isBlock(this.getSysMLStereotype(property.type))
                     if strcmpi(property.aggregation.toString, 'composite')
                         cID = this.getExtID(property);
-                        
-                        thisArch.addChildComponent(...
+                        childComp = thisArch.addChildComponent(...
                             propertyName, ...
                             cID, this.getExtID(property.type));
+                        if property.redefinedElement.size > 0
+                            thisArch.redefine(childComp, this.getExtID(property.redefinedElement.at(1)));
+                        end
                         visitChildren(this,property.ownedComment);
                     else
                         addNotImported(this, property, "BlockProperty", ...
@@ -249,7 +251,10 @@ classdef UMLVisitor < m3i.Visitor
                         end
                     end
                     
-                    thisArch.addParameter(propertyName, elType, elTypeName, elDim, elValue);
+                    parameter = thisArch.addParameter(this.getExtID(property), property.name, elType, elTypeName, elDim, elValue);
+                    if property.redefinedElement.size > 0
+                        thisArch.redefine(parameter, this.getExtID(property.redefinedElement.at(1)));
+                    end
                 end
             end
             
@@ -779,7 +784,7 @@ classdef UMLVisitor < m3i.Visitor
                         if this.isBlock(partStereotype) && this.isBlock(partParentStereotype)
                             candidateComponent = SysMLConnector.internal.CandidateComponent(part.name, [], this.getExtID(part), this.getExtID(part.type));
                             candidateComponent.DeferredParentArchitecture = this.getExtID(partParent);
-    
+
                             return;
                         end
                     end
@@ -850,6 +855,8 @@ classdef UMLVisitor < m3i.Visitor
         function ret = visitumlmmPort(this,element,thisArch)
 
             ret = false;
+
+			portName = string(element.name);
             
             % Process port type
             portDataType = element.type;
@@ -857,7 +864,11 @@ classdef UMLVisitor < m3i.Visitor
             portDataTypeExtID = "";
             if ~isempty(portDataType)
                 portDataTypeStereotype = this.getSysMLStereotype(portDataType);
-                portDataTypeExtID = this.getExtID(portDataType);                
+                portDataTypeExtID = this.getExtID(portDataType);       
+				
+				if isempty(portName) || strcmp(portName, "")
+					portName = string(portDataType.name);
+				end         
             end
 
             % Ensure port is a supported port type explicitly or implied
@@ -874,8 +885,8 @@ classdef UMLVisitor < m3i.Visitor
             if (portStereotype == "SysML.FullPort") && (portDataTypeStereotype ~= "SysML.InterfaceBlock")
                 % Create child component for Full Port
                 cID = this.getExtID(element);
-                thisArch.addChildComponent(...
-                    string(element.name), ...
+                port = thisArch.addChildComponent(...
+                    portName, ...
                     cID, portDataTypeExtID);
             else
                 % Full Port typed by interface, Proxy Port, Flow Port
@@ -896,8 +907,12 @@ classdef UMLVisitor < m3i.Visitor
                     portDataTypeExtID = "";
                 end
 
-                thisArch.addPort(string(element.name), isConj, ...
+                port = thisArch.addPort(portName, isConj, ...
                                  this.getExtID(element), portDataTypeExtID, [], false);
+            end
+
+            if element.redefinedElement.size > 0
+                thisArch.redefine(port, this.getExtID(element.redefinedElement.at(1)));
             end
         end
 

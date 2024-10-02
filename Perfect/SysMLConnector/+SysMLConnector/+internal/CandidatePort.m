@@ -2,24 +2,19 @@ classdef CandidatePort < SysMLConnector.internal.CandidateElement
 % CANDIDATEPORT Helper class for SysMLConnector.internal.import that holds candidate Architecture ports.
     properties
         ParentArch
-        
         Name
         BuildName = ""
         IsConjugated
-
         InterfaceExtElementID
         Interface
         Connectors = [];
-        
         ComputedDir = "unset";
-        
         Valid = true;
         InvalidReason = "";
-        
+        Redefines = [];
         Replaced = false;
         Replacements = [];
         Derived = false;
-    
         ZCElement = [];
     end
 

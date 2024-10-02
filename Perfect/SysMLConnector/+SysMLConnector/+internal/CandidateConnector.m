@@ -103,7 +103,9 @@ classdef CandidateConnector < SysMLConnector.internal.CandidateElement
             this.Replacements = replacements;            
         end
         
-        function validate(this)
+        function notImported = validate(this)
+            notImported = [];
+
             if this.Valid && ~this.Replaced
                 end1TypeIsArchPort = isempty(this.End1Comp);
                 end2TypeIsArchPort = isempty(this.End2Comp);
