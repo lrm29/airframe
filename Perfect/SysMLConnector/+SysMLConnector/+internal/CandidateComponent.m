@@ -2,21 +2,15 @@ classdef CandidateComponent < SysMLConnector.internal.CandidateElement
     properties
         Name = "";
         ParentArchitecture;
-        
         DeferredParentArchitecture;
-
         ReferenceArchExtElementID = ""
-        
         ReferenceArch = [];
-        
+        Redefines = [];
         PortMapFromArchElementID = [];
-        
         IsInliningItsArch = false;
-        
         Valid = true;
         InvalidReason = "";
         Build = true;
-        
         ZCElement = [];
     end
 
