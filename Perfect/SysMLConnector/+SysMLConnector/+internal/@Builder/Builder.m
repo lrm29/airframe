@@ -912,11 +912,14 @@ classdef Builder < handle
                 if ~isempty(options)
                     try
                         optionArgs = namedargs2cell(options);
-                        arch.addParameter(prmName,optionArgs{:});
+                        zcParameter = arch.addParameter(prmName,optionArgs{:});
                     catch ME
-                        arch.addParameter(prmName);
+                        zcParameter = arch.addParameter(prmName);
                         warning('xmi:Builder:createParameters:InvalidOptions', 'Unable to add options for parameter ''%s'' in architecture ''%s''.\nOptions:\n%s', prmName, getQualifiedName(arch), formattedDisplayText(options));
                     end
+
+                    thisPrm.SystemComposerUUID = zcParameter.UUID;
+                    thisPrm.BuildName = zcParameter.Name;
                 end
             end
         end
