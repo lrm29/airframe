@@ -26,6 +26,7 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
         Build = true;
         
         ZCElement = []
+        SystemComposerUUID = ''
         
         IsInlined = false;
         Visited = false;
@@ -43,6 +44,16 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
         DerivedCompIdx = 1;
         
         DefaultWidthOfReferencingComp = -1; 
+    end
+
+    methods
+        function set.ZCElement(this, value)
+            this.ZCElement = value;
+
+            if ~isempty(value) && isvalid(value)
+                this.SystemComposerUUID = value.UUID; %#ok<MCSUP>
+            end
+        end
     end
     
     methods (Static, Access = private)

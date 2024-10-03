@@ -10,8 +10,10 @@ classdef CandidateParameter < SysMLConnector.internal.CandidateElement
     end
 
     properties
+        BuildName
         Redefines = [];
         ParentArch
+        SystemComposerUID
     end
 
     methods
