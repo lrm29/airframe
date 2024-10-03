@@ -178,13 +178,24 @@ classdef UMLVisitor < m3i.Visitor
             % Process child components
             for p=1:element.ownedAttribute.size
                 property = element.ownedAttribute.at(p);
+                propertyName = string(property.name);
+
+                try
+                    if isempty(propertyName) && ~isempty(property.type)
+                        propertyName = string(property.type.name);
+                    end
+                catch ME
+                    warning('SysMLConnector:internal:UMLVisitor:FailedToResolvePropertyName', 'Failed to resolve name of property ''%s'' with error:\n%s', this.getExtID(property), getReport(ME));
+                end
+
                 if ~isa(property, 'umlmm.Port') && ...
                         ~isempty(property.type) && ...
                         this.isBlock(this.getSysMLStereotype(property.type))
                     if strcmpi(property.aggregation.toString, 'composite')
                         cID = this.getExtID(property);
+                        
                         thisArch.addChildComponent(...
-                            string(property.name), ...
+                            propertyName, ...
                             cID, this.getExtID(property.type));
                         visitChildren(this,property.ownedComment);
                     else
@@ -238,7 +249,7 @@ classdef UMLVisitor < m3i.Visitor
                         end
                     end
                     
-                    thisArch.addParameter(property.name, elType, elTypeName, elDim, elValue);
+                    thisArch.addParameter(propertyName, elType, elTypeName, elDim, elValue);
                 end
             end
             
