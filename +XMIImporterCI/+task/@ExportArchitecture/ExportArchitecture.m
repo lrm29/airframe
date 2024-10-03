@@ -89,11 +89,15 @@ classdef ExportArchitecture < padv.Task & XMIImporterCI.utilities.PathManager
 
             %% do the exports
             XMIFiles = strings(size(exportArtifacts));
+            warnings = warning();
+            warning("off","SysMLConnector:UnsupportedVersion");
             for i = 1:numel(exportArtifacts)
                 model = systemcomposer.loadModel(exportArtifacts(i).Alias);
                 XMIFiles(i) = string(fullfile(outputPath, ...
                     string(model.Name)+".xml"));
-                try
+                try 
+                    fprintf("Exporting %s architecture %d of %d",...
+                        model.Name,i,numel(exportArtifacts));
                     SysMLConnector.export(model, char(XMIFiles(i)));
                 catch ME
                     disp(ME.message);
@@ -108,6 +112,8 @@ classdef ExportArchitecture < padv.Task & XMIImporterCI.utilities.PathManager
                 % close all requirements incase this loaded them
                 slreq.clear();
             end
+            % restore warnings
+            warning(warnings);
             %% go back
             this.reopenProject();
             %% record output files
