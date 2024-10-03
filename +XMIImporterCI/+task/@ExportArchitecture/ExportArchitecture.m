@@ -67,6 +67,13 @@ classdef ExportArchitecture < padv.Task & XMIImporterCI.utilities.PathManager
                 return;
             end
 
+            if isempty(archiveFilePath)
+                % means there is no archive, need to skip
+                taskResult.ResultValues.Warn = taskResult.ResultValues.Warn + 1;
+                taskResult.Status = padv.TaskStatus.Pass;
+                return;
+            end
+
             %% determine paths for later
             outputPath = this.resolvePath(this.OutputDirectory);
             % ensure there is an empty directory
