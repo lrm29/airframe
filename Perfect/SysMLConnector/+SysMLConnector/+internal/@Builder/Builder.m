@@ -918,7 +918,6 @@ classdef Builder < handle
                         warning('xmi:Builder:createParameters:InvalidOptions', 'Unable to add options for parameter ''%s'' in architecture ''%s''.\nOptions:\n%s', prmName, getQualifiedName(arch), formattedDisplayText(options));
                     end
 
-                    thisPrm.SystemComposerUUID = zcParameter.UUID;
                     thisPrm.BuildName = zcParameter.Name;
                 end
             end
