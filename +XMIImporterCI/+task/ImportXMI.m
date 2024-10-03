@@ -129,6 +129,7 @@ classdef ImportXMI < padv.Task & XMIImporterCI.utilities.PathManager
                         fullfile(importedProject.RootFolder, ...
                         importedProject.Name+".mlproj");
                     export(importedProject,outputFiles(end));
+                    systemcomposer.allocation.AllocationSet.closeAll;
                     close(importedProject);
                 end
             catch ME
