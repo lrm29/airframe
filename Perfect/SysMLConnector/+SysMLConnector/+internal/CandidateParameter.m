@@ -15,6 +15,10 @@ classdef CandidateParameter < SysMLConnector.internal.CandidateElement
     end
 
     methods
+        function paramObj = CandidateParameter(varargin)
+            paramObj@SysMLConnector.internal.CandidateElement(varargin{:});
+        end
+
         function clonedParameter = cloneParameter(this, targetArch)
             clonedParameter = addParameter(targetArch, this.ExtElementID, ...
                                             this.Name, ...
