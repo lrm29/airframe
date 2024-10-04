@@ -181,7 +181,7 @@ classdef UMLVisitor < m3i.Visitor
                 propertyName = string(property.name);
 
                 try
-                    if isempty(propertyName) && ~isempty(property.type)
+                    if (isempty(propertyName) || strcmp(propertyName, "")) && ~isempty(property.type)
                         propertyName = string(property.type.name);
                     end
                 catch ME
