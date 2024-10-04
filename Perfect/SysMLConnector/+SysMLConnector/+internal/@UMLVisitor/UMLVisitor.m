@@ -251,7 +251,7 @@ classdef UMLVisitor < m3i.Visitor
                         end
                     end
                     
-                    parameter = thisArch.addParameter(this.getExtID(property), property.name, elType, elTypeName, elDim, elValue);
+                    parameter = thisArch.addParameter(this.getExtID(property), propertyName, elType, elTypeName, elDim, elValue);
                     if property.redefinedElement.size > 0
                         thisArch.redefine(parameter, this.getExtID(property.redefinedElement.at(1)));
                     end
@@ -906,7 +906,6 @@ classdef UMLVisitor < m3i.Visitor
                     % Incompatible port interface type.
                     portDataTypeExtID = "";
                 end
-
                 port = thisArch.addPort(portName, isConj, ...
                                  this.getExtID(element), portDataTypeExtID, [], false);
             end
