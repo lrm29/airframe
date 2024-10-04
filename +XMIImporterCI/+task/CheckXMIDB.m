@@ -1,4 +1,4 @@
-classdef CheckXMIDB < padv.Task
+classdef CheckXMIDB < padv.Task & XMIImporterCI.utilities.PathManager
     %CHECKXMIDB checks import agains xmidb
 
     properties
@@ -33,12 +33,13 @@ classdef CheckXMIDB < padv.Task
                 options.report = true;
             end
             % add self to the dependency list
-            options.InputDependencyQuery = XMIImporterCI.query.multiQuery(...
+            options.InputDependencyQuery = citools.query.GetDependencies(...
+                XMIImporterCI.query.multiQuery(...
                 [options.InputDependencyQuery,...
-                XMIImporterCI.query.findByPath(ArtifactType="m_file",...
-                filePath=string(mfilename("fullpath"))+".m"),...
+                citools.query.FindArtifactMFilePath(...
+                string(mfilename("fullpath"))),...
                 padv.builtin.query.FindArtifacts(ArtifactType="m_file",...
-                IncludePath="XMIChecker")]);
+                IncludePath="XMIChecker")]));
             % call the constructor of the superclass
             obj@padv.Task(options.Name, ...
                 IterationQuery=options.IterationQuery, ...
@@ -59,15 +60,8 @@ classdef CheckXMIDB < padv.Task
 
             %% check for open SLDD files
             % can cause errors
-            if ~isempty(Simulink.data.dictionary.getOpenDictionaryPaths)
-                openDDs = Simulink.data.dictionary.getOpenDictionaryPaths();
-                cellfun( ...
-                    @(odd) warning("Data dictionary %s was left open and will be closed.",odd), ...
-                    openDDs);
-                taskResult.ResultValues.Warn = taskResult.ResultValues.Warn + ...
-                    numel(openDDs);
-                Simulink.data.dictionary.closeAll('-discard');
-            end
+            taskResult.ResultValues.Warn = taskResult.ResultValues.Warn + ...
+                XMIImporterCI.utilities.closeDataDictionaries();
 
             try
                 % make sure output exists
@@ -136,13 +130,8 @@ classdef CheckXMIDB < padv.Task
                 % now that everything else is ready
                 % open the generated project and start loading stuff
                 % need to see if anything in the database got imported
-                % need to keep track of the process running this task
-                % add project path to path
-                processPath = processProject.ProjectPath;
                 % close porject and save off original path
-                processProject.close();
-                originalPath = path;
-                arrayfun(@(f) addpath(f.File),processPath);
+                obj.leaveProject();
                 % need to open the generated project
                 importedProject = openProject(importedPath);
                 % name save file for later
@@ -223,8 +212,7 @@ classdef CheckXMIDB < padv.Task
                 %% go back to the process project
                 % first restore the original path
                 importedProject.close();
-                path(originalPath);
-                openProject(processProject.RootFolder);
+                obj.reopenProject();
                 %% save important data
                 outputFilePath = fullfile(obj.resolvePath(obj.OutputDirectory),...
                     outputFileName);
