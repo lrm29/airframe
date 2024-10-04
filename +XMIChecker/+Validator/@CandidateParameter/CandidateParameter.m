@@ -12,9 +12,6 @@ classdef CandidateParameter < XMIChecker.Validator.Default
             % call the super constructor
             obj@XMIChecker.Validator.Default(candidate,xmidb,foundElements);
 
-            % assume fail
-            obj.fail = true;
-
             % load the model, lookup the parameter parent architecture by
             % UUID, match the external UID of the parent architecture,
             % match the build name of the parameter.
@@ -31,7 +28,7 @@ classdef CandidateParameter < XMIChecker.Validator.Default
 
                     if strcmp(param.Owner.ExternalUID, candidate.ParentArch.ExternalUID) ...
                            && strcmp(param.Name, candidate.BuildName)
-                        obj.fail = false;
+                        obj.pass = 1;
                     end
                 end
             end
