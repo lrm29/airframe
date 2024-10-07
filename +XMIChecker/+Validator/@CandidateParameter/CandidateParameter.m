@@ -24,7 +24,7 @@ classdef CandidateParameter < XMIChecker.Validator.Default
                 archElement = zcMdl.lookup(UUID=candidate.ParentArch.SystemComposerUUID);            
     
                 if ~isempty(archElement.Parameters)
-                    paramLogIdx = strcmp(candidate.SystemComposerUUID, {archElement.Parameters.UUID});
+                    paramLogIdx = strcmp(candidate.Name, {archElement.Parameters.Name});
     
                     if any(paramLogIdx)
                         param = archElement.Parameters(paramLogIdx);
