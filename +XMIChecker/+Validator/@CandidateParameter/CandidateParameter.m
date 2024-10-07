@@ -15,22 +15,30 @@ classdef CandidateParameter < XMIChecker.Validator.Default
             % load the model, lookup the parameter parent architecture by
             % UUID, match the external UID of the parent architecture,
             % match the build name of the parameter.
-            zcMdl = systemcomposer.loadModel(candidate.ParentArch.SimulinkModelName);
-            cleanupModel = onCleanup(@() close(zcMdl));
-            
-            [~, archElement] = zcMdl.lookup(UUID=candidate.ParentArch.SystemComposerUUID);            
 
-            if ~isempty(archElement.Parameters)
-                paramLogIdx = strcmp(candidate.SystemComposerUUID, {archElement.Parameters.UUID});
+            try
+                zcMdl = systemcomposer.loadModel(candidate.ParentArch.SimulinkModelName);
 
-                if any(paramLogIdx)
-                    param = archElement.Parameters(paramLogIdx);
-
-                    if strcmp(param.Owner.ExternalUID, candidate.ParentArch.ExternalUID) ...
-                           && strcmp(param.Name, candidate.BuildName)
-                        obj.pass = 1;
+                cleanupModel = onCleanup(@() close(zcMdl));
+                
+                [~, archElement] = zcMdl.lookup(UUID=candidate.ParentArch.SystemComposerUUID);            
+    
+                if ~isempty(archElement.Parameters)
+                    paramLogIdx = strcmp(candidate.SystemComposerUUID, {archElement.Parameters.UUID});
+    
+                    if any(paramLogIdx)
+                        param = archElement.Parameters(paramLogIdx);
+    
+                        if strcmp(param.Owner.ExternalUID, candidate.ParentArch.ExternalUID) ...
+                               && strcmp(param.Name, candidate.BuildName)
+                            obj.pass = 1;
+                        end
                     end
                 end
+            catch ME
+                fprintf('Failed to check parameter ''%s'' with parent architecture ''%s'' in model ''%s'' with error:\n%s\n', ...
+                    candidate.Name, candidate.ParentArch.Name, candidate.ParentArch.SimulinkModelName, getReport(ME));
+                obj.fail = 1;
             end
         end
     end
