@@ -1,16 +1,16 @@
-classdef CandidateParameter < XMIChecker.Validator.Default
+classdef CandidateParameter < XMIChecker.Validator.Validator
     %CANDIDATEPARAMETER validates candidate architecture parameters
     
     methods
-        function obj = CandidateParameter(candidate,xmidb,foundElements)
+        function obj = CandidateParameter(candidate,~,~)
             %CANDIDATEPARAMETER Construct an instance of this class
             arguments
                 candidate SysMLConnector.internal.CandidateParameter
-                xmidb SysMLConnector.internal.CandidateAD.internal.XMIDatabase
-                foundElements dictionary
+                ~
+                ~
             end
             % call the super constructor
-            obj@XMIChecker.Validator.Default(candidate,xmidb,foundElements);
+            obj@XMIChecker.Validator.Validator(candidate);
 
             % load the model, lookup the parameter parent architecture by
             % UUID, match the external UID of the parent architecture,
@@ -27,8 +27,12 @@ classdef CandidateParameter < XMIChecker.Validator.Default
 
             if result
                 obj.pass = 1;
+                obj.warn = 0;
+                obj.fail = 0;
             else
-                obj.fail = 1;            
+                obj.pass = 0;
+                obj.warn = 0;
+                obj.fail = 1;
             end
         end
     end
