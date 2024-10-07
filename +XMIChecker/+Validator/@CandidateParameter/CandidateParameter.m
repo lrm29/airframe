@@ -17,7 +17,7 @@ classdef CandidateParameter < XMIChecker.Validator.Default
             % match the build name of the parameter.
 
             try
-                zcMdl = systemcomposer.loadModel(candidate.ParentArch.SimulinkModelName);
+                zcMdl = systemcomposer.loadModel(candidate.ParentArch.ModelName);
 
                 cleanupModel = onCleanup(@() close(zcMdl));
                 
@@ -32,14 +32,19 @@ classdef CandidateParameter < XMIChecker.Validator.Default
                         if strcmp(param.Owner.ExternalUID, candidate.ParentArch.ExternalUID) ...
                                && strcmp(param.Name, candidate.BuildName)
                             obj.pass = 1;
+
+                            return;
                         end
                     end
                 end
+
             catch ME
                 fprintf('Failed to check parameter ''%s'' with parent architecture ''%s'' in model ''%s'' with error:\n%s\n', ...
                     candidate.Name, candidate.ParentArch.Name, candidate.ParentArch.SimulinkModelName, getReport(ME));
-                obj.fail = 1;
             end
+
+            % If we got to the bottom of the script, the validation failed.
+            obj.fail = 1;            
         end
     end
 end
