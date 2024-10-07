@@ -17,7 +17,7 @@ classdef CandidateParameter < XMIChecker.Validator.Default
             % match the build name of the parameter.
 
             try
-                result = candidate.checkParameter(candidate);
+                result = obj.checkParameter(candidate);
             catch ME
                 fprintf('Failed to check parameter ''%s'' with parent architecture ''%s'' in model ''%s'' with error:\n%s\n', ...
                     candidate.Name, candidate.ParentArch.Name, candidate.ParentArch.SimulinkModelName, getReport(ME));
