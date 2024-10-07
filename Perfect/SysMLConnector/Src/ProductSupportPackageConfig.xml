@@ -11,6 +11,7 @@
 	<Dependency>Simulink</Dependency>
     <Dependency>Requirements Toolbox</Dependency>
 	<Dependency>System Composer</Dependency>
+    <Dependency>Stateflow</Dependency>
     <App>
         <Name>SysML Connector</Name>
         <Image>+SysMLConnector/+internal/+icons/ico-sysml-connector-app-24.png</Image>
