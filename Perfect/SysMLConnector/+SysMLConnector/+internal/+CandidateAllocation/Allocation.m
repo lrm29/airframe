@@ -43,9 +43,13 @@ classdef Allocation < SysMLConnector.internal.CandidateAllocation.Element
         end
 
         function tf = get.IsValid(this)
-            tf = ~isempty(this.Source)           && ~isempty(this.Target)                 ...
-              && ~isempty(this.Source.ZCElement) && ~isempty(this.Target.ZCElement)       ...
-              &&  isvalid(this.Source.ZCElement) &&  isvalid(this.Target.ZCElement);
+            tf = false;
+
+            try %#ok<TRYNC> Easier than trying to keep in sync with allowable allocation targets for the product.
+                tf = ~isempty(this.Source)           && ~isempty(this.Target)                 ...
+                  && ~isempty(this.Source.ZCElement) && ~isempty(this.Target.ZCElement)       ...
+                  &&  isvalid(this.Source.ZCElement) &&  isvalid(this.Target.ZCElement);
+            end
         end    
 
         function prePublish(this, varargin)
