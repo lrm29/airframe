@@ -21,6 +21,9 @@ classdef Printer < handle
                 this.Verbose = true;
             else
                 this.PrintFile = fopen(pFile, 'w');
+                if this.PrintFile == -1
+            		error("SysMLConnector:internal:Printer", "Cannot open debug print file")
+                end
             end
             
         end
