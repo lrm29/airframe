@@ -5,6 +5,9 @@ arguments
     pm padv.ProcessModel
 end
 
+%% setup flags
+padv.internal.FeatureManager.set('PipelineParallelBranchMerger', true);
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Include/Exclude Tasks in processmodel
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
