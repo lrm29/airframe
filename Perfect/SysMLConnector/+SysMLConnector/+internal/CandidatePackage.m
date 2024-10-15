@@ -129,9 +129,7 @@ classdef CandidatePackage < SysMLConnector.internal.CandidateElement
             % Unique child folder names
             if ~isempty(this.BuildChildPackages)
                 cNames = [this.BuildChildPackages.BuildName];
-                cNames = matlab.lang.makeUniqueStrings(matlab.lang.makeValidName(cNames)); %remove any special characters and spaces that can break file/folder creation
-                cNames = regexprep(cNames,"^private$","private_"); %private is a reserved folder name
-                cNames = regexprep(cNames,"^resources$","resources_"); %resources is a reserved folder name
+                cNames = matlab.lang.makeUniqueStrings(matlab.lang.makeValidName(cNames), {'private', 'resources'}); %remove any special characters and spaces that can break file/folder creation and reserved project names
                 for k = 1:length(this.BuildChildPackages)
                     this.BuildChildPackages(k).BuildName = cNames(k);
                 end            
