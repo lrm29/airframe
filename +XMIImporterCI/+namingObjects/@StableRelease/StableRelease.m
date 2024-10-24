@@ -31,7 +31,6 @@ classdef StableRelease < citools.task.UploadPackageToGit.NamingInterface
                     "true")
                 % protected branch so change the version to the branch name
                 % and set the package name to Stable
-                stableReleaseObj.PackageName = "Stable";
                 branch = string(getenv("CI_COMMIT_BRANCH"));
                 if isempty(branch) || ...
                         strcmp(branch,"")
