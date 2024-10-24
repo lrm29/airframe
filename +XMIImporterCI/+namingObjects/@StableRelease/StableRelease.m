@@ -25,13 +25,13 @@ classdef StableRelease < citools.task.UploadPackageToGit.NamingInterface
                     strcmp(stableReleaseObj.TagName,""))
                 % this is expected to be a release
                 stableReleaseObj.PackageName = "Release";
-                stableReleaseObj.PackageVersion = strjoin(...
-                    [stableReleaseObj.PackageName,stableReleaseObj.TagName], ...
-                    stableReleaseObj.Delemiter);
+                stableReleaseObj.PackageVersion = stableReleaseObj.TagName;
                 stableReleaseObj.IncludeVersion = true;
             elseif strcmp(getenv("CI_COMMIT_REF_PROTECTED"), ...
                     "true")
                 % protected branch so change the version to the branch name
+                % and set the package name to Stable
+                stableReleaseObj.PackageName = "Stable";
                 branch = string(getenv("CI_COMMIT_BRANCH"));
                 if isempty(branch) || ...
                         strcmp(branch,"")
