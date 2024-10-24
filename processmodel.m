@@ -93,6 +93,16 @@ if includePSPT
         AccessToken="eupHXNYdZ6oouy2piVsP", ...
         pspDirectory=fullfile("Perfect","SysMLConnector"), ...
         alwaysRun=alwaysRun));
+
+    %% setup the upload tasks
+    developmentNaming = XMIImporterCI.namingObjects.Development();
+    if developmentNaming.isValid()
+        % only if valid do we even need to think about this task
+        citools.task.UploadPackageToGit(Name="Upload Development Package",...
+            NamingObj=developmentNaming,...
+            DependentTasks=psptTask);
+    end
+
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
