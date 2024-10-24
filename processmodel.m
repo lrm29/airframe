@@ -98,7 +98,7 @@ if includePSPT
     developmentNaming = XMIImporterCI.namingObjects.Development();
     if developmentNaming.isValid()
         % only if valid do we even need to think about this task
-         pm.addTask(citools.task.UploadPackageToGit(...
+         developmentTask = pm.addTask(citools.task.UploadPackageToGit(...
              Name="Upload Development Package",...
             NamingObj=developmentNaming,...
             DependentTasks=psptTask));
@@ -126,6 +126,13 @@ addInputQueries(exportMDZIPTask, ...
 if includePSPT && isempty(getenv("DEVMODE"))
     importTask.dependsOn(psptTask); % replace when second check task is added
     importMDZIPTask.dependsOn(psptTask);
+end
+
+if includePSPT
+    if developmentNaming.isValid
+        importTask.runsAfter(developmentTask);
+        importMDZIPTask.runsAfter(developmentTask);
+    end
 end
 
 % !PROCESSMODEL_EDITOR_MARKER! %

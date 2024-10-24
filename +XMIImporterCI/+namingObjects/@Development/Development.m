@@ -15,10 +15,5 @@ classdef Development < citools.task.UploadPackageToGit.NamingInterface
         function developmentObj = Development()
             %DEVELOPMENT Construct an instance of this class
         end
-
-        function updateNames(~,~)
-            % updateNames does nothing
-            return;
-        end
     end
 end
