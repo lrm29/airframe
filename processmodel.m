@@ -103,7 +103,14 @@ if includePSPT
             NamingObj=developmentNaming,...
             DependentTasks=psptTask));
     end
-
+    
+    stableReleaseNaming = XMIImporterCI.namingObjects.StableRelease();
+    if stableReleaseNaming.isValid()
+        % valid for release, create the task
+        stableReleaseTask = pm.addTask(citools.task.UploadPackageToGit(...
+            Name="Uploade Stable/Release Package",...
+            NamingObj=stableReleaseNaming,DependentTasks=psptTask));
+    end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -132,6 +139,10 @@ if includePSPT
     if developmentNaming.isValid
         importTask.runsAfter(developmentTask);
         importMDZIPTask.runsAfter(developmentTask);
+    end
+    if stableReleaseNaming.isValid()
+        stableReleaseTask.dependsOn([importMDZIPTask,importTask,checkTask, ...
+            checkMDZIPTask,exportXMITask,exportMDZIPTask]);
     end
 end
 
