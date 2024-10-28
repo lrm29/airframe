@@ -5,7 +5,8 @@ arguments
     artifacts padv.Artifact
 end
 if this.IncludeVersion
-    toolboxInfo = this.findToolboxInfo(artifacts);
+    toolboxInfo = ...
+        citools.task.UploadPackageToGit.DefaultNaming.findToolboxInfo(artifacts);
     if ~isempty(toolboxInfo)
         this.PackageVersion = this.PackageVersion+this.Delemiter+...
             toolboxInfo.Version;
