@@ -10,6 +10,10 @@ if this.IncludeVersion
     if ~isempty(toolboxInfo)
         this.PackageVersion = this.PackageVersion+this.Delemiter+...
             toolboxInfo.Version;
+    else
+        warning("XMIImporterCI:namingObjects:StableRelease:NoToolbox", ...
+            "No toolbox json file was found in the artifacts provided, "+...
+            "so file will be uploaded to version %s.",this.PackageVersion);
     end
 end
 end
