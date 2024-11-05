@@ -10,8 +10,6 @@ else
     this.StateflowObj.LabelString = string(this.Name)+newline+this.LabelString;
 end
 this.storeID();
-%% shift right to avoid junctions
-this.moveCenterTo(this.Center+[this.DefaultOffset,0]);
 %% check for conflicts
 this.deconflict();
 %% build internals
