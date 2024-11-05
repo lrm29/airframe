@@ -10,8 +10,6 @@ else
     this.StateflowObj.LabelString = string(this.Name)+newline+this.LabelString;
 end
 this.storeID();
-%% check for conflicts
-this.deconflict();
 %% build internals
 if ~isempty(this.ConnectionPoints) || ~isempty(this.Regions)
     this.StateflowObj.IsSubchart = true;
