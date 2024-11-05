@@ -9,7 +9,7 @@ catch ME
     rethrow(ME)
 end
 this.storeID();
-% handle special cases
+%% handle special cases
 switch this.Type
     case umlmm.PseudostateKind.Initial
         % initial node needs a default transition

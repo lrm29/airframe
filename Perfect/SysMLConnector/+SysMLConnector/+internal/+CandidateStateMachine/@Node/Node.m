@@ -78,6 +78,7 @@ classdef Node < SysMLConnector.internal.CandidateStateMachine.GraphicalElement &
         oClock = findNearestUnusedOClock(this,oClock);
         position = getOClockPosition(this,oClock);
         oClock = findClosestOClock(this,position); % finds the one closest to the position
+        deconflict(this);
     end
 
     methods (Abstract)
