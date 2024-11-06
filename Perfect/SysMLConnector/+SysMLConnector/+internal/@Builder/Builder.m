@@ -55,6 +55,11 @@ classdef Builder < handle
         StateMachineCount
         CommentCount
     end
+
+    properties (SetAccess=immutable)
+        MLRelease
+        MLUpdate
+    end
     
     properties (Access=private)
         % These are incremented when they are retrieved for the status monitor.
@@ -87,6 +92,10 @@ classdef Builder < handle
         end
     
         function this = Builder(buildDir, buildProj, dtypeMapping, vNameStyle)
+            releaseInfo = matlabRelease;
+            this.MLRelease = releaseInfo.Release;
+            this.MLUpdate  = releaseInfo.Update;
+
             this.BuildDir = buildDir;
             this.BuildProject = buildProj;
             
@@ -788,6 +797,7 @@ classdef Builder < handle
             end
 
             arch = candArch.ZCElement;
+            modelName = arch.Model.Name;
 
             % Start with built-ins
             allPrmNames = string(fieldnames(get_param(arch.SimulinkHandle, 'ObjectParameters')))';
@@ -901,7 +911,16 @@ classdef Builder < handle
                     end
 
                     if strcmpi(tName, "string")
-                        options.Value = sprintf('"%s"', paramValue);
+                        if strcmp(this.MLRelease, "R2024b") && isequal(this.MLUpdate,2) && strcmpi(paramValue, modelName)
+                            % protection logic
+                            paramValue = matlab.lang.makeUniqueStrings(paramValue, modelName);
+
+                            options.Value = sprintf('"%s_1"', paramValue);
+
+                            warning("SysMLConnector:internal:Builder:createParameters:ParameterValueMatchesModelName", "Value of parameter with XMI ID ""%s"" was changed from ""%s"" to %s during import.", thisPrm.ExtElementID, paramValue, options.Value);
+                        else
+                            options.Value = sprintf('"%s"', paramValue);
+                        end
                     else
                         options.Value = paramValue;
                     end
