@@ -44,19 +44,26 @@ classdef Activity < SysMLConnector.internal.CandidateAD.Node
 
                 % Publish pins
                 arrayfun(@(pin)  publish(pin,  this), this.Pins);
-                arrayfun(@(parameter)  publish(parameter,  this), this.Reference.Parameters);
-                
-                if ~SysMLConnector.internal.CandidateAD.internal.isRecursive(this, target)
-                    arrayfun(@(node) publish(node, this), this.Reference.Nodes);
-                    arrayfun(@(flow) publish(flow, this), this.Reference.Flows);
+
+                % If the reference property is empty then it did not get parsed by
+                % the visitor so skip.
+                if ~isempty(this.Reference)
+                    arrayfun(@(parameter)  publish(parameter,  this), this.Reference.Parameters);
                     
-                    warnState = warning('off', 'diagram_autolayout:autolayout:layoutRejectedCommandLine');
-                    systemPath = SysMLConnector.internal.CandidateAD.internal.getArchitecturePeer(this.ZCElement).getQualifiedName;
-                    Simulink.BlockDiagram.arrangeSystem(systemPath);
-                    warning(warnState);
+                    if ~SysMLConnector.internal.CandidateAD.internal.isRecursive(this, target)
+                        arrayfun(@(node) publish(node, this), this.Reference.Nodes);
+                        arrayfun(@(flow) publish(flow, this), this.Reference.Flows);
+                        
+                        warnState = warning('off', 'diagram_autolayout:autolayout:layoutRejectedCommandLine');
+                        systemPath = SysMLConnector.internal.CandidateAD.internal.getArchitecturePeer(this.ZCElement).getQualifiedName;
+                        Simulink.BlockDiagram.arrangeSystem(systemPath);
+                        warning(warnState);
+                    else
+                        recursionPath = sprintf('%s/%s', target.getFullPath, this.Name);
+                        SysMLConnector.internal.StatusMonitor.publishEvent('RecursionDetected', recursionPath, 'Recursion removed for activity %s in parent %s.', target.getFullPath, this.Name);
+                    end
                 else
-                    recursionPath = sprintf('%s/%s', target.getFullPath, this.Name);
-                    SysMLConnector.internal.StatusMonitor.publishEvent('RecursionDetected', recursionPath, 'Recursion removed for activity %s in parent %s.', target.getFullPath, this.Name);
+                    warning('SysMLConnector:internal:CandidateAD:Activity:MissingReference', 'The reference with id ''%s'' is missing for activity ''%s'' and was not imported.', this.ReferenceID, this.getFullPath);
                 end
             end
         end
