@@ -811,6 +811,10 @@ classdef UMLVisitor < m3i.Visitor
             else
                 addNotImported(this, element, "Class", ...
                                "Not a Block, InterfaceBlock, or Requirement");
+
+                % Treat it as a package to try to import things below this
+                % class.
+                visitumlmmPackage(this, element);
             end
             ret = [];            
             visitChildren(this,element.ownedComment);
