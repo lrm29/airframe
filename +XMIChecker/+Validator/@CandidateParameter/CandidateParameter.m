@@ -63,6 +63,12 @@ classdef CandidateParameter < XMIChecker.Validator.Validator
                     end
                 end
             end
+
+            if isempty(candidateParameter.BuildName)
+                % this means it was not built
+                %invert the result reported
+                tf = ~tf;
+            end
         end
     end
 end

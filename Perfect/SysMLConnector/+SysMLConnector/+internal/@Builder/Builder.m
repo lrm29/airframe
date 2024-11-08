@@ -937,7 +937,13 @@ classdef Builder < handle
                         warning('xmi:Builder:createParameters:InvalidOptions', 'Unable to add options for parameter ''%s'' in architecture ''%s''.\nOptions:\n%s', prmName, getQualifiedName(arch), formattedDisplayText(options));
                     end
 
-                    thisPrm.BuildName = zcParameter.Name;
+                    if ~isempty(zcParameter)
+                        thisPrm.BuildName = zcParameter.Name;
+                    else
+                        warning("xmi:Builder:createParameters:NoParameter",...
+                            "Unable to create parameter '%s' in architecture '%s'",...
+                            prmName,getQualifiedName(arch));
+                    end
                 end
             end
         end
