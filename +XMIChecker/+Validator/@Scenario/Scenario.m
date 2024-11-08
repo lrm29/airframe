@@ -14,10 +14,10 @@ classdef Scenario < XMIChecker.Validator.Validator
             % validate an allocation set scenario
             % validate the parent and see from there
             parentValidator = XMIChecker.Validator.build(...
-                candidate.Parent,xmidb,foundElements);
+                candidate.Owner,xmidb,foundElements);
             % if the parent exists then the scenario needs to be checked
-            if (parentValidator.pass > 0 && candidate.Parent.Build) || ...
-                    (parentValidator.fail > 0 && ~candidate.Parent.Build)
+            if (parentValidator.pass > 0 && candidate.Owner.Build) || ...
+                    (parentValidator.fail > 0 && ~candidate.Owner.Build)
                 % this means that the parent exists
                 if xor(obj.isBuilt(),candidate.Build)
                     % built or not, its not what was promissed

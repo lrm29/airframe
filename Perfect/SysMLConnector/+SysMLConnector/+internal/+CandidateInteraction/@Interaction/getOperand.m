@@ -3,10 +3,10 @@ function operand = getOperand(this)
 arguments
     this SysMLConnector.internal.CandidateInteraction.Interaction
 end
-if isempty(this.ZCElement)
+if isempty(this.BuiltElement)
     operand = [];
 else
-    operand = this.ZCElement.Model.Interactions.RootFragment.Operands(1);
+    operand = this.BuiltElement.Model.Interactions.RootFragment.Operands(1);
 end
 end
 

@@ -1,10 +1,7 @@
-classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
+classdef CandidateArchitecture < SysMLConnector.internal.CandidateArchitecture.Element
 % CANDIDATEARCHITECTURE Helper class for SysMLConnector.internal.import that
 % holds candidate Architecture models
-    properties
-        Name = "";
-        
-        ParentPackageExtElementID;
+    properties        
         GeneralizationExtElementIDs;
 
         CompMapFromExtElementID;
@@ -18,14 +15,11 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
 
         DeferredConnectors = [];
 
-        Parameters = [];
-        
-        ParentPackage = [];        
+        Parameters = [];        
        
         GenMerged = false;
         Build = true;
         
-        ZCElement = []
         ModelName = '';
         SystemComposerUUID = ''
         
@@ -46,17 +40,6 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
         
         DefaultWidthOfReferencingComp = -1; 
     end
-
-    methods
-        function set.ZCElement(this, value)
-            this.ZCElement = value;
-
-            if ~isempty(value) && isvalid(value)
-                this.ModelName = value.Model.Name; %#ok<MCSUP>
-                this.SystemComposerUUID = value.UUID; %#ok<MCSUP>
-            end
-        end
-    end
     
     methods (Static, Access = private)
         
@@ -70,8 +53,8 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
                 rComps = arch.ReferencingComps;
                 for k = 1:length(rComps)
                     [reached,pArchs1,pComps1] = ...
-                        SysMLConnector.internal.CandidateArchitecture.recMarkHier(...
-                            rComps(k).ParentArchitecture, endArch, pArchs, pComps);
+                        SysMLConnector.internal.CandidateArchitecture.CandidateArchitecture.recMarkHier(...
+                            rComps(k).Owner, endArch, pArchs, pComps);
                     if reached
                         pArchs1 = [pArchs1 arch]; %#ok<AGROW>
                         pComps1 = [pComps1 rComps(k)]; %#ok<AGROW>
@@ -83,8 +66,8 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
         
         function [pArchs,pComps] = findArchHierPath(comp, endArch)
 
-            [~, pArchs, pComps] = SysMLConnector.internal.CandidateArchitecture.recMarkHier(...
-                comp.ParentArchitecture, endArch, [], []);
+            [~, pArchs, pComps] = SysMLConnector.internal.CandidateArchitecture.CandidateArchitecture.recMarkHier(...
+                comp.Owner, endArch, [], []);
 
             pArchs = fliplr(pArchs);
             pComps = fliplr(pComps);
@@ -94,7 +77,7 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
         function [pArchs, notUnique] = findUniqueParentArchHier(comp, endArch)
             notUnique = false; % assume
             pArchs = [];
-            pArch = comp.ParentArchitecture;
+            pArch = comp.Owner;
             while pArch ~= endArch                    
                 pArchs = [pArchs pArch]; %#ok<AGROW>
                 rComps = pArch.ReferencingComps;
@@ -105,7 +88,7 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
                 elseif isempty(rComps)
                     break;
                 else
-                    pArch = rComps.ParentArchitecture;
+                    pArch = rComps.Owner;
                 end
             end
             if pArch ~= endArch
@@ -130,9 +113,9 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
             newConn = thisArch.addChildConnector(...
                 connID + "DerivedConn" + thisArch.DerivedConnectorIdx, ...
                 comp1ID, aPort1.ExtElementID, ...
-                aPort1.ParentArch.ExtElementID, ...
+                aPort1.Owner.ExtElementID, ...
                 comp2ID, aPort2.ExtElementID, ...
-                aPort2.ParentArch.ExtElementID, true);
+                aPort2.Owner.ExtElementID, true);
             thisArch.DerivedConnectorIdx = thisArch.DerivedConnectorIdx + 1;
 
             if isempty(comp1)
@@ -146,8 +129,8 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
                 comp2.addConnector(aPort2, newConn);
             end
             
-            newConn.setEndComps(aPort1, comp1, aPort1.ParentArch, ...
-                                aPort2, comp2, aPort2.ParentArch);
+            newConn.setEndComps(aPort1, comp1, aPort1.Owner, ...
+                                aPort2, comp2, aPort2.Owner);
             
             % Set that the ends are already checked and set to avoid rechecking
             newConn.EndsChecked = true;
@@ -238,7 +221,7 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
             if ~isempty(endComp)
                 endAPort = ...
                     endComp.ReferenceArch.getCachedPortFromExtElementID(endPortID);
-                if endComp.ParentArchitecture ~= this
+                if endComp.Owner ~= this
                     % Handle connection of non sibling Components
                     nonSibling = true;
                 elseif ~isempty(endAPort)
@@ -376,11 +359,11 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
                 if this.BuildAsSimulink
                     % Bug in ZC. Refresh Arch handle
                     set_param(this.SimulinkModelName, 'HasSystemComposerArchInfo', 'on');
-                    this.ZCElement = get_param(this.SimulinkModelName, ...
+                    this.BuiltElement = get_param(this.SimulinkModelName, ...
                                               'SystemComposerArchitecture');
                     set_param(this.SimulinkModelName, 'HasSystemComposerArchInfo', 'off');
                 end
-                allPorts = this.ZCElement.Ports;
+                allPorts = this.BuiltElement.Ports;
                 maxPortNameLenIn = 0;
                 maxPortNameLenOut = 0;
                 
@@ -446,30 +429,30 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
             % canInLine - true/false indicating if the architecture can be
             % inlined without orphaning elements
             arguments
-                this SysMLConnector.internal.CandidateArchitecture  
-                checkedArchitectures SysMLConnector.internal.CandidateArchitecture ...
-                    = SysMLConnector.internal.CandidateArchitecture.empty
+                this SysMLConnector.internal.CandidateArchitecture.CandidateArchitecture  
+                checkedArchitectures SysMLConnector.internal.CandidateArchitecture.CandidateArchitecture ...
+                    = SysMLConnector.internal.CandidateArchitecture.CandidateArchitecture.empty
             end
             checkedArchitectures = [checkedArchitectures,this];
             % first check if this has a reference component
             if isempty(this.ReferencingComps) || ...
-                    isempty(this.ReferencingComps.ParentArchitecture)
+                    isempty(this.ReferencingComps.Owner)
                 % no reference means need to build the architecture
                 canInline = false;
             elseif any(checkedArchitectures == ...
-                    this.ReferencingComps.ParentArchitecture)
+                    this.ReferencingComps.Owner)
                 % this means that we have hit a loop meaning we can't
                 % inline this architecture
                 canInline = false;
-            elseif this.ReferencingComps.ParentArchitecture.Build
+            elseif this.ReferencingComps.Owner.Build
                 % if the parent is being built the reference component will
                 % be
-                canInline = this.ReferencingComps.ParentArchitecture.Build;
+                canInline = this.ReferencingComps.Owner.Build;
             else
                 % this means the the reference components parent is new and
                 % not being built directly
                 % need to get the answer from it
-                canInline = this.ReferencingComps.ParentArchitecture.canBeInlined(checkedArchitectures);
+                canInline = this.ReferencingComps.Owner.canBeInlined(checkedArchitectures);
             end
         end
     end
@@ -477,10 +460,10 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
     methods
         function this = CandidateArchitecture(name, extID, ...
                                               parPackageExtID, genIDs)
-            this@SysMLConnector.internal.CandidateElement(extID, ValidRequirementLinkTarget=true);
-
+            this@SysMLConnector.internal.CandidateArchitecture.Element(extID, ValidRequirementLinkTarget=true)
+            
             this.Name = name;
-            this.ParentPackageExtElementID = parPackageExtID;
+            this.OwnerExtElementID = parPackageExtID;
             this.GeneralizationExtElementIDs = genIDs;
             
             this.PortMapFromExtElementID = containers.Map;
@@ -499,7 +482,7 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
                 intfID = intf.ExtElementID;
             end
             
-            newPort = SysMLConnector.internal.CandidatePort(...
+            newPort = SysMLConnector.internal.CandidateArchitecture.CandidatePort(...
                 this, portName, extID, isConjugated, intfID, intf, isDerived);
             
             if ~isempty(intf)
@@ -523,7 +506,7 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
         end
         
         function cComp = addChildComponent(this, compName, extID, refCompID)
-            cComp = SysMLConnector.internal.CandidateComponent(...
+            cComp = SysMLConnector.internal.CandidateArchitecture.CandidateComponent(...
                 compName, this, extID, refCompID);
     
             this.ChildComponents = [this.ChildComponents cComp];
@@ -535,7 +518,7 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
         function addDeferredChildComponents(this, deferredChildComponents)
             for componentIndex = 1:numel(deferredChildComponents)
                 deferredComponent = deferredChildComponents(componentIndex);
-                deferredComponent.ParentArchitecture = this;
+                deferredComponent.Owner = this;
 
                 this.ChildComponents = [this.ChildComponents deferredComponent];
     
@@ -548,7 +531,7 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
             this, extID, end1CompID, ...
             end1RefPortID, end1RefPortCompID, ...
             end2CompID, end2RefPortID, end2RefPortCompID, isDerived)
-            cConn = SysMLConnector.internal.CandidateConnector(...
+            cConn = SysMLConnector.internal.CandidateArchitecture.CandidateConnector(...
                 this, extID,  end1CompID, end1RefPortID, end1RefPortCompID, ...
                 end2CompID, end2RefPortID, end2RefPortCompID, isDerived);
             this.ChildConnectors = [this.ChildConnectors cConn];
@@ -556,7 +539,7 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
 
         function connectors = copyChildConnectors(this, childConnectors)
             % copy child connectors from another architecture to this one.
-            connectors = SysMLConnector.internal.CandidateConnector.empty(0, length(childConnectors));
+            connectors = SysMLConnector.internal.CandidateArchitecture.CandidateConnector.empty(0, length(childConnectors));
 
             for connectorIndex = 1:length(childConnectors)
                 otherConnector = childConnectors(connectorIndex);
@@ -577,8 +560,8 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
 
         function parameter = addParameter(this, extID, paramName, paramType, paramTypeName, paramDim, paramDefValue)
 
-            parameter = SysMLConnector.internal.CandidateParameter(extID);
-            parameter.ParentArch = this;
+            parameter = SysMLConnector.internal.CandidateArchitecture.CandidateParameter(extID);
+            parameter.Owner = this;
 
             parameter.Name = string(paramName);
             parameter.Type = paramType;
@@ -598,7 +581,7 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
                     genArch = SysMLConnector.internal.CandidateElement.idMap(...
                         "lookup", genIDs(k));
 
-                    if isa(genArch, 'SysMLConnector.internal.CandidateArchitecture')
+                    if isa(genArch, 'SysMLConnector.internal.CandidateArchitecture.CandidateArchitecture')
                         if ~genArch.GenMerged
                             notImportedArch = genArch.mergeGeneralizations();
                             notImported = [notImported notImportedArch]; %#ok<AGROW>
@@ -669,10 +652,8 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
                 end
             end
             
-            compPkg = SysMLConnector.internal.CandidateElement.idMap(...
-                "lookup", this.ParentPackageExtElementID);
-            compPkg.addArchitecture(this);
-            this.ParentPackage = compPkg;
+            resolveOwningPackage(this);
+            this.OwningPackage.addArchitecture(this);
         end
         
         function setPortDirection(this, splitBidirectional)
@@ -743,8 +724,8 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
 
                     if ~isempty(end1APort) && ~isempty(end2APort)
                         thisConnNotImported = thisConn.setEndComps(...
-                            end1APort, end1Comp, end1APort.ParentArch, ...
-                            end2APort, end2Comp, end2APort.ParentArch);
+                            end1APort, end1Comp, end1APort.Owner, ...
+                            end2APort, end2Comp, end2APort.Owner);
 
                         notImported = [notImported thisConnNotImported]; %#ok<AGROW>
                     else
@@ -756,11 +737,11 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
                 else
                     nonSibling1 = false;
                     if ~isempty(thisConn.End1Comp)
-                        nonSibling1 = thisConn.End1Comp.ParentArchitecture ~= this;
+                        nonSibling1 = thisConn.End1Comp.Owner ~= this;
                     end
                     nonSibling2 = false;
                     if ~isempty(thisConn.End2Comp)
-                        nonSibling2 = thisConn.End2Comp.ParentArchitecture ~= this;
+                        nonSibling2 = thisConn.End2Comp.Owner ~= this;
                     end
                 end
                 
@@ -770,7 +751,7 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
                         if thisConn.End1APort.Replaced && thisConn.End2APort.Replaced
                             % Make sure the ports are complements of each
                             % other.
-                            derivedConnectors = SysMLConnector.internal.CandidateConnector.empty(0, 2);
+                            derivedConnectors = SysMLConnector.internal.CandidateArchitecture.CandidateConnector.empty(0, 2);
                             
                             if strcmp(thisConn.End1APort.Replacements(1).ComputedDir, "in")
                                 conn(1).TargetPort      = thisConn.End1APort.Replacements(1);
@@ -863,7 +844,7 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
                 thisComp = cComps(p);
                 compArch = thisComp.ReferenceArch;
                 
-                archsToCheck = thisComp.ParentArchitecture;
+                archsToCheck = thisComp.Owner;
                 allArchsToCheck = archsToCheck;
 
                 while ~isempty(archsToCheck)
@@ -883,7 +864,7 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
                     end
                     
                     for n = 1:length(archCheck.ReferencingComps)
-                        parArch = archCheck.ReferencingComps(n).ParentArchitecture;
+                        parArch = archCheck.ReferencingComps(n).Owner;
                         if ~parArch.Visited
                             archsToCheck = [archsToCheck, parArch]; %#ok<AGROW>
                             allArchsToCheck = [allArchsToCheck parArch]; %#ok<AGROW>
@@ -903,10 +884,10 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
             
         function fPath = getPostLinkFullPath(this)
             fPath = this.Name;
-            pOwn = this.ParentPackage;
+            pOwn = this.OwningPackage;
             while ~isempty(pOwn)
                 fPath = pOwn.Name + "/" + fPath;
-                pOwn = pOwn.ParentPackage;
+                pOwn = pOwn.OwningPackage;
             end
         end
         
@@ -919,10 +900,10 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
         end
         
         function adComp = addAdapter(this, conns, dstComp, dstCompArchPort)
-            adArch = SysMLConnector.internal.CandidateArchitecture(...
+            adArch = SysMLConnector.internal.CandidateArchitecture.CandidateArchitecture(...
                 "Adapter" + this.DerivedArchIdx, ...
                 this.ExtElementID + "AdapterArch" + this.DerivedArchIdx, ...
-                this.ParentPackageExtElementID, []);
+                this.OwnerExtElementID, []);
             adArch.Derived = true;
             this.DerivedArchIdx = this.DerivedArchIdx + 1;
             
@@ -997,14 +978,14 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
                 this.BuildAsSimulink = true;
             elseif isscalar(this.ReferencingComps)
                 % If a single reference, check if we should inline
-                aPrj = this.ParentPackage;
-                rcPrj = this.ReferencingComps.ParentArchitecture.ParentPackage;
+                aPrj = this.OwningPackage;
+                rcPrj = this.ReferencingComps.Owner.OwningPackage;
                 if (aPrj.ExtElementID == rcPrj.ExtElementID || ...
                         inlineSingleUseArchsAcrossPackages || ...
                         this.Derived) && this.canBeInlined()
                     this.IsInlined = true;
                     this.ReferencingComps.IsInliningItsArch = true;
-                    this.ParentPackage = rcPrj; % Fixup parent pkg link for book keeping
+                    this.OwningPackage = rcPrj; % Fixup parent pkg link for book keeping
                     build = false; % Will be built when building the Component instead of Prj
                     % need to check if the reference component is part of a
                     % loop
@@ -1052,7 +1033,7 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
         end
         
         function prelimBuildArchBody(this, thisArch, builder)
-            this.ZCElement = thisArch;
+            this.BuiltElement = thisArch;
             thisArch.ExternalUID = this.ExtElementID;
             
             % Apply stereotypes
@@ -1065,7 +1046,7 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
                 thisComp = cComps(p);
                 if thisComp.Valid
                     c = builder.createComponent(thisArch, thisComp);
-                    thisComp.ZCElement = c;
+                    thisComp.BuiltElement = c;
                     c.ExternalUID = thisComp.ExtElementID;
                 end
             end
@@ -1079,7 +1060,7 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
                 if thisComp.Valid && thisComp.IsInliningItsArch && ...
                         ~isempty(thisComp.ReferenceArch)
                     thisComp.ReferenceArch.prelimBuildArchBody(...
-                        thisComp.ZCElement.Architecture, builder);
+                        thisComp.BuiltElement.Architecture, builder);
                 end
             end
             
@@ -1092,11 +1073,11 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
                 if thisPort.Valid && ~thisPort.Replaced
                     aP = builder.createPort(thisArch, thisPort.Name, ...
                                             thisPort.ComputedDir);
-                    thisPort.ZCElement = aP;
+                    thisPort.BuiltElement = aP;
                     thisPort.BuildName = aP.Name;
                     aP.ExternalUID = thisPort.ExtElementID;
                     if ~isempty(thisPort.Interface)
-                        intf = thisPort.Interface.ZCElement;
+                        intf = thisPort.Interface.BuiltElement;
                         aP.setInterface(intf);
                     end
                 end
@@ -1126,7 +1107,7 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
                                 % Link to reference architecture model
                                 refMdlName = builder.lookupModelNameFromExtID(...
                                     thisComp.ReferenceArchExtElementID);
-                                    thisComp.ZCElement.linkToModel(refMdlName);
+                                    thisComp.BuiltElement.linkToModel(refMdlName);
                             else
                                 thisComp.ReferenceArch.finishBuildLinkComps(builder);
                             end
@@ -1136,9 +1117,9 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
                             defWidth = strlength(thisComp.Name)*10 + 20;
                         end
 
-                        compPos = get_param(thisComp.ZCElement.SimulinkHandle,'Position');
+                        compPos = get_param(thisComp.BuiltElement.SimulinkHandle,'Position');
                         offsetPos = 10 * (cIdx-1);
-                        set_param(thisComp.ZCElement.SimulinkHandle,'Position',...
+                        set_param(thisComp.BuiltElement.SimulinkHandle,'Position',...
                                                 [compPos(1), compPos(2), ...
                                             compPos(1)+defWidth, ...
                                             compPos(4)] + offsetPos);
@@ -1150,9 +1131,9 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
                         try %#ok<TRYNC>
                             % Try to position the component using basic heuristics but do not recover again.
                             defWidth = strlength(thisComp.Name)*10 + 20;
-                            compPos = get_param(thisComp.ZCElement.SimulinkHandle,'Position');
+                            compPos = get_param(thisComp.BuiltElement.SimulinkHandle,'Position');
                             offsetPos = 10 * (cIdx-1);
-                            set_param(thisComp.ZCElement.SimulinkHandle,'Position',...
+                            set_param(thisComp.BuiltElement.SimulinkHandle,'Position',...
                                                     [compPos(1), compPos(2), ...
                                                 compPos(1)+defWidth, ...
                                                 compPos(4)] + offsetPos);
@@ -1174,25 +1155,25 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
                         % Arch port
                         port1 = this.getCachedPortFromExtElementID(thisConn.End1RefPortExtElementID);
                         port1Dir = port1.ComputedDir;
-                        zcPort1 = port1.ZCElement;
+                        zcPort1 = port1.BuiltElement;
                         port1Arch = true;
                     else
                         % Comp port
                         port1 = thisConn.End1RefArch.getCachedPortFromExtElementID(thisConn.End1RefPortExtElementID);
                         port1Name = port1.BuildName;
                         port1Dir = port1.ComputedDir;
-                        zcPort1 = thisConn.End1Comp.ZCElement.getPort(char(port1Name));
+                        zcPort1 = thisConn.End1Comp.BuiltElement.getPort(char(port1Name));
                         port1Arch = false;
                     end
                     if isempty(thisConn.End2Comp)
                         % Arch port
                         port2 = this.getCachedPortFromExtElementID(thisConn.End2RefPortExtElementID);
-                        zcPort2 = port2.ZCElement;
+                        zcPort2 = port2.BuiltElement;
                     else
                         % Comp port
                         port2 = thisConn.End2RefArch.getCachedPortFromExtElementID(thisConn.End2RefPortExtElementID);
                         port2Name = port2.BuildName;
-                        zcPort2 = thisConn.End2Comp.ZCElement.getPort(char(port2Name));
+                        zcPort2 = thisConn.End2Comp.BuiltElement.getPort(char(port2Name));
                     end
                     
                     if (port1Arch && port1Dir == "in") || (~port1Arch && port1Dir == "out")
@@ -1205,8 +1186,8 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateElement
             end
             
             % Fix layout of Arch
-            this.ZCElement.layout;
-            set_param(this.ZCElement.SimulinkHandle, 'SystemRect', [0 0 0 0]);
+            this.BuiltElement.layout;
+            set_param(this.BuiltElement.SimulinkHandle, 'SystemRect', [0 0 0 0]);
             
             cComps = this.ChildComponents;
             for p = 1:length(cComps)

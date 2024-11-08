@@ -15,18 +15,18 @@ classdef Node < SysMLConnector.internal.CandidateAD.Element & matlab.mixin.Heter
         function node = addNode(modelObj, nodeName, nodeType, nodeID)
             switch nodeType
                 case 'Initial'
-                    node = SysMLConnector.internal.CandidateAD.InitialNode(Name=nodeName, ExternalID=nodeID, Parent=modelObj);
+                    node = SysMLConnector.internal.CandidateAD.InitialNode(Name=nodeName, ExternalID=nodeID, Owner=modelObj);
                 case 'ActivityFinal'
-                    node = SysMLConnector.internal.CandidateAD.FinalNode(Name=nodeName, ExternalID=nodeID, Parent=modelObj);
+                    node = SysMLConnector.internal.CandidateAD.FinalNode(Name=nodeName, ExternalID=nodeID, Owner=modelObj);
                 case 'FlowFinal'
-                    node = SysMLConnector.internal.CandidateAD.FlowFinalNode(Name=nodeName, ExternalID=nodeID, Parent=modelObj);
+                    node = SysMLConnector.internal.CandidateAD.FlowFinalNode(Name=nodeName, ExternalID=nodeID, Owner=modelObj);
                 case 'JoinFork'
-                    node = SysMLConnector.internal.CandidateAD.JoinForkNode(Name=nodeName, ExternalID=nodeID, Parent=modelObj);
+                    node = SysMLConnector.internal.CandidateAD.JoinForkNode(Name=nodeName, ExternalID=nodeID, Owner=modelObj);
                 case 'MergeDecision'
-                    node = SysMLConnector.internal.CandidateAD.MergeDecisionNode(Name=nodeName, ExternalID=nodeID, Parent=modelObj);
+                    node = SysMLConnector.internal.CandidateAD.MergeDecisionNode(Name=nodeName, ExternalID=nodeID, Owner=modelObj);
                 otherwise
                     % Assume Activity
-                    node = SysMLConnector.internal.CandidateAD.Activity(Name=nodeName, ExternalID=nodeID, Parent=modelObj);
+                    node = SysMLConnector.internal.CandidateAD.Activity(Name=nodeName, ExternalID=nodeID, Owner=modelObj);
             end
 
             modelObj.Nodes = [modelObj.Nodes node];
@@ -72,8 +72,8 @@ classdef Node < SysMLConnector.internal.CandidateAD.Element & matlab.mixin.Heter
         end
 
         function doPublish(this, target)    
-            if isempty(this.ZCElement) || ~isvalid(this.ZCElement)
-                this.ZCElement = SysMLConnector.internal.CandidateAD.internal.addAction(target, this.Name);
+            if isempty(this.BuiltElement) || ~isvalid(this.BuiltElement)
+                this.BuiltElement = SysMLConnector.internal.CandidateAD.internal.addAction(target, this.Name);
             end
         end
 
@@ -84,7 +84,7 @@ classdef Node < SysMLConnector.internal.CandidateAD.Element & matlab.mixin.Heter
             arrayfun(@(flow) publish(flow, this), this.Flows);
 
             warnState = warning('off', 'diagram_autolayout:autolayout:layoutRejectedCommandLine');
-            systemPath = SysMLConnector.internal.CandidateAD.internal.getArchitecturePeer(this.ZCElement).getQualifiedName;
+            systemPath = SysMLConnector.internal.CandidateAD.internal.getArchitecturePeer(this.BuiltElement).getQualifiedName;
             Simulink.BlockDiagram.arrangeSystem(systemPath);
             warning(warnState);
         end

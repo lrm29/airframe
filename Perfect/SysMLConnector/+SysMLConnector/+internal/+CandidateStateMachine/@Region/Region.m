@@ -7,9 +7,6 @@ classdef Region < SysMLConnector.internal.CandidateStateMachine.Element
             = SysMLConnector.internal.CandidateStateMachine.Transition.empty
     end
 
-    properties (Dependent,SetAccess=protected)
-        StateflowObj
-    end
     
     methods
         function regionObj = Region(element,parent,portJunctions)
@@ -58,13 +55,6 @@ classdef Region < SysMLConnector.internal.CandidateStateMachine.Element
                     SysMLConnector.internal.CandidateStateMachine.Transition(...
                     element.transition.at(i),regionObj);
             end
-        end
-
-        function value = get.StateflowObj(this)
-            arguments
-                this SysMLConnector.internal.CandidateStateMachine.Region
-            end
-            value = this.Parent.StateflowObj;
         end
 
         build(this);

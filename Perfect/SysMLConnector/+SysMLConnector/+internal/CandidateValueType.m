@@ -1,17 +1,12 @@
 classdef CandidateValueType < SysMLConnector.internal.CandidateElement
 % CANDIDATEVALUETYPE Helper class for SysMLConnector.internal.import that holds candidate interface objects.
     properties
-        Name = "";
-        BuildName;
-
         TypeName = '';
         Type;
         Dim;
 
         Valid = true
         InvalidReason = "";
-
-        ZCElement = [];
     end
     
     methods
@@ -38,10 +33,10 @@ classdef CandidateValueType < SysMLConnector.internal.CandidateElement
         end
 
         function buildZCInterface(this, builder)
-            if isempty(this.ZCElement)
+            if isempty(this.BuiltElement)
                 intf = builder.createValueType(this.ExtElementID, this.BuildName);
 
-                this.ZCElement = intf;
+                this.BuiltElement = intf;
                 intf.ExternalUID = this.ExtElementID;
 
                 builder.setDataType(this);

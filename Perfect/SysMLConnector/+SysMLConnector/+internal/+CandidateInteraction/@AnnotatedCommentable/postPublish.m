@@ -8,6 +8,6 @@ arguments (Repeating)
 end
 % create blank annotations for later
 this.Annotations = arrayfun( ...
-    @(c) this.Model.ZCElement.addAnnotation(),this.Comments);
+    @(c) this.Model.BuiltElement.addAnnotation(),this.Comments);
 end
 

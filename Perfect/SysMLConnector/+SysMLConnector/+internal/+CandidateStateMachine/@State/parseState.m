@@ -14,7 +14,7 @@ for i = 1:element.connectionPoint.size
         element.connectionPoint.at(i),this,i);
 end
 % report the connection points to the parent
-this.Parent.addConnectionPoint(this.ConnectionPoints);
+this.Owner.addConnectionPoint(this.ConnectionPoints);
 %% parse regions
 % expect this to be 1
 this.Regions = ...

@@ -1,13 +1,10 @@
 classdef Element < SysMLConnector.internal.CandidateElement & matlab.mixin.SetGetExactNames
     properties
-        Name (1,:) char
-        Parent
         Model
     end
 
     properties
         Build (1,1) logical = true % build all allocations unless the build of it fails.
-        ZCElement
     end
 
     properties (Dependent)
@@ -19,12 +16,12 @@ classdef Element < SysMLConnector.internal.CandidateElement & matlab.mixin.SetGe
             arguments
                 NameValueArgs.Name
                 NameValueArgs.ExternalID
-                NameValueArgs.Parent = [];
+                NameValueArgs.Owner = [];
             end
             elementObj@SysMLConnector.internal.CandidateElement(NameValueArgs.ExternalID);
 
             elementObj.Name = NameValueArgs.Name;
-            elementObj.Parent = NameValueArgs.Parent;
+            elementObj.Owner = NameValueArgs.Owner;
 
             setModel(elementObj);
         end
@@ -58,8 +55,8 @@ classdef Element < SysMLConnector.internal.CandidateElement & matlab.mixin.SetGe
 
         function setModel(this)
             % Can be overridden during element construction.
-            if ~isempty(this.Parent)
-                this.Model = this.Parent.Model;
+            if ~isempty(this.Owner)
+                this.Model = this.Owner.Model;
             end
         end
 
@@ -80,10 +77,10 @@ classdef Element < SysMLConnector.internal.CandidateElement & matlab.mixin.SetGe
             %fprintf('publishing: \n  %s\n  %s\n\n', class(this), this.getFullPath);
 
             if nargin < 2
-                target = this.Parent;
+                target = this.Owner;
             end
 
-            this.ZCElement = [];
+            this.BuiltElement = [];
             
             prePublish(this, target);
 
@@ -96,14 +93,14 @@ classdef Element < SysMLConnector.internal.CandidateElement & matlab.mixin.SetGe
         end
 
         function fullPath = getFullPath(this)
-            if isempty(this.Parent)
+            if isempty(this.Owner)
                 if ~isempty(this.Name)
                     fullPath = this.Name;
                 else
                     fullPath = this.ExtElementID;
                 end
             else
-                fullPath = [getFullPath(this.Parent) '<:>' this.Name];
+                fullPath = [getFullPath(this.Owner) '<:>' this.Name];
             end
         end
     end

@@ -4,10 +4,7 @@ classdef AllocationSet < SysMLConnector.internal.CandidateAllocation.Element
     end
 
     properties % Build Artifacts
-        ParentPackage
-        ParentPackageExtElementID
         Builder
-        BuildName
         BuildSource
         BuildTarget
     end
@@ -30,18 +27,18 @@ classdef AllocationSet < SysMLConnector.internal.CandidateAllocation.Element
                 this.BuildName = this.Builder.getModelName(this.Name);
             end
 
-            this.ZCElement = systemcomposer.allocation.createAllocationSet(this.BuildName, this.BuildSource, this.BuildTarget);
+            this.BuiltElement = systemcomposer.allocation.createAllocationSet(this.BuildName, this.BuildSource, this.BuildTarget);
 
             % Immediately add it to the list so that it gets closed when
             % the builder is deleted, even if the build fails.
-            this.Builder.AllocationSets = [this.Builder.AllocationSets this.ZCElement];
+            this.Builder.AllocationSets = [this.Builder.AllocationSets this.BuiltElement];
             
             % Delete the default scenario.
-            destroy(this.ZCElement.Scenarios);
+            destroy(this.BuiltElement.Scenarios);
         end
 
         function scenario = addScenario(this, scenarioName, scenarioID)
-            scenario = SysMLConnector.internal.CandidateAllocation.Scenario(Name=scenarioName, ExternalID=scenarioID, Parent=this);
+            scenario = SysMLConnector.internal.CandidateAllocation.Scenario(Name=scenarioName, ExternalID=scenarioID, Owner=this);
 
             this.Scenarios = [this.Scenarios scenario];
         end
@@ -51,26 +48,23 @@ classdef AllocationSet < SysMLConnector.internal.CandidateAllocation.Element
         end
 
         function linkPackage(this)    
-            if isempty(this.ParentPackageExtElementID)
+            if strcmp(this.OwnerExtElementID, "")
                 % Derived allocation set. Set the package to match the
                 % source.
                 source = this.Scenarios(1).Allocations(1).Source;
                 
-                if isa(source, 'SysMLConnector.internal.CandidateArchitecture') ...
-                        || isa(source, 'SysMLConnector.internal.CandidateComponent') ...
-                        || isa(source, 'SysMLConnector.internal.CandidatePort') ...
-                        || isa(source, 'SysMLConnector.internal.CandidateConnector')
-                    this.ParentPackageExtElementID = source.ParentPackageExtElementID;
+                if isa(source, 'SysMLConnector.internal.CandidateArchitecture.CandidateArchitecture') ...
+                        || isa(source, 'SysMLConnector.internal.CandidateArchitecture.CandidateComponent') ...
+                        || isa(source, 'SysMLConnector.internal.CandidateArchitecture.CandidatePort') ...
+                        || isa(source, 'SysMLConnector.internal.CandidateArchitecture.CandidateConnector')
+                    this.OwnerExtElementID = source.OwnerExtElementID;
                 else
-                    this.ParentPackageExtElementID = source.Model.ParentPackageExtElementID;
+                    this.OwnerExtElementID = source.Model.OwnerExtElementID;
                 end
             end
-
-            compPkg = SysMLConnector.internal.CandidateElement.idMap(...
-                "lookup", this.ParentPackageExtElementID);
-
-            this.ParentPackage = compPkg;
-            this.ParentPackage.BuildAllocations = [this.ParentPackage.BuildAllocations this];
+            
+            resolveOwningPackage(this);
+            this.OwningPackage.BuildAllocations = [this.OwningPackage.BuildAllocations this];
         end
 
         function prelimBuild(~,~)

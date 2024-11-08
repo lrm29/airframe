@@ -3,7 +3,7 @@ arguments
     this SysMLConnector.internal.CandidateStateMachine.Junction
     newCenter (1,2) {mustBeNumeric}
 end
-if ~isempty(this.StateflowObj)
-    this.StateflowObj.Position.Center = newCenter;
+if ~isempty(this.BuiltElement)
+    this.BuiltElement.Position.Center = newCenter;
 end
 end

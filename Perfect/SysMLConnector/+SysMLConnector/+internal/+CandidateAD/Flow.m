@@ -34,13 +34,13 @@ classdef Flow < SysMLConnector.internal.CandidateAD.Element & matlab.mixin.Heter
             % Check if the pins were created explicitly. If not, they will
             % be created by the flow function. 
             source = this.SourcePin;
-            if isa(source, 'SysMLConnector.internal.CandidateAD.Pin') && isempty(source.ZCElement)
-                source = source.Parent;
+            if isa(source, 'SysMLConnector.internal.CandidateAD.Pin') && isempty(source.BuiltElement)
+                source = source.Owner;
             end
 
             destination = this.DestinationPin;
-            if isa(destination, 'SysMLConnector.internal.CandidateAD.Pin') && isempty(destination.ZCElement)
-                destination = destination.Parent;
+            if isa(destination, 'SysMLConnector.internal.CandidateAD.Pin') && isempty(destination.BuiltElement)
+                destination = destination.Owner;
             end
 
             % Create the flow between the pins or nodes.
@@ -49,7 +49,7 @@ classdef Flow < SysMLConnector.internal.CandidateAD.Element & matlab.mixin.Heter
                                destination, ...
                                Guard=this.Guard);
 
-            this.ZCElement = flow;
+            this.BuiltElement = flow;
 
             connector = SysMLConnector.internal.CandidateAD.internal.getArchitecturePeer(flow);
             

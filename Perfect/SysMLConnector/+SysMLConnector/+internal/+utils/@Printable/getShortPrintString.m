@@ -10,10 +10,12 @@ if ~isempty(printableProperties)
     end
     for i = 1:numel(printableProperties)
         printables = this.getPrintables(this.(printableProperties(i)));
+
         propertyString = arrayfun(@(p) p.getPrintID(),printables);
         if ~isscalar(propertyString)
             propertyString = strjoin(propertyString,",");
         end
+        
         shortString = shortString+"["+printableProperties(i)+"="+...
             propertyString+"]";
     end

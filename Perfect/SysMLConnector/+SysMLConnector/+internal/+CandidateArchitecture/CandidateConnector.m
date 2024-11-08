@@ -1,8 +1,6 @@
-classdef CandidateConnector < SysMLConnector.internal.CandidateElement
+classdef CandidateConnector < SysMLConnector.internal.CandidateArchitecture.Element
 % CANDIDATECONNECTOR Helper class for SysMLConnector.internal.import that holds candidate Connector objects.
-    properties
-        ParentComp
-        
+    properties        
         End1CompExtElementID
         End1RefPortExtElementID
         End1RefPortArchExtElementID
@@ -29,17 +27,13 @@ classdef CandidateConnector < SysMLConnector.internal.CandidateElement
         
         Derived = false;
     end
-
-    properties (Dependent)
-        ParentPackageExtElementID
-    end
     
     methods
         function this = CandidateConnector(parComp, extID, end1CompID, end1RefPortID, ...
                                            end1RefPortArchID, ...
                                            end2CompID, end2RefPortID, end2RefPortArchID, isDerived)
-            this@SysMLConnector.internal.CandidateElement(extID);
-            this.ParentComp   = parComp;
+            this@SysMLConnector.internal.CandidateArchitecture.Element(extID);
+            this.Owner   = parComp;
             
             this.End1CompExtElementID = end1CompID;
             this.End1RefPortExtElementID = end1RefPortID;
@@ -52,16 +46,8 @@ classdef CandidateConnector < SysMLConnector.internal.CandidateElement
             this.Derived = isDerived;
         end
 
-        function elementID = get.ParentPackageExtElementID(this)
-            try
-                elementID = this.ParentComp.ParentPackageExtElementID;
-            catch
-                elementID = [];
-            end
-        end
-
         function fullPath = getFullPath(this)
-            fullPath = this.ParentComp.getFullPath + "/";
+            fullPath = this.Owner.getFullPath + "/";
         end
         
         function notImported = setEndComps(this, end1P, end1C, end1RC, end2P, end2C, end2RC)

@@ -1,15 +1,12 @@
-classdef CandidateProfile < handle
+classdef CandidateProfile < SysMLConnector.internal.CandidateElement
 % CANDIDATEPROFILE Helper class for SysMLConnector.internal.import that holds candidate Profiles.
     properties
-        Name
-        FinalName = ""
         Stereotypes = [];
-        
-        ZCElement = [];
     end
     
     methods
-        function this = CandidateProfile(pName)
+        function this = CandidateProfile(pExtID, pName)
+            this@SysMLConnector.internal.CandidateElement(pExtID);
             this.Name = pName;
         end
         

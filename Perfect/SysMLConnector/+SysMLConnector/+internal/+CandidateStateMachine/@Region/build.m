@@ -3,6 +3,9 @@ function build(this)
 arguments
     this SysMLConnector.internal.CandidateStateMachine.Region
 end
+
+this.BuiltElement = this.Owner.BuiltElement;
+
 % build the subvertexes
 if this.Subvertexes.isConfigured
     % build states first to avoid issues
@@ -24,5 +27,5 @@ if isempty(startingSubvertex)
     startingSubvertex = subvertexes(1);
 end
 arrayfun(@(ss) ss.arrange(),startingSubvertex);
-this.Built = true;
+
 end

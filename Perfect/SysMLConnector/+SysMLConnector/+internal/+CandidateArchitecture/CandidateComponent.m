@@ -1,7 +1,5 @@
-classdef CandidateComponent < SysMLConnector.internal.CandidateElement
+classdef CandidateComponent < SysMLConnector.internal.CandidateArchitecture.Element
     properties
-        Name = "";
-        ParentArchitecture;
         DeferredParentArchitecture;
         ReferenceArchExtElementID = ""
         ReferenceArch = [];
@@ -11,34 +9,16 @@ classdef CandidateComponent < SysMLConnector.internal.CandidateElement
         Valid = true;
         InvalidReason = "";
         Build = true;
-        ZCElement = [];
-    end
-
-    properties (Dependent)
-        BuildName
-        ParentPackageExtElementID
     end
     
     methods
         function this = CandidateComponent(name, parArch, extID, refCompID)
-            this@SysMLConnector.internal.CandidateElement(extID);
+            this@SysMLConnector.internal.CandidateArchitecture.Element(extID);
             this.Name = name;
+            this.BuildName = name;
             this.ReferenceArchExtElementID = refCompID;
-            this.ParentArchitecture = parArch;
+            this.Owner = parArch;
             this.ValidRequirementLinkTarget = true;
-        end
-
-        function elementID = get.ParentPackageExtElementID(this)
-            try
-                elementID = this.ParentArchitecture.ParentPackageExtElementID;
-            catch
-                elementID = [];
-            end
-        end
-
-        function name = get.BuildName(this)
-            % No restrictions on component names so it is used directly.
-            name = this.Name;
         end
         
         function addConnector(this, refArchPort, conn)
@@ -78,7 +58,7 @@ classdef CandidateComponent < SysMLConnector.internal.CandidateElement
                         % Multiple fan in connectors
                         if length(validConn) > 1
                             % Synthesize an Adapter Component
-                            this.ParentArchitecture.addAdapter(...
+                            this.Owner.addAdapter(...
                                 validConn, this, thisInfo.RefArchPort);
                         end
                     end
@@ -87,7 +67,7 @@ classdef CandidateComponent < SysMLConnector.internal.CandidateElement
         end
 
         function fullPath = getFullPath(this)
-            fullPath = this.ParentArchitecture.getPostLinkFullPath() + "/" + this.Name;
+            fullPath = this.Owner.getPostLinkFullPath() + "/" + this.Name;
         end
         
         function setInvalid(this, reason)

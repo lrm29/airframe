@@ -44,10 +44,10 @@ function importActivityDiagrams(xmiFileName)
             % Publish the candidate diagram as a real diagram.
             try
                 publish(ad);
-                modelName = ad.ZCElement.Name;
+                modelName = ad.BuiltElement.Name;
             catch ME
                 try %#ok<TRYNC> try to close the errant model if possible.
-                    modelName = ad.ZCElement.Name;
+                    modelName = ad.BuiltElement.Name;
                     save_system(modelName, SaveDirtyReferencedModels='on');
                     close_system(modelName);
                 end

@@ -11,11 +11,11 @@ classdef Scenario < SysMLConnector.internal.CandidateAllocation.Element
 
         function prePublish(this, varargin)
             % propagate downward for build.
-            this.Builder = this.Parent.Builder;
+            this.Builder = this.Owner.Builder;
         end
 
         function doPublish(this, varargin)
-            this.ZCElement = this.Parent.ZCElement.createScenario(this.Name);
+            this.BuiltElement = this.Owner.BuiltElement.createScenario(this.Name);
         end
 
         function postPublish(this, varargin)

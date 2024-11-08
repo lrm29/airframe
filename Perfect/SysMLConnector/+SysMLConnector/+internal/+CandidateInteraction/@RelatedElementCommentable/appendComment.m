@@ -6,7 +6,7 @@ arguments
     comment SysMLConnector.internal.CandidateComment.Comment
 end
 if this.Built
-    relatedElements = this.ZCElement.RelatedElements;
+    relatedElements = this.BuiltElement.RelatedElements;
     arrayfun(@(re) this.appendToDescription(re.SimulinkHandle,comment.Text), ...
         relatedElements);
 end

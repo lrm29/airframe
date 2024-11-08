@@ -3,14 +3,8 @@ classdef Element < SysMLConnector.internal.CandidateElement & ...
         SysMLConnector.internal.utils.Printable
    
     properties
-        Name (1,:) char
-        Parent
         Model
         ReferenceElementID
-    end
-
-    properties (SetAccess=protected)
-        ZCElement
     end
 
     properties (Dependent)
@@ -18,22 +12,18 @@ classdef Element < SysMLConnector.internal.CandidateElement & ...
         ElementType
         ReferenceElement
     end
-
-    properties (Dependent,SetAccess=protected)
-        Built
-    end
     
     methods
         function elementObj = Element(NameValueArgs)
             arguments
                 NameValueArgs.Name
                 NameValueArgs.ExternalID
-                NameValueArgs.Parent = [];
+                NameValueArgs.Owner = [];
             end
             elementObj@SysMLConnector.internal.CandidateElement(NameValueArgs.ExternalID);
 
             elementObj.Name = NameValueArgs.Name;
-            elementObj.Parent = NameValueArgs.Parent;
+            elementObj.Owner = NameValueArgs.Owner;
             elementObj.ValidRequirementLinkTarget = true;
 
             setModel(elementObj);
@@ -56,18 +46,11 @@ classdef Element < SysMLConnector.internal.CandidateElement & ...
         end
 
         function qualifiedName = get.QualifiedName(this)
-            if ~isempty(this.Parent)
-                qualifiedName = [get(this.Parent, 'QualifiedName') '/' this.ZCElement.Name];
+            if ~isempty(this.Owner)
+                qualifiedName = [get(this.Owner, 'QualifiedName') '/' this.BuiltElement.Name];
             else
-                qualifiedName = this.ZCElement.Name;
+                qualifiedName = this.BuiltElement.Name;
             end
-        end
-
-        function built = get.Built(this)
-            arguments
-                this SysMLConnector.internal.CandidateInteraction.Element
-            end
-            built = ~isempty(this.ZCElement);
         end
 
         function doPublish(this, target) %#ok<INUSD>
@@ -95,16 +78,16 @@ classdef Element < SysMLConnector.internal.CandidateElement & ...
 
         function setModel(this)
             % Can be overridden during element construction.
-            this.Model = this.Parent.Model;
+            this.Model = this.Owner.Model;
         end
 
         function setZCName(this, newName)
-            SysMLConnector.internal.CandidateAD.internal.setName(this.ZCElement, newName);
+            SysMLConnector.internal.CandidateAD.internal.setName(this.BuiltElement, newName);
         end
 
         function applyExternalUID(this)
-            if ~isempty(this.ZCElement)
-                this.ZCElement.ExternalUID = this.ExtElementID;
+            if ~isempty(this.BuiltElement)
+                this.BuiltElement.ExternalUID = this.ExtElementID;
             end
         end
     end
@@ -113,10 +96,10 @@ classdef Element < SysMLConnector.internal.CandidateElement & ...
             %fprintf('publishing: \n  %s\n  %s\n\n', class(this), this.getFullPath);
 
             if nargin < 2
-                target = this.Parent;
+                target = this.Owner;
             end
 
-            this.ZCElement = [];
+            this.BuiltElement = [];
             
             prePublish(this, target);
 
@@ -129,10 +112,10 @@ classdef Element < SysMLConnector.internal.CandidateElement & ...
         end
 
         function fullPath = getFullPath(this)
-            if isempty(this.Parent)
+            if isempty(this.Owner)
                 fullPath = this.Name;
             else
-                fullPath = [getFullPath(this.Parent) '<:>' this.Name];
+                fullPath = [getFullPath(this.Owner) '<:>' this.Name];
             end
         end
     end

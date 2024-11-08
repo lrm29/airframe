@@ -7,24 +7,24 @@ classdef Lifeline < SysMLConnector.internal.CandidateInteraction.Element & ...
 
     methods
         function lifelineObj = Lifeline(name, externalID, parent)
-            lifelineObj@SysMLConnector.internal.CandidateInteraction.Element(Name=name, ExternalID=externalID, Parent=parent);
+            lifelineObj@SysMLConnector.internal.CandidateInteraction.Element(Name=name, ExternalID=externalID, Owner=parent);
         end
 
         function applyExternalUID(this)
-            if ~isempty(this.ZCElement)
-                this.ZCElement.RelatedElements.ExternalUID = this.ExtElementID;
+            if ~isempty(this.BuiltElement)
+                this.BuiltElement.RelatedElements.ExternalUID = this.ExtElementID;
             end            
         end
 
         function doPublish(this, varargin)
-            this.ZCElement = SysMLConnector.internal.CandidateInteraction.internal.addLifeline(this.Parent.ZCElement, this.Name);
+            this.BuiltElement = SysMLConnector.internal.CandidateInteraction.internal.addLifeline(this.Owner.BuiltElement, this.Name);
         end
 
         function linkTarget = getLinkTarget(this)
             linkTarget = [];
             
-            if ~isempty(this.ZCElement)
-                linkTarget = this.ZCElement.RelatedElements.SimulinkHandle;
+            if ~isempty(this.BuiltElement)
+                linkTarget = this.BuiltElement.RelatedElements.SimulinkHandle;
             end
         end
 

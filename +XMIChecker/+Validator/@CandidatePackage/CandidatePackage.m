@@ -14,7 +14,7 @@ classdef CandidatePackage < XMIChecker.Validator.Validator
             % if build is set check for dir
             if candidate.Build
                 project = currentProject();
-                if exist(project.RootFolder+candidate.ZCProjectFolder,"dir")
+                if exist(project.RootFolder+candidate.BuiltElement,"dir")
                     % build set and folder exists within the project
                     obj.pass = 1;
                 else
@@ -23,7 +23,7 @@ classdef CandidatePackage < XMIChecker.Validator.Validator
                 end
             else
                 % validate that dir is empty
-                if strcmp(candidate.ZCProjectFolder,"")
+                if strcmp(candidate.BuiltElement,"")
                     obj.pass = 1;
                 else
                     obj.fail = 1;

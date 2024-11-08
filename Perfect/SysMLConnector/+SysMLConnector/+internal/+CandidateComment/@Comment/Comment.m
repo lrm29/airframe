@@ -5,7 +5,10 @@ classdef Comment < SysMLConnector.internal.CandidateElement
         Text = string.empty()
         AnnotatedElementExtID = string.empty()
         Valid logical
-        Built logical = false
+    end
+
+    properties
+        Build = true
     end
 
     properties (SetAccess=protected,Dependent)

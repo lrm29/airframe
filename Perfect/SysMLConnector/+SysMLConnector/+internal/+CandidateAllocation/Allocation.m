@@ -22,8 +22,8 @@ classdef Allocation < SysMLConnector.internal.CandidateAllocation.Element
         end
 
         function allocationSetName = get.AllocationSetName(this)
-            allocationSetName = sprintf('Allocs_%sTo%s', SysMLConnector.internal.utils.getModelName(this.Source.ZCElement), ...
-                                                              SysMLConnector.internal.utils.getModelName(this.Target.ZCElement));
+            allocationSetName = sprintf('Allocs_%sTo%s', SysMLConnector.internal.utils.getModelName(this.Source.BuiltElement), ...
+                                                              SysMLConnector.internal.utils.getModelName(this.Target.BuiltElement));
         end
 
         function referenceElement = get.Source(this)
@@ -47,14 +47,14 @@ classdef Allocation < SysMLConnector.internal.CandidateAllocation.Element
 
             try %#ok<TRYNC> Easier than trying to keep in sync with allowable allocation targets for the product.
                 tf = ~isempty(this.Source)           && ~isempty(this.Target)                 ...
-                  && ~isempty(this.Source.ZCElement) && ~isempty(this.Target.ZCElement)       ...
-                  &&  isvalid(this.Source.ZCElement) &&  isvalid(this.Target.ZCElement);
+                  && ~isempty(this.Source.BuiltElement) && ~isempty(this.Target.BuiltElement)       ...
+                  &&  isvalid(this.Source.BuiltElement) &&  isvalid(this.Target.BuiltElement);
             end
         end    
 
         function prePublish(this, varargin)
             % propagate downward for build.
-            this.Builder = this.Parent.Builder;
+            this.Builder = this.Owner.Builder;
         end
 
         function doPublish(this, varargin)
@@ -62,7 +62,7 @@ classdef Allocation < SysMLConnector.internal.CandidateAllocation.Element
                 sourceElement = this.getFinalElement(this.Source);
                 targetElement = this.getFinalElement(this.Target);
 
-                this.Parent.ZCElement.allocate(sourceElement, targetElement);
+                this.Owner.BuiltElement.allocate(sourceElement, targetElement);
     
                 % Cache the print string for later in case the model has been
                 % closed.
@@ -75,7 +75,7 @@ classdef Allocation < SysMLConnector.internal.CandidateAllocation.Element
         function finalElement = getFinalElement(~, element)
             % If the element is lifeline from a sequence diagram, get the
             % component representation of it.
-            finalElement = element.ZCElement;
+            finalElement = element.BuiltElement;
             if isa(element, 'SysMLConnector.internal.CandidateInteraction.Lifeline')
                 finalElement = finalElement.RelatedElements;
             elseif startsWith(class(finalElement), 'systemcomposer.activitydiagram.model.')
@@ -83,7 +83,9 @@ classdef Allocation < SysMLConnector.internal.CandidateAllocation.Element
             end
 
             % Bubble up component architectures to components for allocation.
-            if isa(finalElement, 'systemcomposer.arch.Architecture') && ~isempty(finalElement.Parent) && isa(finalElement.Parent, 'systemcomposer.arch.Component')
+            if isa(finalElement, 'systemcomposer.arch.Architecture') ...
+                    && ~isempty(finalElement.Parent) ...
+                    && isa(finalElement.Parent, 'systemcomposer.arch.Component')
                 finalElement = finalElement.Parent;
             end
         end

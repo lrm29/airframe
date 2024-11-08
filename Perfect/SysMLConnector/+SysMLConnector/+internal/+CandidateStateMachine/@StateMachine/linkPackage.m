@@ -3,9 +3,7 @@ function linkPackage(this)
 arguments
     this SysMLConnector.internal.CandidateStateMachine.StateMachine
 end
-parentPackage = SysMLConnector.internal.CandidateElement.idMap(...
-    "lookup",this.ParentPackageExtElementID);
-parentPackage.addStateMachine(this);
-this.ParentPackage = parentPackage;
+resolveOwningPackage(this);
+this.OwningPackage.addStateMachine(this);
 end
 

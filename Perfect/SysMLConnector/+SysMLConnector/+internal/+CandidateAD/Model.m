@@ -1,8 +1,5 @@
 classdef Model < SysMLConnector.internal.CandidateAD.Node
     properties
-        BuildName
-        ParentPackage
-        ParentPackageExtElementID
         ModelDatabase
     end
 
@@ -27,7 +24,7 @@ classdef Model < SysMLConnector.internal.CandidateAD.Node
             
             modelName = this.BuildName;
 
-            this.ZCElement = SysMLConnector.internal.CandidateAD.internal.createActivity(modelName);
+            this.BuiltElement = SysMLConnector.internal.CandidateAD.internal.createActivity(modelName);
         end
 
         function setModel(this)
@@ -35,13 +32,9 @@ classdef Model < SysMLConnector.internal.CandidateAD.Node
             this.Model = this;
         end
 
-        function linkPackage(this)            
-            compPkg = SysMLConnector.internal.CandidateElement.idMap(...
-                "lookup", this.ParentPackageExtElementID);
-
-            compPkg.addActivity(this);
-
-            this.ParentPackage = compPkg;
+        function linkPackage(this)      
+            resolveOwningPackage(this);
+            this.OwningPackage.addActivity(this);
         end
 
         function prelimBuild(this, builder)

@@ -5,7 +5,7 @@ classdef CandidateComponent < XMIChecker.Validator.Default
         function obj = CandidateComponent(candidate,xmidb,foundElements)
             %CANDIDATECOMPONENT Construct an instance of this class
             arguments
-                candidate SysMLConnector.internal.CandidateComponent
+                candidate SysMLConnector.internal.CandidateArchitecture.CandidateComponent
                 xmidb SysMLConnector.internal.CandidateAD.internal.XMIDatabase
                 foundElements dictionary
             end

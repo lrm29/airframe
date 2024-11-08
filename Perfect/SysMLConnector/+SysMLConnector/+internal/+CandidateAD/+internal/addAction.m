@@ -1,12 +1,12 @@
 function actionNode = addAction(target, nodeName)
         % Add an action node to an activity diagram and resolve any naming
         % conflicts.
-        if isa(target.ZCElement, 'systemcomposer.activitydiagram.model.Action')
+        if isa(target.BuiltElement, 'systemcomposer.activitydiagram.model.Action')
             % Get the child activity of the action to continue the
             % build.
-            targetElement = target.ZCElement.ChildActivity;
+            targetElement = target.BuiltElement.ChildActivity;
         else
-            targetElement = target.ZCElement;
+            targetElement = target.BuiltElement;
         end
 
         existingComponents = targetElement.Nodes;

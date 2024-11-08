@@ -3,12 +3,8 @@ classdef Printable < handle
     
     properties (SetAccess=protected)
         ShallowProperties = string.empty()
-        ExcludedProperties = "Parent"
+        ExcludedProperties = "Owner"
         ShortProperties = string.empty();
-    end
-
-    properties (Abstract,SetAccess=protected)
-        Built
     end
 
     methods

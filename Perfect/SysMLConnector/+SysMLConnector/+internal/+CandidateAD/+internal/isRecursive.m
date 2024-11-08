@@ -9,7 +9,7 @@ function tf = isRecursive(this, nextComponent)
     thisID = this.ReferenceID;
 
     if nargin < 2
-        nextComponent = this.Parent;
+        nextComponent = this.Owner;
     end
     
     while ~isempty(nextComponent)
@@ -22,6 +22,6 @@ function tf = isRecursive(this, nextComponent)
             return
         end
 
-        nextComponent = nextComponent.Parent;
+        nextComponent = nextComponent.Owner;
     end
 end

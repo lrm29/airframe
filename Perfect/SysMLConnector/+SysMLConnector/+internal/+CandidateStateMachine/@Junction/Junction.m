@@ -27,8 +27,8 @@ classdef Junction < SysMLConnector.internal.CandidateStateMachine.Node
             arguments
                 this SysMLConnector.internal.CandidateStateMachine.Junction
             end
-            if ~isempty(this.StateflowObj)
-                value = this.StateflowObj.Position.Radius;
+            if ~isempty(this.BuiltElement)
+                value = this.BuiltElement.Position.Radius;
             else
                 value = 0;
             end
@@ -45,8 +45,8 @@ classdef Junction < SysMLConnector.internal.CandidateStateMachine.Node
             arguments
                 this SysMLConnector.internal.CandidateStateMachine.Junction
             end
-            if ~isempty(this.StateflowObj)
-                value = this.StateflowObj.Position.Center;
+            if ~isempty(this.BuiltElement)
+                value = this.BuiltElement.Position.Center;
             else
                 value = 0;
             end

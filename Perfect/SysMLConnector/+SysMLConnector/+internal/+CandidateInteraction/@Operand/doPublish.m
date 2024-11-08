@@ -11,7 +11,7 @@ if isMATLABReleaseOlderThan("R2024b")
     return;
 else
     % add the operand
-    this.ZCElement = this.Parent.ZCElement.addOperand(this.Guard);
+    this.BuiltElement = this.Owner.BuiltElement.addOperand(this.Guard);
     % publish the owned fragments
     arrayfun(@publish,this.Fragments);
 end

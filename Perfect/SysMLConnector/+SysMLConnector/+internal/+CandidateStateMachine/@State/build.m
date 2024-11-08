@@ -3,16 +3,16 @@ function build(this)
 arguments
     this SysMLConnector.internal.CandidateStateMachine.State
 end
-this.StateflowObj = Stateflow.State(this.Parent.StateflowObj);
+this.BuiltElement = Stateflow.State(this.Owner.BuiltElement);
 if strcmp(this.LabelString,"")
-    this.StateflowObj.Name = this.Name;
+    this.BuiltElement.Name = this.Name;
 else
-    this.StateflowObj.LabelString = string(this.Name)+newline+this.LabelString;
+    this.BuiltElement.LabelString = string(this.Name)+newline+this.LabelString;
 end
 this.storeID();
 %% build internals
 if ~isempty(this.ConnectionPoints) || ~isempty(this.Regions)
-    this.StateflowObj.IsSubchart = true;
+    this.BuiltElement.IsSubchart = true;
 end
 arrayfun(@(r) r.build(),this.Regions);
 arrayfun(@(cp) cp.build(),this.ConnectionPoints);

@@ -1,14 +1,10 @@
 classdef CandidateEnum < SysMLConnector.internal.CandidateElement
 % CANDIDATEENUM Helper class for SysMLConnector.internal.import that holds candidate enumerations.
     properties
-        Name
         EnumStrs = []
 
         Internal = true % If false then this will be a MATLAB class instead of a dictionary entry.
-        ParentPackageExtElementID = ''
-        ParentPackage = [];
 
-        BuildName = ""
         BuildEnumStrs = []
         BuildFileContent = ""
     end
@@ -36,10 +32,7 @@ classdef CandidateEnum < SysMLConnector.internal.CandidateElement
                 return;
             end
             
-            parentPackage = SysMLConnector.internal.CandidateElement.idMap(...
-                "lookup", this.ParentPackageExtElementID);
-            parentPackage.addEnumeration(this);
-            this.ParentPackage = parentPackage;
+            this.OwningPackage.addEnumeration(this);
         end
 
         function prelimBuild(this, builder)
@@ -80,6 +73,8 @@ classdef CandidateEnum < SysMLConnector.internal.CandidateElement
             importFromBaseWorkspace(ddHdl, 'varList', {char(this.BuildName)});
 
             evalin('base', ['clear ' char(this.BuildName)]);
+
+            this.BuiltElement = this.BuildName;
         end
 
         function prelimBuildExternal(this, builder)
@@ -95,6 +90,8 @@ classdef CandidateEnum < SysMLConnector.internal.CandidateElement
             this.BuildFileContent = sprintf('%s%s%s', fileHeader, enumContent, fileFooter);
 
             builder.createPackagedFile(this);
+
+            this.BuiltElement = this.BuildName;
         end
 
         function finishBuild(~, ~)

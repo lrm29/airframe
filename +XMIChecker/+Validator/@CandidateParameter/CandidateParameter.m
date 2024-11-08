@@ -20,7 +20,7 @@ classdef CandidateParameter < XMIChecker.Validator.Validator
                 result = obj.checkParameter(candidate);
             catch ME
                 fprintf('Failed to check parameter ''%s'' with parent architecture ''%s'' in model ''%s'' with error:\n%s\n', ...
-                    candidate.Name, candidate.ParentArch.Name, candidate.ParentArch.SimulinkModelName, getReport(ME));
+                    candidate.Name, candidate.Owner.Name, candidate.Owner.SimulinkModelName, getReport(ME));
 
                 result = false;
             end
@@ -45,11 +45,11 @@ classdef CandidateParameter < XMIChecker.Validator.Validator
 
             tf = false; 
 
-            zcMdl = systemcomposer.loadModel(candidateParameter.ParentArch.ModelName);
+            zcMdl = systemcomposer.loadModel(candidateParameter.Owner.ModelName);
 
             cleanupModel = onCleanup(@() close(zcMdl));
             
-            archElement = zcMdl.lookup(UUID=candidateParameter.ParentArch.SystemComposerUUID);            
+            archElement = zcMdl.lookup(UUID=candidateParameter.Owner.SystemComposerUUID);            
 
             if ~isempty(archElement.Parameters)
                 paramLogIdx = strcmp(candidateParameter.BuildName, [archElement.Parameters.Name]);
@@ -57,7 +57,7 @@ classdef CandidateParameter < XMIChecker.Validator.Validator
                 if any(paramLogIdx)
                     param = archElement.Parameters(paramLogIdx);
 
-                    if strcmp(param.Parent.ExternalUID, candidateParameter.ParentArch.ExtElementID) ...
+                    if strcmp(param.Owner.ExternalUID, candidateParameter.Owner.ExtElementID) ...
                            && strcmp(param.Name, candidateParameter.BuildName)
                         tf = true;
                     end

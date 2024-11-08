@@ -3,11 +3,6 @@ classdef Element < SysMLConnector.internal.CandidateElement & ...
         SysMLConnector.internal.utils.Printable 
     %ELEMENT basic element of a state machine
     
-    properties (SetAccess=protected)
-        Parent
-        Built = false
-    end
-    
     methods
         function elementObj = Element(element,parent)
             %ELEMENT Construct an instance of this class
@@ -17,7 +12,7 @@ classdef Element < SysMLConnector.internal.CandidateElement & ...
             end
             elementObj@SysMLConnector.internal.CandidateElement( ...
                 SysMLConnector.internal.utils.getExtID(element));
-            elementObj.Parent = parent;
+            elementObj.Owner = parent;
             %% enable requirement linking
             elementObj.ValidRequirementLinkTarget = true;
             %% check for comments

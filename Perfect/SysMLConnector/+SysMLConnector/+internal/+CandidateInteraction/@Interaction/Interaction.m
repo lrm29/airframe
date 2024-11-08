@@ -10,15 +10,12 @@ classdef Interaction < SysMLConnector.internal.CandidateInteraction.Element & ..
     end
 
     properties % Build Properties
-        BuildName
-        ParentPackage
-        ParentPackageExtElementID
-        ModelZCElement
+        ModelBuiltElement
     end
 
     methods
         function interObj = Interaction(name, externalID, parent)
-            interObj@SysMLConnector.internal.CandidateInteraction.Element(Name=name, ExternalID=externalID, Parent=parent);
+            interObj@SysMLConnector.internal.CandidateInteraction.Element(Name=name, ExternalID=externalID, Owner=parent);
         end
 
         function setModel(this)
@@ -29,8 +26,8 @@ classdef Interaction < SysMLConnector.internal.CandidateInteraction.Element & ..
         function linkTarget = getLinkTarget(this)
             linkTarget = [];
             
-            if ~isempty(this.ModelZCElement)
-                linkTarget = this.ModelZCElement.SimulinkHandle;
+            if ~isempty(this.ModelBuiltElement)
+                linkTarget = this.ModelBuiltElement.SimulinkHandle;
             end
         end
 
@@ -72,28 +69,28 @@ classdef Interaction < SysMLConnector.internal.CandidateInteraction.Element & ..
         end
 
         function applyExternalUID(this)
-            if ~isempty(this.ZCElement) && ~isempty(this.ExtElementID)
+            if ~isempty(this.BuiltElement) && ~isempty(this.ExtElementID)
                 % For now, one sequence diagram per arch model.
-                this.ZCElement.Model.Architecture.ExternalUID = this.ExtElementID;
+                this.BuiltElement.Model.Architecture.ExternalUID = this.ExtElementID;
             end
         end
 
         function doPublish(this, zcModel)            
             modelName = this.BuildName;
 
-            this.ModelZCElement = zcModel;
+            this.ModelBuiltElement = zcModel;
 
             % Toggle allocation badges on
-            set_param(this.ModelZCElement.SimulinkHandle, 'ShowAllocations', 'on');
+            set_param(this.ModelBuiltElement.SimulinkHandle, 'ShowAllocations', 'on');
 
             % Add the sequence diagram to the model
-            this.ZCElement = SysMLConnector.internal.CandidateInteraction.internal.addInteraction(this.ModelZCElement, modelName);
+            this.BuiltElement = SysMLConnector.internal.CandidateInteraction.internal.addInteraction(this.ModelBuiltElement, modelName);
         end
 
         function postPublish(this, varargin)
             arrayfun(@publish, this.Lifelines);
             arrayfun(@publish, this.Fragments);
-            Simulink.BlockDiagram.arrangeSystem(this.ZCElement.Name);
+            Simulink.BlockDiagram.arrangeSystem(this.BuiltElement.Name);
         end
 
         function lifeline = addLifeline(this, name, externalID, referenceID)
@@ -113,13 +110,9 @@ classdef Interaction < SysMLConnector.internal.CandidateInteraction.Element & ..
             end
         end
 
-        function linkPackage(this)            
-            compPkg = SysMLConnector.internal.CandidateElement.idMap(...
-                "lookup", this.ParentPackageExtElementID);
-
-            compPkg.addInteraction(this);
-
-            this.ParentPackage = compPkg;
+        function linkPackage(this)
+            resolveOwningPackage(this);
+            this.OwningPackage.addInteraction(this);
         end
 
         function prelimBuild(this, builder)

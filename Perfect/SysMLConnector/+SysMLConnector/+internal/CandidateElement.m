@@ -1,7 +1,15 @@
 classdef CandidateElement < handle
 % CANDIDATEELEMENT Base class of all candidate model elements
     properties
+        Name
+
         ExtElementID
+
+        Owner = []
+        OwnerExtElementID = ""
+
+        OwningPackage = []
+        OwningPackageExtElementID = ""
 
         Generalizations = [];
         Specializations = [];
@@ -10,10 +18,48 @@ classdef CandidateElement < handle
         StereotypePropVals = [];
 
         ValidRequirementLinkTarget = false; % This should be set to true by any constructs that support requirement linking.
+
+        BuildName
     end
     
     properties (Dependent)
+        Built
+    end
+
+    properties
+        BuiltElement
+    end
+
+    properties (Dependent)
         LinkTarget
+    end
+
+    methods
+        function this = CandidateElement(extElemID, options)
+            arguments
+                extElemID
+                options.ValidRequirementLinkTarget = false
+            end
+
+            this.ExtElementID = extElemID;
+            this.ValidRequirementLinkTarget = options.ValidRequirementLinkTarget;
+            SysMLConnector.internal.CandidateElement.idMap(...
+                "add", extElemID, this);
+        end
+
+        function built = get.Built(this)
+            built = getBuilt(this);
+        end
+
+        function linkTarget = get.LinkTarget(this)
+            linkTarget = getLinkTarget(this);
+        end
+
+        function set.Owner(this, owner)
+            this.Owner = owner;
+
+            updateOwnerExtElementID(this);
+        end
     end
     
     methods (Static)
@@ -58,39 +104,47 @@ classdef CandidateElement < handle
             else
                 error("Unknown option to idMap");
             end
-        end
-        
+        end  
     end
     
     methods
-        function this = CandidateElement(extElemID, options)
-            arguments
-                extElemID
-                options.ValidRequirementLinkTarget = false
-            end
-
-            this.ExtElementID = extElemID;
-            this.ValidRequirementLinkTarget = options.ValidRequirementLinkTarget;
-            SysMLConnector.internal.CandidateElement.idMap(...
-                "add", extElemID, this);
+        function built = getBuilt(this)
+            built = ~isempty(this.BuiltElement);
         end
 
-        function linkTarget = get.LinkTarget(this)
-            linkTarget = getLinkTarget(this);
-        end
-        
         function linkTarget = getLinkTarget(this)
             % Stub to be populated by the candidates for their own link
             % targets.
             try
-                linkTarget = this.ZCElement.SimulinkHandle; %#ok<MCNPN>
+                linkTarget = this.BuiltElement.SimulinkHandle;
             catch
                 try
-                    linkTarget = this.ZCElement; %#ok<MCNPN>
+                    linkTarget = this.BuiltElement;
                 catch
                     error('SysMLConnector:internal:CandidateElement:InvalidLinkTarget', 'Missing link target for ''%s'' with ID ''%s''.', class(this), this.ExtElementID);
                 end
             end
+        end
+
+        function resolveOwningPackage(this)
+            oP = [];
+            ownerExtElementID = this.OwnerExtElementID;
+            while ~isa(oP, 'SysMLConnector.internal.CandidatePackage')
+                if ~isempty(oP)
+                    ownerExtElementID = oP.OwnerExtElementID;
+                end
+
+                if strcmp(ownerExtElementID,"")
+                    % Exhausted the whole list.
+                    return;
+                end
+
+                oP = SysMLConnector.internal.CandidateElement.idMap(...
+                "lookup", ownerExtElementID);
+            end
+
+            this.OwningPackage = oP;
+            this.OwningPackageExtElementID = oP.ExtElementID;
         end
 
         function st = addStereotype(this, st)
@@ -133,6 +187,12 @@ classdef CandidateElement < handle
                     notImported.Element = notImported.Stereotype; 
                 end
                 
+            end
+        end
+    
+        function updateOwnerExtElementID(this)
+            if ~isempty(this.Owner)
+                this.OwnerExtElementID = this.Owner.ExtElementID;
             end
         end
     end

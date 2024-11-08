@@ -13,7 +13,7 @@ classdef Allocation < XMIChecker.Validator.Validator
             obj.candidate = candidate;
             % validate the allocation
             % check that the parent exists
-            if isempty(candidate.Parent)
+            if isempty(candidate.Owner)
                 if candidate.Build
                     % no parent but expected? no
                     obj.fail = 1;
@@ -34,10 +34,10 @@ classdef Allocation < XMIChecker.Validator.Validator
             end
             % first check on the scenario that contains it
             scenarioValidator = XMIChecker.Validator.build(...
-                candidate.Parent,xmidb,foundElements);
+                candidate.Owner,xmidb,foundElements);
             % is the scenario built as expected or as not expected?
-            if (scenarioValidator.pass > 0 && candidate.Parent.Build) || ...
-                    (scenarioValidator.fail > 0 && ~candidate.Parent.Build)
+            if (scenarioValidator.pass > 0 && candidate.Owner.Build) || ...
+                    (scenarioValidator.fail > 0 && ~candidate.Owner.Build)
                 % scenario exists, check if the allocation does
                 if xor(obj.isBuilt(),candidate.Build)
                     % that's not good...

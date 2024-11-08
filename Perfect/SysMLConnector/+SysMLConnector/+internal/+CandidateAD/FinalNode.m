@@ -9,7 +9,7 @@ classdef FinalNode < SysMLConnector.internal.CandidateAD.Node
 
         function prePublish(this, target)
             adCommands = systemcomposer.activitydiagram.internal.ActivityCommands;
-            this.ZCElement = adCommands.addActivityFinal(SysMLConnector.internal.CandidateAD.internal.getQualifiedName(target), this.Name);
+            this.BuiltElement = adCommands.addActivityFinal(SysMLConnector.internal.CandidateAD.internal.getQualifiedName(target), this.Name);
         end
     end
 
