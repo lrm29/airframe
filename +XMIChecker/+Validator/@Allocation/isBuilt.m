@@ -8,10 +8,10 @@ end
 built = false;
 % load the allocation set and start digging
 allocationSet = systemcomposer.allocation.load(...
-    obj.candidate.Parent.Parent.BuildName);
+    obj.candidate.Owner.Owner.BuildName);
 cleanUp = onCleanup(@() allocationSet.close(true));
 scenario = allocationSet.Scenarios(...
-    ismember({allocationSet.Scenarios.Name},obj.candidate.Parent.Name));
+    ismember({allocationSet.Scenarios.Name},obj.candidate.Owner.Name));
 if isempty(scenario)
     return;
 else
@@ -48,8 +48,8 @@ arguments
 end
 if isa(endPoint,"systemcomposer.arch.Architecture")
     id = endPoint.ExternalUID;
-    if isa(endPoint.Parent,"systemcomposer.arch.Component")
-        id = {id,endPoint.Parent.ExternalUID};
+    if isa(endPoint.Owner,"systemcomposer.arch.Component")
+        id = {id,endPoint.Owner.ExternalUID};
     end
 else
     id = {endPoint.ExternalUID,endPoint.Architecture.ExternalUID};

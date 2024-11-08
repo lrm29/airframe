@@ -3,6 +3,6 @@ function operand = getOperand(this)
 arguments
     this SysMLConnector.internal.CandidateInteraction.Operand
 end
-operand = this.ZCElement;
+operand = this.BuiltElement;
 end
 

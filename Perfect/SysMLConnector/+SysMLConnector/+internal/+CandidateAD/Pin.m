@@ -22,7 +22,7 @@ classdef Pin < SysMLConnector.internal.CandidateAD.Element
                 name = SysMLConnector.internal.utils.nextNameProperty(parent.Pins, name);
             end
 
-            pinObj@SysMLConnector.internal.CandidateAD.Element(Name=name, ExternalID=externalID, Parent=parent);
+            pinObj@SysMLConnector.internal.CandidateAD.Element(Name=name, ExternalID=externalID, Owner=parent);
             pinObj.ValidRequirementLinkTarget = true;
             pinObj.TokenType = type;
             pinObj.Direction = direction;
@@ -43,15 +43,15 @@ classdef Pin < SysMLConnector.internal.CandidateAD.Element
             try
                 activityPath = SysMLConnector.internal.CandidateAD.internal.getQualifiedName(target);
 
-                this.ZCElement = SysMLConnector.internal.CandidateAD.internal.addPin(activityPath, this.Name, isInput);
+                this.BuiltElement = SysMLConnector.internal.CandidateAD.internal.addPin(activityPath, this.Name, isInput);
             catch
                 % Try to recover 
-                if ~isa(target.ZCElement, 'systemcomposer.activitydiagram.model.Activity')
+                if ~isa(target.BuiltElement, 'systemcomposer.activitydiagram.model.Activity')
                     % Object Pins
-                    this.ZCElement = this.Parent.ZCElement.Pins(strcmp({target.ZCElement.Pins.Name}, this.Name));
+                    this.BuiltElement = this.Owner.BuiltElement.Pins(strcmp({target.BuiltElement.Pins.Name}, this.Name));
                 else
                     % Activity Parameters
-                    this.ZCElement = this.Parent.ZCElement.Parameters(strcmp({target.ZCElement.Parameters.Name}, this.Name));
+                    this.BuiltElement = this.Owner.BuiltElement.Parameters(strcmp({target.BuiltElement.Parameters.Name}, this.Name));
                 end
             end
         end
@@ -60,12 +60,12 @@ classdef Pin < SysMLConnector.internal.CandidateAD.Element
             % This is a basic heuristic to fix an invalid modeling semantic
             % where multiple flows are connected to this pin by inserting a
             % proxy merge/decision node.
-            if isempty(this.Parent.Flows)
+            if isempty(this.Owner.Flows)
                 return;
             end
 
             try
-                flows = this.Parent.Flows;
+                flows = this.Owner.Flows;
                 if this.Direction == systemcomposer.activitydiagram.model.PortDirection.OUTPUT
                     dirFlag = 'DestinationPin';
                     nameSuffix = '_Merge';
@@ -89,14 +89,14 @@ classdef Pin < SysMLConnector.internal.CandidateAD.Element
 
                     mergeDecisionNode = SysMLConnector.internal.CandidateAD.MergeDecisionNode(Name = [this.Name nameSuffix], ...
                                                                                     ExternalID = mergeDecisionExternalID, ...
-                                                                                    Parent = this.Parent);
+                                                                                    Owner = this.Owner);
 
                     publish(mergeDecisionNode, target);
     
                     proxyFlow = SysMLConnector.internal.CandidateAD.Flow('', sourceID, destinationID, ...
                                                                          Name = [this.Name '_ProxyFlow'], ...
                                                                          ExternalID = [char(this.ExtElementID) '_ProxyFlow'], ...
-                                                                         Parent = this.Parent);
+                                                                         Owner = this.Owner);
 
                     publish(proxyFlow, target);
 

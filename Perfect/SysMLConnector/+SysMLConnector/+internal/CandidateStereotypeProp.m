@@ -1,15 +1,9 @@
 classdef CandidateStereotypeProp < SysMLConnector.internal.CandidateElement
 % CANDIDATESTEREOTYPEPROP Helper class for SysMLConnector.internal.import that holds candidate Stereotype properties
     properties
-        Name
         Datatype
         DatatypeName
         Enumtype
-        FinalName = ""
-        
-        Owner = []
-        
-        ZCElement = [];
     end
     
     methods
@@ -28,7 +22,7 @@ classdef CandidateStereotypeProp < SysMLConnector.internal.CandidateElement
         
         function print(this, printer)
             printer.print("Prop: " + this.Name + ...
-                          "<" + this.Datatype + "> [" + this.FinalName + "]");
+                          "<" + this.Datatype + "> [" + this.BuildName + "]");
         end
     end
 end

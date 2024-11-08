@@ -5,7 +5,6 @@ classdef Transition < SysMLConnector.internal.CandidateStateMachine.GraphicalEle
     properties (SetAccess=protected)
         Source
         Target
-        StateflowObj
         Arranged = false
     end
 
@@ -131,11 +130,11 @@ classdef Transition < SysMLConnector.internal.CandidateStateMachine.GraphicalEle
             arguments
                 this SysMLConnector.internal.CandidateStateMachine.Transition
             end
-            if isempty(this.StateflowObj)
+            if isempty(this.BuiltElement)
                 % not built yet
                 value = [];
             else
-                value = this.StateflowObj.SourceOClock;
+                value = this.BuiltElement.SourceOClock;
             end
         end
 
@@ -143,11 +142,11 @@ classdef Transition < SysMLConnector.internal.CandidateStateMachine.GraphicalEle
             arguments
                 this SysMLConnector.internal.CandidateStateMachine.Transition
             end
-            if isempty(this.StateflowObj)
+            if isempty(this.BuiltElement)
                 % not built yet
                 value = [];
             else
-                value = this.StateflowObj.DestinationOClock;
+                value = this.BuiltElement.DestinationOClock;
             end
         end
 

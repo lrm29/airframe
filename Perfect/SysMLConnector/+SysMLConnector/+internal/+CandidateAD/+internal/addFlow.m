@@ -5,5 +5,5 @@ function flow = addFlow(source, destination, NameValueArgs)
         NameValueArgs.Guard = ''
     end
 
-    flow = SysMLConnector.internal.CandidateAD.internal.addZCActivityFlow(source.ZCElement, destination.ZCElement, Guard=NameValueArgs.Guard);
+    flow = SysMLConnector.internal.CandidateAD.internal.addZCActivityFlow(source.BuiltElement, destination.BuiltElement, Guard=NameValueArgs.Guard);
 end

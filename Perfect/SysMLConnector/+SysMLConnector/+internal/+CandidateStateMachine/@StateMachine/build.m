@@ -3,15 +3,15 @@ function build(this)
 
     % Set the new model from the builder as the build root for the state
     % machine
-    this.StateflowObj = find(sfroot,"-isa","Stateflow.Chart", ...
+    this.BuiltElement = find(sfroot,"-isa","Stateflow.Chart", ...
         Path=string(this.BuildName)+"/Chart");
 
-    this.StateflowObj.Document = this.ExtElementID;
+    this.BuiltElement.Document = this.ExtElementID;
 
     arrayfun(@(r) r.build(),this.Regions);
 
     if ~isempty(this.Regions)
-        Simulink.BlockDiagram.arrangeSystem(this.Regions.StateflowObj.Path, ...
+        Simulink.BlockDiagram.arrangeSystem(this.Regions.BuiltElement.Path, ...
             FullLayout='true');
     end
 end

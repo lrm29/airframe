@@ -4,29 +4,17 @@ classdef StateMachine < SysMLConnector.internal.CandidateElement & ...
         SysMLConnector.internal.CandidateStateMachine.Stateflow
     %STATEMACHINE represents a state machine imported from SysML
 
-    properties (SetAccess=protected)
-        Name
-        ParentPackageExtElementID
-        ParentPackage
-        BuildName
-        StateflowObj
-    end
-
-    properties (Dependent,SetAccess=protected)
-        Built
-    end
-
     methods
-        function stateMachineObj = StateMachine(element,parentPackageExtElementID)
+        function stateMachineObj = StateMachine(element, ownerExtElementID)
             %STATEMACHINE Construct an instance of this class
             arguments
                 element umlmm.StateMachine
-                parentPackageExtElementID {mustBeText}
+                ownerExtElementID {mustBeText}
             end
             stateMachineObj@SysMLConnector.internal.CandidateElement(...
                 SysMLConnector.internal.utils.getExtID(element));
             stateMachineObj.Name = element.name;
-            stateMachineObj.ParentPackageExtElementID = parentPackageExtElementID;
+            stateMachineObj.OwnerExtElementID = ownerExtElementID;
             %% enable requirement linking
             stateMachineObj.ValidRequirementLinkTarget = true;
             %% check for comments
@@ -45,18 +33,5 @@ classdef StateMachine < SysMLConnector.internal.CandidateElement & ...
         finishBuild(this,builder);
         modelHandle = build(this,name);
         linkTarget = getLinkTarget(this);
-
-        function Built = get.Built(this)
-            arguments
-                this SysMLConnector.internal.CandidateStateMachine.StateMachine
-            end
-            Built = ~isempty(this.StateflowObj);
-        end
-    end
-
-    methods (Access={?SysMLConnector.internal.Builder})
-        function setBuildName(this, buildName)
-            this.BuildName = buildName;
-        end
     end
 end

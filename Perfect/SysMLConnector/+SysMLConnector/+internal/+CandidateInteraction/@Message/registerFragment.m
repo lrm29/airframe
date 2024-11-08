@@ -1,6 +1,6 @@
 function registerFragment(this, fragment)
 %REGISTERFRAGMENT registers a fragment as one end of the message so it can
-%be linked to the right ZCElement later
+%be linked to the right BuiltElement later
 arguments
     this SysMLConnector.internal.CandidateInteraction.Message
     fragment SysMLConnector.internal.CandidateInteraction.Fragment

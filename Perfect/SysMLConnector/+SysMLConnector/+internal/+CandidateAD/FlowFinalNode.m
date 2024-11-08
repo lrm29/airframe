@@ -9,7 +9,7 @@ classdef FlowFinalNode < SysMLConnector.internal.CandidateAD.Node
         
         function prePublish(this, target)
             adCommands = systemcomposer.activitydiagram.internal.ActivityCommands;
-            this.ZCElement = adCommands.addFlowFinal(SysMLConnector.internal.CandidateAD.internal.getQualifiedName(target), this.Name);
+            this.BuiltElement = adCommands.addFlowFinal(SysMLConnector.internal.CandidateAD.internal.getQualifiedName(target), this.Name);
         end
     end
 

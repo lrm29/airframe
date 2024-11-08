@@ -3,18 +3,16 @@ function build(this)
 arguments
     this SysMLConnector.internal.CandidateStateMachine.Junction
 end
-try
-this.StateflowObj = Stateflow.Junction(this.Parent.StateflowObj);
-catch ME
-    rethrow(ME)
-end
+
+this.BuiltElement = Stateflow.Junction(this.Owner.BuiltElement);
+
 this.storeID();
 % handle special cases
 switch this.Type
     case umlmm.PseudostateKind.Initial
         % initial node needs a default transition
-        defaultTransition = Stateflow.Transition(this.Parent.StateflowObj);
-        defaultTransition.Destination = this.StateflowObj;
+        defaultTransition = Stateflow.Transition(this.Owner.BuiltElement);
+        defaultTransition.Destination = this.BuiltElement;
         defaultTransition.SourceEndPoint = this.Center-[0,this.Height]-...
             [0 this.DefaultOffset/4];
         defaultTransition.MidPoint = this.Center-[0,this.Height]-...

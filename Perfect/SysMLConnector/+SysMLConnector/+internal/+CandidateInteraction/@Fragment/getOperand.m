@@ -3,6 +3,6 @@ function operand = getOperand(this)
 arguments
     this SysMLConnector.internal.CandidateInteraction.Fragment
 end
-operand = this.Parent.getOperand();
+operand = this.Owner.getOperand();
 end
 

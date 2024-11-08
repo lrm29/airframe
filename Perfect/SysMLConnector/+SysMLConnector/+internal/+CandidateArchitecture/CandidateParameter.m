@@ -1,8 +1,7 @@
-classdef CandidateParameter < SysMLConnector.internal.CandidateElement
+classdef CandidateParameter < SysMLConnector.internal.CandidateArchitecture.Element
 % CANDIDATEPARAMETER Helper class for SysMLConnector.internal.import that
 % holds candidate Architecture and Component parameters
     properties
-        Name
         Type
         TypeName
         Dim
@@ -10,14 +9,12 @@ classdef CandidateParameter < SysMLConnector.internal.CandidateElement
     end
 
     properties
-        BuildName
         Redefines = [];
-        ParentArch
     end
 
     methods
         function paramObj = CandidateParameter(varargin)
-            paramObj@SysMLConnector.internal.CandidateElement(varargin{:});
+            paramObj@SysMLConnector.internal.CandidateArchitecture.Element(varargin{:});
         end
 
         function clonedParameter = cloneParameter(this, targetArch)
@@ -27,7 +24,7 @@ classdef CandidateParameter < SysMLConnector.internal.CandidateElement
                                             this.TypeName, ...
                                             this.Dim, ...
                                             this.DefaultValue);
-            clonedParameter.ParentArch = targetArch;
+            clonedParameter.Owner = targetArch;
             
             if ~isempty(this.Redefines)
                 targetArch.redefine(clonedParameter, this.Redefines);

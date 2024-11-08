@@ -4,10 +4,10 @@ arguments
     this SysMLConnector.internal.CandidateStateMachine.Transition
 end
 if ~isempty(this.Source) && ~isempty(this.Target)
-    this.StateflowObj = Stateflow.Transition(this.Parent.StateflowObj);
-    this.StateflowObj.Source = this.Source.StateflowObj;
-    this.StateflowObj.Destination = this.Target.StateflowObj;
-    this.StateflowObj.LabelString = this.LabelString;
+    this.BuiltElement = Stateflow.Transition(this.Owner.BuiltElement);
+    this.BuiltElement.Source = this.Source.BuiltElement;
+    this.BuiltElement.Destination = this.Target.BuiltElement;
+    this.BuiltElement.LabelString = this.LabelString;
     this.storeID();
 else
     warning( ...

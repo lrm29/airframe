@@ -34,7 +34,7 @@ classdef Operand < SysMLConnector.internal.CandidateInteraction.AnnotatedComment
             for i = 1:umlOperand.fragment.size
                 operandObj.Fragments = [operandObj.Fragments,...
                     SysMLConnector.internal.CandidateInteraction.Fragment(...
-                    operandObj,operandObj.Parent.Interaction,umlOperand.fragment.at(i))];
+                    operandObj,operandObj.Owner.Interaction,umlOperand.fragment.at(i))];
             end
         end
     end

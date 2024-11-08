@@ -6,13 +6,14 @@ function stateMachineMdl = createStateMachine(this,candStateMachine)
     end
 
     buildName = this.getModelName(candStateMachine.Name);
-    setBuildName(candStateMachine, buildName);
+    
+    candStateMachine.BuildName = buildName;
 
     sfnew(buildName);
 
-    candProj = candStateMachine.ParentPackage;
+    candProj = candStateMachine.OwningPackage;
 
-    mdlPath = this.ProjectPath + candProj.ZCProjectFolder + filesep + ...
+    mdlPath = this.ProjectPath + candProj.BuiltElement + filesep + ...
                     buildName + ".slx";
 
     save_system(buildName, mdlPath);

@@ -33,7 +33,7 @@ classdef Parameter < SysMLConnector.internal.CandidateAD.Pin
                 if isempty(pinIdx)
                     % Unable to find a match by XMI ID, try one more time
                     % by name resolution.
-                    foundPort = target.ZCElement.getPin(this.Name);
+                    foundPort = target.BuiltElement.getPin(this.Name);
 
                     % The pin and parameter are only a match if the port
                     % direction is the same.
@@ -41,7 +41,7 @@ classdef Parameter < SysMLConnector.internal.CandidateAD.Pin
                         componentPort = foundPort;
                     end
                 else
-                    componentPort = target.Pins(pinIdx).ZCElement;
+                    componentPort = target.Pins(pinIdx).BuiltElement;
 
                     % Ensure the pin name on the component matches the
                     % parameter name. The name might not match if the pin
@@ -59,7 +59,7 @@ classdef Parameter < SysMLConnector.internal.CandidateAD.Pin
                 end
 
                 if isempty(componentPort)
-                    targetArchElement = SysMLConnector.internal.CandidateAD.internal.getArchitecturePeer(target.ZCElement);
+                    targetArchElement = SysMLConnector.internal.CandidateAD.internal.getArchitecturePeer(target.BuiltElement);
 
                     warning('xmi:CandidateAD:Parameter:MalformedXMI', 'Pin with name ''%s'' could not be found on reference activity ''%s'' and will be created. This is usually from a malformed XMI file. It is recommended that you review <a href="matlab: open_system(''%s'') ">%s</a> to ensure it was imported as expected.', ...
                         this.Name, ...
@@ -71,10 +71,10 @@ classdef Parameter < SysMLConnector.internal.CandidateAD.Pin
                     % malformed XMI file. Recover by creating the pin.
                     doPublish@SysMLConnector.internal.CandidateAD.Pin(this, target);
 
-                    componentPort = target.ZCElement.getPin(this.Name);
+                    componentPort = target.BuiltElement.getPin(this.Name);
                 end
 
-                this.ZCElement = componentPort.ParentNode.ChildActivity.getParameter(componentPort.Name);
+                this.BuiltElement = componentPort.ParentNode.ChildActivity.getParameter(componentPort.Name);
             end
         end
     end

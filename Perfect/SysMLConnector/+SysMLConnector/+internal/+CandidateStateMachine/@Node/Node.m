@@ -4,7 +4,6 @@ classdef Node < SysMLConnector.internal.CandidateStateMachine.GraphicalElement &
     % junctions or states
 
     properties (SetAccess=protected)
-        StateflowObj
         IncomingTransitions
         OutgoingTransitions
         ArrangeCount = 0;

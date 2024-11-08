@@ -2,20 +2,13 @@ classdef Element < SysMLConnector.internal.CandidateElement & ...
         matlab.mixin.SetGetExactNames & ...
         SysMLConnector.internal.CandidateComment.Commentable
     properties
-        Name (1,:) char
-        Parent
         Model
         ExternalID (1,:) char
-    end
-
-    properties
-        ZCElement
     end
 
     properties (Dependent)
         QualifiedName
         ElementType
-        Built
     end
     
     methods
@@ -23,13 +16,13 @@ classdef Element < SysMLConnector.internal.CandidateElement & ...
             arguments
                 NameValueArgs.Name
                 NameValueArgs.ExternalID
-                NameValueArgs.Parent = [];
+                NameValueArgs.Owner = [];
             end
             elementObj@SysMLConnector.internal.CandidateElement(NameValueArgs.ExternalID);
 
             elementObj.Name = NameValueArgs.Name;
             elementObj.ExternalID = NameValueArgs.ExternalID;
-            elementObj.Parent = NameValueArgs.Parent;
+            elementObj.Owner = NameValueArgs.Owner;
 
             setModel(elementObj);
         end
@@ -39,19 +32,15 @@ classdef Element < SysMLConnector.internal.CandidateElement & ...
         end
 
         function qualifiedName = get.QualifiedName(this)
-            if ~isempty(this.Parent)
-                qualifiedName = [get(this.Parent, 'QualifiedName') '/' this.ZCElement.Name];
+            if ~isempty(this.Owner)
+                qualifiedName = [get(this.Owner, 'QualifiedName') '/' this.BuiltElement.Name];
             else
-                qualifiedName = this.ZCElement.Name;
+                qualifiedName = this.BuiltElement.Name;
             end
         end
 
-        function Built = get.Built(this)
-            Built = ~isempty(this.ZCElement);
-        end
-
         function linkTarget = getLinkTarget(this)
-            linkTarget = SysMLConnector.internal.CandidateAD.internal.getSimulinkPeer(this.ZCElement);
+            linkTarget = SysMLConnector.internal.CandidateAD.internal.getSimulinkPeer(this.BuiltElement);
         end
 
         function doPublish(this, target) %#ok<INUSD>
@@ -79,11 +68,11 @@ classdef Element < SysMLConnector.internal.CandidateElement & ...
 
         function setModel(this)
             % Can be overridden during element construction.
-            this.Model = this.Parent.Model;
+            this.Model = this.Owner.Model;
         end
 
         function setZCName(this, newName)
-            SysMLConnector.internal.CandidateAD.internal.setName(this.ZCElement, newName);
+            SysMLConnector.internal.CandidateAD.internal.setName(this.BuiltElement, newName);
         end
 
         appendComment(this,comment);
@@ -101,18 +90,18 @@ classdef Element < SysMLConnector.internal.CandidateElement & ...
             %fprintf('publishing: \n  %s\n  %s\n\n', class(this), this.getFullPath);
 
             if nargin < 2
-                target = this.Parent;
+                target = this.Owner;
             end
 
-            this.ZCElement = [];
+            this.BuiltElement = [];
             
             prePublish(this, target);
 
             doPublish(this, target);
 
             % Tag the element with the xmi id:
-            if ~isempty(this.ZCElement)
-                archElement = SysMLConnector.internal.CandidateAD.internal.getArchitecturePeer(this.ZCElement);
+            if ~isempty(this.BuiltElement)
+                archElement = SysMLConnector.internal.CandidateAD.internal.getArchitecturePeer(this.BuiltElement);
                 archElement.ExternalUID = this.ExternalID;
             end
 
@@ -120,10 +109,10 @@ classdef Element < SysMLConnector.internal.CandidateElement & ...
         end
 
         function fullPath = getFullPath(this)
-            if isempty(this.Parent)
+            if isempty(this.Owner)
                 fullPath = this.Name;
             else
-                fullPath = [getFullPath(this.Parent) '<:>' this.Name];
+                fullPath = [getFullPath(this.Owner) '<:>' this.Name];
             end
         end
     end

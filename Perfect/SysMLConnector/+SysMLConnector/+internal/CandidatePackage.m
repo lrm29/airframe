@@ -3,13 +3,7 @@ classdef CandidatePackage < SysMLConnector.internal.CandidateElement
 %  of Architecture models that are to be packaged together in a project folder.
 %    
    
-    properties
-        Name = "";
-        BuildName = "";
-        
-        OwnerExtElementID = "";
-        
-        ParentPackage = [];
+    properties        
         ChildPackages = [];
         
         Enumerations = [];
@@ -27,8 +21,6 @@ classdef CandidatePackage < SysMLConnector.internal.CandidateElement
         BuildAllocations   = [];
         BuildEnumerations  = [];
         BuildStateMachines = [];
-        
-        ZCProjectFolder = "";
     end
     
     methods
@@ -40,16 +32,11 @@ classdef CandidatePackage < SysMLConnector.internal.CandidateElement
         end
         
         function link(this)
-            if this.OwnerExtElementID ~= ""
-                oP = SysMLConnector.internal.CandidateElement.idMap(...
-                    "lookup", this.OwnerExtElementID);
-                this.setParentPackage(oP);
+            resolveOwningPackage(this);
+
+            if ~isempty(this.OwningPackage)
+                this.OwningPackage.ChildPackages = [this.OwningPackage.ChildPackages this];
             end
-        end
-        
-        function setParentPackage(this, oP)
-            this.ParentPackage = oP;
-            oP.ChildPackages = [oP.ChildPackages this];
         end
         
         function setBuildParentPackage(this, oP)

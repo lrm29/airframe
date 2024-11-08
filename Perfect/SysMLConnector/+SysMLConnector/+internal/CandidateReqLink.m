@@ -18,8 +18,6 @@ classdef CandidateReqLink < SysMLConnector.internal.CandidateElement
         Valid = true;
         InvalidReason = "";
         
-        ZCElement = [];
-        
         DerivedID = 1;
 
         FullPath = "" % Cached XMI path for error reporting.
@@ -76,7 +74,7 @@ classdef CandidateReqLink < SysMLConnector.internal.CandidateElement
             % map look-up can return multiple elements after
             % generalizations have been merged in.
             if numel(resolvedElement) > 1
-                if isa(resolvedElement, 'SysMLConnector.internal.CandidateComponent') && isscalar(unique([resolvedElement.ReferenceArchExtElementID]))
+                if isa(resolvedElement, 'SysMLConnector.internal.CandidateArchitecture.CandidateComponent') && isscalar(unique([resolvedElement.ReferenceArchExtElementID]))
                     % If it resolves to an array of components and they all
                     % reference the same architecture, then return the
                     % architecture as the resolved element.

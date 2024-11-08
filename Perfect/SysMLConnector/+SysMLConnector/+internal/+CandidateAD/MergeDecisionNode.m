@@ -8,7 +8,7 @@ classdef MergeDecisionNode < SysMLConnector.internal.CandidateAD.Node
             nodeObj@SysMLConnector.internal.CandidateAD.Node(varargin{:});
 
             if isempty(nodeObj.Name)
-                nodeObj.Name = SysMLConnector.internal.utils.nextNameProperty(nodeObj.Parent.Nodes, 'MergeDecision');
+                nodeObj.Name = SysMLConnector.internal.utils.nextNameProperty(nodeObj.Owner.Nodes, 'MergeDecision');
             else
                 nodeObj.ShowName = true;
             end
@@ -17,8 +17,8 @@ classdef MergeDecisionNode < SysMLConnector.internal.CandidateAD.Node
         function prePublish(this, target)
             adCommands = systemcomposer.activitydiagram.internal.ActivityCommands;
 
-            this.ZCElement = adCommands.addMergeDecision(SysMLConnector.internal.CandidateAD.internal.getQualifiedName(target), this.Name);
-            this.ZCElement.NameVisible = this.ShowName;
+            this.BuiltElement = adCommands.addMergeDecision(SysMLConnector.internal.CandidateAD.internal.getQualifiedName(target), this.Name);
+            this.BuiltElement.NameVisible = this.ShowName;
         end
     end
 

@@ -10,7 +10,7 @@ classdef InitialNode < SysMLConnector.internal.CandidateAD.Node
         function prePublish(this, target)
             adCommands = systemcomposer.activitydiagram.internal.ActivityCommands;
 
-            this.ZCElement = adCommands.addInitial(SysMLConnector.internal.CandidateAD.internal.getQualifiedName(target), this.Name);
+            this.BuiltElement = adCommands.addInitial(SysMLConnector.internal.CandidateAD.internal.getQualifiedName(target), this.Name);
         end
     end
 

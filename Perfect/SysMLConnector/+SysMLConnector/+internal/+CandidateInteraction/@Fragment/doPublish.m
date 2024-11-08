@@ -19,9 +19,9 @@ else
         %% link the fragment to the message event
         if this.Message.Built
             if this.Message.StartFragment == this
-                this.ZCElement = this.Message.ZCElement.Start;
+                this.BuiltElement = this.Message.BuiltElement.Start;
             elseif this.Message.EndFragment == this
-                this.ZCElement = this.Message.ZCElement.End;
+                this.BuiltElement = this.Message.BuiltElement.End;
             else
                 warning("SysMLConnector:internal:CandidateInteraction:Fragment",...
                     "Fragment %s could not be linked to either end of message %s.",...
@@ -32,7 +32,7 @@ else
         % this is an interesting fragment
         % need to build the right fragment first
         operand = this.getOperand();
-        this.ZCElement = operand.addFragment(string(this.Type),NumOperands=0);
+        this.BuiltElement = operand.addFragment(string(this.Type),NumOperands=0);
         % publish the operands owned by this fragment
         arrayfun(@publish,this.Operands);
     else

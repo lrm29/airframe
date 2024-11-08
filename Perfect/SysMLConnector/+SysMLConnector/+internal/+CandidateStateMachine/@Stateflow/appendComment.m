@@ -5,7 +5,7 @@ arguments
     comment SysMLConnector.internal.CandidateComment.Comment
 end
 if this.Built
-    this.StateflowObj.Description = [this.StateflowObj.Description,...
+    this.BuiltElement.Description = [this.BuiltElement.Description,...
         char(comment.Text)];
 end
 end

@@ -1,12 +1,10 @@
 classdef CandidateStereotype < SysMLConnector.internal.CandidateElement
 % CANDIDATEREQUIREMENT Helper class for SysMLConnector.internal.import that holds candidate Stereotypes.
     properties
-        Name
         PackagePath
         
         SuperClassExtElementID = ""
         
-        Profile = [];
         SuperClass = [];
         
         Properties = [];
@@ -15,8 +13,6 @@ classdef CandidateStereotype < SysMLConnector.internal.CandidateElement
         PropNamesInScope = [];
         
         AppliedElements = [];
-        
-        ZCElement = [];
     end
     
     methods
@@ -25,7 +21,7 @@ classdef CandidateStereotype < SysMLConnector.internal.CandidateElement
 
             this.Name = sName;
             this.PackagePath = pPath;
-            this.Profile = prof;
+            this.Owner = prof;
             this.SuperClassExtElementID = scExtID;
         end
         
@@ -87,7 +83,7 @@ classdef CandidateStereotype < SysMLConnector.internal.CandidateElement
                     [sClassPropNames, thisName], ...
                     [false(1, length(sClassPropNames)) true]);
                 thisName = thisName(end);
-                this.Properties(k).FinalName = thisName;
+                this.Properties(k).BuildName = thisName;
                 propNames = [propNames thisName]; %#ok<AGROW>
             end
             

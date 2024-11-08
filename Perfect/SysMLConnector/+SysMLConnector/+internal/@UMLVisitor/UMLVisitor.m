@@ -168,7 +168,7 @@ classdef UMLVisitor < m3i.Visitor
                 end
             end
             
-            thisArch = SysMLConnector.internal.CandidateArchitecture(...
+            thisArch = SysMLConnector.internal.CandidateArchitecture.CandidateArchitecture(...
                 aName, cID, ppID, genIDs);
             this.addStereotypes(element, thisArch);
             
@@ -546,7 +546,7 @@ classdef UMLVisitor < m3i.Visitor
 
                 % Set the package parent in case this becomes an external enumeration.
                 ppID = SysMLConnector.internal.utils.getUMLPackageParentID(element);
-                newEnum.ParentPackageExtElementID = ppID;
+                newEnum.OwnerExtElementID = ppID;
             end
         end
         
@@ -782,7 +782,7 @@ classdef UMLVisitor < m3i.Visitor
                         partParentStereotype = this.getSysMLStereotype(partParent);
     
                         if this.isBlock(partStereotype) && this.isBlock(partParentStereotype)
-                            candidateComponent = SysMLConnector.internal.CandidateComponent(part.name, [], this.getExtID(part), this.getExtID(part.type));
+                            candidateComponent = SysMLConnector.internal.CandidateArchitecture.CandidateComponent(part.name, [], this.getExtID(part), this.getExtID(part.type));
                             candidateComponent.DeferredParentArchitecture = this.getExtID(partParent);
 
                             return;
@@ -1019,7 +1019,7 @@ classdef UMLVisitor < m3i.Visitor
             ppID = SysMLConnector.internal.utils.getUMLPackageParentID(element);
 
             [CandidateAD, notImported] = SysMLConnector.internal.CandidateAD.buildCandidateAD(element);
-            CandidateAD.ParentPackageExtElementID = ppID;
+            CandidateAD.OwnerExtElementID = ppID;
             this.NotImported = [this.NotImported notImported];
 
             visitChildren(this, element.ownedBehavior);
@@ -1041,7 +1041,7 @@ classdef UMLVisitor < m3i.Visitor
             ppID = SysMLConnector.internal.utils.getUMLPackageParentID(element);
 
             [candidateInteraction, notImported] = SysMLConnector.internal.CandidateInteraction.buildCandidateInteraction(element);
-            candidateInteraction.ParentPackageExtElementID = ppID;
+            candidateInteraction.OwnerExtElementID = ppID;
             this.NotImported = [this.NotImported notImported];
 
             visitChildren(this, element.ownedBehavior);

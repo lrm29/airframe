@@ -3,7 +3,6 @@ classdef State < SysMLConnector.internal.CandidateStateMachine.Node & ...
     %STATE represents a Stateflow state
 
     properties (SetAccess=protected)
-        Name
         ConnectionPoints SysMLConnector.internal.CandidateStateMachine.Port ...
             = SysMLConnector.internal.CandidateStateMachine.Port.empty
     end
@@ -39,8 +38,8 @@ classdef State < SysMLConnector.internal.CandidateStateMachine.Node & ...
             arguments
                 this SysMLConnector.internal.CandidateStateMachine.State
             end
-            if ~isempty(this.StateflowObj)
-                value = this.StateflowObj.Position(3);
+            if ~isempty(this.BuiltElement)
+                value = this.BuiltElement.Position(3);
             else
                 value = 0;
             end
@@ -50,8 +49,8 @@ classdef State < SysMLConnector.internal.CandidateStateMachine.Node & ...
             arguments
                 this SysMLConnector.internal.CandidateStateMachine.State
             end
-            if ~isempty(this.StateflowObj)
-                value = this.StateflowObj.Position(4);
+            if ~isempty(this.BuiltElement)
+                value = this.BuiltElement.Position(4);
             else
                 value = 0;
             end
@@ -61,9 +60,9 @@ classdef State < SysMLConnector.internal.CandidateStateMachine.Node & ...
             arguments
                 this SysMLConnector.internal.CandidateStateMachine.State
             end
-            if ~isempty(this.StateflowObj)
-                value = [this.StateflowObj.Position(1)+(this.Width/2),...
-                    this.StateflowObj.Position(2)+(this.Height/2)];
+            if ~isempty(this.BuiltElement)
+                value = [this.BuiltElement.Position(1)+(this.Width/2),...
+                    this.BuiltElement.Position(2)+(this.Height/2)];
             else
                 value = [0,0];
             end

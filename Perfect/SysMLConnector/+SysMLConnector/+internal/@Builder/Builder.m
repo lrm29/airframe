@@ -338,10 +338,13 @@ classdef Builder < handle
             if ~isempty(candProj) && ~isempty(candProj.BuildParentPackage)
                 candProjName = candProj.BuildName;
                 
-                candProj.ZCProjectFolder = ...
-                    candProj.BuildParentPackage.ZCProjectFolder + filesep + candProjName;
-                projFolderPath = projFolderPath + filesep + candProj.ZCProjectFolder;
+                candidateFolder = ...
+                    candProj.BuildParentPackage.BuiltElement + filesep + candProjName;
+                projFolderPath = projFolderPath + filesep + candidateFolder;
+
                 mkdir(projFolderPath);
+
+                candProj.BuiltElement = candidateFolder;
                 
                 this.RootProject.addPath(projFolderPath);
                 
@@ -350,7 +353,7 @@ classdef Builder < handle
         end
 
         function createPackagedFile(this, element)
-            candProj = element.ParentPackage;
+            candProj = element.OwningPackage;
             
             folderPath = this.createProjectFolder(candProj);
             filePath = folderPath + filesep + element.BuildFileName;
@@ -374,14 +377,16 @@ classdef Builder < handle
             tmpComp = tempMdlZCM.Architecture.addComponent(char(candArchName));
             candArch.prelimBuildPorts(tmpComp.Architecture, this);
             
-            candArch.ZCElement = tmpComp.Architecture;
-            
+            candArch.BuiltElement = tmpComp.Architecture;
+            candArch.ModelName = candArch.BuiltElement.Model.Name;
+            candArch.SystemComposerUUID = candArch.BuiltElement.UUID;
+
             this.applyStereotypes(candArch);
             this.createParameters(candArch);
             
-            candProj = candArch.ParentPackage;
+            candProj = candArch.OwningPackage;
             slMdlPath = this.ProjectPath + ...
-                candProj.ZCProjectFolder + filesep + candArchName + ".slx";
+                candProj.BuiltElement + filesep + candArchName + ".slx";
             
             this.AllModelPaths = [this.AllModelPaths slMdlPath];
             tmpComp.createSimulinkBehavior(char(slMdlPath));
@@ -393,9 +398,9 @@ classdef Builder < handle
             this.ArchModelExtIDMap(candArch.ExtElementID) = slMdlHdl;
             
             set_param(slMdlHdl, 'HasSystemComposerArchInfo', 'on');
-            candArch.ZCElement = get_param(slMdlHdl, 'SystemComposerArchitecture');
+            candArch.BuiltElement = get_param(slMdlHdl, 'SystemComposerArchitecture');
             set_param(slMdlHdl, 'HasSystemComposerArchInfo', 'off');
-            candArch.ZCElement.ExternalUID = candArch.ExtElementID;
+            candArch.BuiltElement.ExternalUID = candArch.ExtElementID;
 
             this.Stats.NumArchitectureModels = this.Stats.NumArchitectureModels + 1;
         end
@@ -413,14 +418,14 @@ classdef Builder < handle
                 warning('SysMLConnector:internal:Builder:FailedToBuildActivityDiagram', 'Unable to complete build of activity diagram ''%s'' with ID ''%s''. Error: %s (%i).', candAct.Name, candAct.ExtElementID, ME.identifier, ME.stack(1).line);
             end
 
-            if ~isempty(candAct.ZCElement)
-                actArch  = SysMLConnector.internal.CandidateAD.internal.getArchitecturePeer(candAct.ZCElement);
+            if ~isempty(candAct.BuiltElement)
+                actArch  = SysMLConnector.internal.CandidateAD.internal.getArchitecturePeer(candAct.BuiltElement);
                 archMdl  = actArch.Model;
                 slHandle = archMdl.SimulinkHandle;
                 
-                candProj = candAct.ParentPackage;
+                candProj = candAct.OwningPackage;
                 archMdlPath = this.ProjectPath + ...
-                    candProj.ZCProjectFolder + filesep + archMdlName + ".slx";
+                    candProj.BuiltElement + filesep + archMdlName + ".slx";
                 this.AllModelPaths = [this.AllModelPaths archMdlPath];
     
                 save_system(slHandle, archMdlPath);
@@ -447,9 +452,9 @@ classdef Builder < handle
             interactionMdl = systemcomposer.createModel(archMdlName, "SoftwareArchitecture");
             slHandle = interactionMdl.SimulinkHandle;
 
-            candProj = candInteraction.ParentPackage;
+            candProj = candInteraction.OwningPackage;
             archMdlPath = this.ProjectPath + ...
-                candProj.ZCProjectFolder + filesep + archMdlName + ".slx";
+                candProj.BuiltElement + filesep + archMdlName + ".slx";
             save_system(slHandle, archMdlPath);
 
             this.AllModelPaths = [this.AllModelPaths archMdlPath];
@@ -472,9 +477,9 @@ classdef Builder < handle
                 archMdl.applyProfile(this.Profiles(k).Name)
             end
             
-            candProj = candArch.ParentPackage;
+            candProj = candArch.OwningPackage;
             archMdlPath = this.ProjectPath + ...
-                candProj.ZCProjectFolder + filesep + archMdlName + ".slx";
+                candProj.BuiltElement + filesep + archMdlName + ".slx";
             this.AllModelPaths = [this.AllModelPaths archMdlPath];
             save_system(archMdl.SimulinkHandle, archMdlPath);
             this.RootProject.addFile(archMdlPath);
@@ -611,7 +616,7 @@ classdef Builder < handle
                         'Type', tName, 'Dimensions', dimensions);
                 else
                     % Standalone Value Type Interface
-                    zcElem = valueType.ZCElement;
+                    zcElem = valueType.BuiltElement;
                     setDataType(zcElem, tName);
                     setDimensions(zcElem, dimensions);
                 end
@@ -640,7 +645,7 @@ classdef Builder < handle
             thisReq = reqParent.add(Id=req.ReqID, ...
                                     Summary=req.Name, ...
                                     Description=req.Text);
-            req.ZCElement = thisReq;
+            req.BuiltElement = thisReq;
 
             setAttribute(thisReq, 'ExternalUID',   req.ExtElementID);
             setAttribute(thisReq, 'ExternalType', req.Type);
@@ -684,7 +689,7 @@ classdef Builder < handle
                     this.Profiles = [this.Profiles newProf];
                     profFile = save(newProf, char(this.ProjectPath));
                     this.RootProject.addFile(profFile);
-                    thisProf.FinalName = newProfName;
+                    thisProf.BuildName = newProfName;
                     
                     this.Stats.NumProfiles = this.Stats.NumProfiles + 1;
                     
@@ -694,7 +699,7 @@ classdef Builder < handle
                         st = thisProf.Stereotypes(p);
                         SysMLConnector.internal.StatusMonitor.publishEvent('BuildingStereotype', st.ExtElementID, 'Building stereotype %s (%i of %i).', st.Name, p, numStereotypes);
 
-                        st.ZCElement = newProf.addStereotype(st.Name);
+                        st.BuiltElement = newProf.addStereotype(st.Name);
                         props = st.Properties;
                         this.Stats.NumStereotypes = this.Stats.NumStereotypes + 1;
                         
@@ -722,8 +727,8 @@ classdef Builder < handle
                             end
 
                             props(m).Datatype = tName;
-                            props(m).ZCElement = st.ZCElement.addProperty(...
-                                char(props(m).FinalName),'Type', tName);
+                            props(m).BuiltElement = st.BuiltElement.addProperty(...
+                                char(props(m).BuildName),'Type', tName);
                             
                             this.Stats.NumStereotypeProps = this.Stats.NumStereotypeProps+1;
                         end
@@ -732,8 +737,8 @@ classdef Builder < handle
                     % Add superclasses
                     for p = 1:length(thisProf.Stereotypes)
                         st = thisProf.Stereotypes(p);
-                        if ~isempty(st.SuperClass) && ~isempty(st.SuperClass(1).ZCElement)
-                            st.ZCElement.Parent = st.SuperClass.ZCElement;
+                        if ~isempty(st.SuperClass) && ~isempty(st.SuperClass(1).BuiltElement)
+                            st.BuiltElement.Parent = st.SuperClass.BuiltElement;
                         end
 
                         if numel(st.SuperClass) > 1
@@ -745,7 +750,7 @@ classdef Builder < handle
         end
         
         function applyStereotypes(this, elem)
-            zcElem = elem.ZCElement;
+            zcElem = elem.BuiltElement;
             
             for k = 1:length(elem.StereotypesExtIDs)
                 candidateStereotypes = SysMLConnector.internal.CandidateElement.idMap(...
@@ -753,7 +758,7 @@ classdef Builder < handle
                 if ~isempty(candidateStereotypes) 
                     for candidateStereotype = candidateStereotypes
                         zcElem.applyStereotype(...
-                            char(candidateStereotype.Profile.FinalName + "." + candidateStereotype.Name));
+                            char(candidateStereotype.Owner.BuildName + "." + candidateStereotype.Name));
                         candidateStereotype.trackAppliedElement(zcElem)
                         this.Stats.NumStereotypesApplied = ...
                             this.Stats.NumStereotypesApplied+1;
@@ -767,7 +772,7 @@ classdef Builder < handle
                 if ~isempty(propST)
                     prop = propST.findProperty(props(p).PropertyName);
                     if ~isempty(prop)
-                        propName = propST.Profile.FinalName + "." + propST.Name + "." + prop.FinalName;
+                        propName = propST.Owner.BuildName + "." + propST.Name + "." + prop.BuildName;
 
                         if ismember(prop.Datatype, {'boolean', 'uint8', 'uint16', 'uint32', 'uint64', 'int8', 'int16', 'int32', 'int64', 'single', 'double'})
                             propValueString = props(p).Value;
@@ -796,7 +801,7 @@ classdef Builder < handle
                 return;
             end
 
-            arch = candArch.ZCElement;
+            arch = candArch.BuiltElement;
             modelName = arch.Model.Name;
 
             % Start with built-ins
@@ -977,14 +982,14 @@ classdef Builder < handle
                         allocationSet = SysMLConnector.internal.CandidateAllocation.AllocationSet(Name=allocSetName, ExternalID=allocSetName);
                     end
 
-                    allocationSet.BuildSource = SysMLConnector.internal.utils.getModelName(candidateAllocation.Source.ZCElement);
-                    allocationSet.BuildTarget = SysMLConnector.internal.utils.getModelName(candidateAllocation.Target.ZCElement);
+                    allocationSet.BuildSource = SysMLConnector.internal.utils.getModelName(candidateAllocation.Source.BuiltElement);
+                    allocationSet.BuildTarget = SysMLConnector.internal.utils.getModelName(candidateAllocation.Target.BuiltElement);
 
                     candidateAllocation.Model = allocationSet;
                 end
 
                 % Populate the default scenario if does not exist
-                if isempty(candidateAllocation.Parent)
+                if isempty(candidateAllocation.Owner)
                     scenarioName = 'Allocations';
                     scenarioID   = sprintf('%s_%s', allocSetName, scenarioName);
 
@@ -995,7 +1000,7 @@ classdef Builder < handle
                         allocationScenario = allocationSet.addScenario(scenarioName, scenarioID);
                     end
 
-                    candidateAllocation.Parent = allocationScenario;
+                    candidateAllocation.Owner = allocationScenario;
                     allocationScenario.Allocations = [allocationScenario.Allocations candidateAllocation];
                 end
             end
@@ -1013,16 +1018,16 @@ classdef Builder < handle
                 
                 publish(candidateAllocationSet);
 
-                if ~isempty(candidateAllocationSet.ParentPackage)
+                if ~isempty(candidateAllocationSet.OwningPackage)
                     directoryPath = this.ProjectPath + ...
-                                candidateAllocationSet.ParentPackage.ZCProjectFolder;
+                                candidateAllocationSet.OwningPackage.BuiltElement;
                 else
                     directoryPath = pwd;
                 end
 
-                this.saveFileToPath(candidateAllocationSet.ZCElement, directoryPath);
+                this.saveFileToPath(candidateAllocationSet.BuiltElement, directoryPath);
                 
-                allocationSetName  = [candidateAllocationSet.ZCElement.Name '.mldatx'];
+                allocationSetName  = [candidateAllocationSet.BuiltElement.Name '.mldatx'];
                 allocationFilepath = which(allocationSetName);
                 this.RootProject.addFile(allocationFilepath);
             end
@@ -1064,7 +1069,7 @@ classdef Builder < handle
                 
                 SysMLConnector.internal.StatusMonitor.publishEvent('BuilderRequirements', thisReq.ExtElementID, 'Building requirements (%i of %i).', this.getRequirementIdx, this.RequirementCount);
                                 
-                if isempty(thisReq.ParentRequirement)
+                if isempty(thisReq.Owner)
                     this.recAddRequirementToSet(thisReq, ...
                                                 this.ReqFile);
                 end
@@ -1131,7 +1136,7 @@ classdef Builder < handle
                                 rethrow(ME)
                             end
                         end
-                        thisLink.ZCElement = link;
+                        thisLink.BuiltElement = link;
                         this.Stats.NumReqLinks = this.Stats.NumReqLinks + 1;
                     end
                 catch ME

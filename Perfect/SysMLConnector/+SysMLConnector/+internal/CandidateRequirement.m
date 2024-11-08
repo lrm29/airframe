@@ -1,18 +1,11 @@
 classdef CandidateRequirement < SysMLConnector.internal.CandidateElement
 % CANDIDATEREQUIREMENT Helper class for SysMLConnector.internal.import that holds candidate Requirements.
     properties
-        Name
         ReqID
         Text
-        
-        ReqOwnerExtElementID
-        
-        ChildRequirements
-        ParentRequirement
-        
         Type % SysML requirement type (Requirement, FunctionalRequirement, etc).
-        ZCElement = [];
         AdditionalProperties = [];
+		ChildRequirements
     end
     
     methods
@@ -23,7 +16,7 @@ classdef CandidateRequirement < SysMLConnector.internal.CandidateElement
             this.Text = txt;
             this.Type = type;
             
-            this.ReqOwnerExtElementID = ownID;
+            this.OwnerExtElementID = ownID;
             this.ValidRequirementLinkTarget = true;
         end
 
@@ -47,11 +40,11 @@ classdef CandidateRequirement < SysMLConnector.internal.CandidateElement
         end
         
         function link(this)
-            if this.ReqOwnerExtElementID ~= ""
+            if this.OwnerExtElementID ~= ""
                 parReq = SysMLConnector.internal.CandidateElement.idMap(...
-                    "lookup", this.ReqOwnerExtElementID);
+                    "lookup", this.OwnerExtElementID);
                 parReq.ChildRequirements = [parReq.ChildRequirements this];
-                this.ParentRequirement = parReq;
+                this.Owner = parReq;
             end
         end
                 

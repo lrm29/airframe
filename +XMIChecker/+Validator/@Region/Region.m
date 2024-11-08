@@ -18,7 +18,7 @@ classdef Region < XMIChecker.Validator.Validator
             % validate the parent as regions aren't directly represented
             regionValidatorObj.ParentValidator = ...
                 XMIChecker.Validator.build(...
-                candidate.Parent,xmidb,foundElements);
+                candidate.Owner,xmidb,foundElements);
             % now report its results instead
             regionValidatorObj.pass = regionValidatorObj.ParentValidator.pass;
             regionValidatorObj.warn = regionValidatorObj.ParentValidator.warn;

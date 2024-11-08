@@ -1,9 +1,6 @@
-classdef CandidatePort < SysMLConnector.internal.CandidateElement
+classdef CandidatePort < SysMLConnector.internal.CandidateArchitecture.Element
 % CANDIDATEPORT Helper class for SysMLConnector.internal.import that holds candidate Architecture ports.
     properties
-        ParentArch
-        Name
-        BuildName = ""
         IsConjugated
         InterfaceExtElementID
         Interface
@@ -15,18 +12,13 @@ classdef CandidatePort < SysMLConnector.internal.CandidateElement
         Replaced = false;
         Replacements = [];
         Derived = false;
-        ZCElement = [];
-    end
-
-    properties (Dependent)
-        ParentPackageExtElementID
     end
     
     methods
         function this = CandidatePort(parArch, portName, extID, ...
                                       isConj, intfID, intf, isDerived)
-            this@SysMLConnector.internal.CandidateElement(extID);
-            this.ParentArch   = parArch;
+            this@SysMLConnector.internal.CandidateArchitecture.Element(extID);
+            this.Owner   = parArch;
             this.Name = portName;
             
             this.IsConjugated = isConj;
@@ -36,20 +28,12 @@ classdef CandidatePort < SysMLConnector.internal.CandidateElement
             this.ValidRequirementLinkTarget = true;
         end
 
-        function elementID = get.ParentPackageExtElementID(this)
-            try
-                elementID = this.ParentArch.ParentPackageExtElementID;
-            catch
-                elementID = [];
-            end
-        end
-        
         function addConnector(this, conn)
             this.Connectors = [this.Connectors conn];
         end
 
         function fullPath = getFullPath(this)
-            fullPath = this.ParentArch.getFullPath + "/" + this.Name;
+            fullPath = this.Owner.getFullPath + "/" + this.Name;
         end
         
         function thisNotImported = setInvalid(this, invalidReason)
@@ -106,7 +90,7 @@ classdef CandidatePort < SysMLConnector.internal.CandidateElement
                     end
                 end
                 if length(validConns) > 1
-                    this.ParentArch.addAdapter(validConns, [], this);
+                    this.Owner.addAdapter(validConns, [], this);
                 end
             end
         end

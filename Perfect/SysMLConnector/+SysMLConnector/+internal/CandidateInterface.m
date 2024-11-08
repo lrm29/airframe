@@ -1,7 +1,6 @@
 classdef CandidateInterface < SysMLConnector.internal.CandidateElement
 % CANDIDATEINTERFACE Helper class for SysMLConnector.internal.import that holds candidate interface objects.
     properties
-        Name = "";
         CreatedFrom;
         
         Elements = [];
@@ -13,12 +12,8 @@ classdef CandidateInterface < SysMLConnector.internal.CandidateElement
         DerivedInInterface = []
         DerivedOutInterface = []
         
-        BuildName;
-        
         Valid = true;
         InvalidReason = "";
-
-        ZCElement = []
     end
     
     methods
@@ -120,10 +115,10 @@ classdef CandidateInterface < SysMLConnector.internal.CandidateElement
         end
 
         function buildZCInterface(this, builder)
-            if isempty(this.ZCElement)
+            if isempty(this.BuiltElement)
                 intf = builder.createInterface(this.ExtElementID, ...
                                                this.BuildName);
-                this.ZCElement = intf;
+                this.BuiltElement = intf;
                 intf.ExternalUID = this.ExtElementID;
                 for k = 1:length(this.Elements)
                     thisElement = this.Elements(k);

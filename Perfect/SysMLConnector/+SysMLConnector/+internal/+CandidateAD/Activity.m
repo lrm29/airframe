@@ -13,7 +13,7 @@ classdef Activity < SysMLConnector.internal.CandidateAD.Node
             activityObj@SysMLConnector.internal.CandidateAD.Node(varargin{:});
             
             if isempty(activityObj.Name)
-                activityObj.Name = SysMLConnector.internal.utils.nextNameProperty(activityObj.Parent.Nodes, 'Activity');
+                activityObj.Name = SysMLConnector.internal.utils.nextNameProperty(activityObj.Owner.Nodes, 'Activity');
             end
         end
 
@@ -28,9 +28,9 @@ classdef Activity < SysMLConnector.internal.CandidateAD.Node
         function doPublish(this, target)
             doPublish@SysMLConnector.internal.CandidateAD.Node(this, target);
 
-            this.ZCElement.PinNamesVisible = true;
+            this.BuiltElement.PinNamesVisible = true;
             
-            this.ZCElement.ActionBehavior  = this.ActionBehavior;
+            this.BuiltElement.ActionBehavior  = this.ActionBehavior;
         end
 
         function postPublish(this, target)
@@ -38,7 +38,7 @@ classdef Activity < SysMLConnector.internal.CandidateAD.Node
                 postPublish@SysMLConnector.internal.CandidateAD.Node(this, target);
             else
                 % Tag the child architecture with the reference id:
-                childActivity = this.ZCElement.ChildActivity;
+                childActivity = this.BuiltElement.ChildActivity;
                 archElement = SysMLConnector.internal.CandidateAD.internal.getArchitecturePeer(childActivity);
                 archElement.ExternalUID = this.ReferenceID;
 
@@ -55,7 +55,7 @@ classdef Activity < SysMLConnector.internal.CandidateAD.Node
                         arrayfun(@(flow) publish(flow, this), this.Reference.Flows);
                         
                         warnState = warning('off', 'diagram_autolayout:autolayout:layoutRejectedCommandLine');
-                        systemPath = SysMLConnector.internal.CandidateAD.internal.getArchitecturePeer(this.ZCElement).getQualifiedName;
+                        systemPath = SysMLConnector.internal.CandidateAD.internal.getArchitecturePeer(this.BuiltElement).getQualifiedName;
                         Simulink.BlockDiagram.arrangeSystem(systemPath);
                         warning(warnState);
                     else

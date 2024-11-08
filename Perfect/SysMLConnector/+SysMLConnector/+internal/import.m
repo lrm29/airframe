@@ -423,30 +423,39 @@ for contentIdx = 1:m3imod.content.size
 end
 
 % Extract profiles and stereotypes
-m3iprofs = [];
+m3iProfs = [];
 candProfiles = [];
 
 if ~isempty(umlmmV.ProfilesFound)
-    m3iprofs = umlmmV.ProfilesFound.values;
+    m3iProfs = umlmmV.ProfilesFound.values;
 else
     SysMLConnector.internal.StatusMonitor.publishEvent('ParsingProfiles', '', 'No profiles found.');
 end
 
-numProfiles = length(m3iprofs);
+numProfiles = length(m3iProfs);
 for k = 1:numProfiles
-    profileName = string(m3iprofs(k).name);
+    m3iProf = m3iProfs(k);
+
+    profileName = string(m3iProf.name);
     SysMLConnector.internal.StatusMonitor.publishEvent('ParsingProfile', profileName, 'Parsing profile %s (%i of %i).', profileName, k, numProfiles);
 
-    newProf = SysMLConnector.internal.CandidateProfile(profileName);
+    profileExtID = SysMLConnector.internal.utils.getExtID(m3iProf);
+
+    newProf = SysMLConnector.internal.CandidateProfile(profileExtID, profileName);
+
+    if ~isempty(m3iProf.owner)
+        newProf.OwnerExtElementID = SysMLConnector.internal.utils.getExtID(m3iProf.owner);
+    end
+
     candProfiles = [candProfiles newProf]; %#ok<AGROW>
 
-    numProfTypes = m3iprofs(k).ownedType.size;
+    numProfTypes = m3iProf.ownedType.size;
 
     stereotypeIndices = double.empty(0, numProfTypes);
     stereotypeCount = 0;
 
     for m = 1:numProfTypes
-        pType = m3iprofs(k).ownedType.at(m);
+        pType = m3iProf.ownedType.at(m);
         if isa(pType, 'M3I.ImmutableCustomStereotype')
             stereotypeCount = stereotypeCount + 1;
             stereotypeIndices(stereotypeCount) = m;
@@ -460,7 +469,7 @@ for k = 1:numProfiles
         for m = stereotypeIndices
             idx = idx + 1;
 
-            pType = m3iprofs(k).ownedType.at(m);
+            pType = m3iProf.ownedType.at(m);
             stereotypeName = string(pType.name);
 
             SysMLConnector.internal.StatusMonitor.publishEvent('ParsingStereotype', stereotypeName, 'Parsing stereotype %s (%i of %i).', profileName + "." + stereotypeName, idx, stereotypeCount);
@@ -539,9 +548,9 @@ report.NotImported = umlmmV.NotImported;
 
 % Fetch lists of elements
 candArchs = SysMLConnector.internal.CandidateElement.idMap(...
-    "getElems", "SysMLConnector.internal.CandidateArchitecture");
+    "getElems", "SysMLConnector.internal.CandidateArchitecture.CandidateArchitecture");
 candComps = SysMLConnector.internal.CandidateElement.idMap(...
-    "getElems", "SysMLConnector.internal.CandidateComponent");
+    "getElems", "SysMLConnector.internal.CandidateArchitecture.CandidateComponent");
 candActivities = SysMLConnector.internal.CandidateElement.idMap(...
     "getElems", "SysMLConnector.internal.CandidateAD.Model");
 candInteractions = SysMLConnector.internal.CandidateElement.idMap(...
@@ -565,7 +574,7 @@ candComments = SysMLConnector.internal.CandidateElement.idMap(...
 
 % Find all components with deferred architectures (were unable to be
 % built at the time they were discovered.
-deferredCompIndices = arrayfun(@(candComp) isempty(candComp{1}.ParentArchitecture), candComps);
+deferredCompIndices = arrayfun(@(candComp) isempty(candComp{1}.Owner), candComps);
 deferredComponents = candComps(deferredCompIndices);
 deferredComponents = [deferredComponents{:}];
 % Merge in generalizations and add deferred components.
@@ -600,7 +609,9 @@ rootPackageIdx = 0;
 for k = 1:length(candPkgs)
     % Link pkg to owner
     thisPkg = candPkgs{k};
+
     thisPkg.link();
+
     if thisPkg.OwnerExtElementID == ""
         rootPackageIdx = rootPackageIdx + 1;
         rootPackages(rootPackageIdx) = thisPkg;
@@ -737,6 +748,7 @@ if ~tryOnly && (~isempty(buildRootModel) || ~isempty(candReqs))
     builder.createProfiles(candProfiles);
 
     if ~isempty(buildRootModel)
+        buildRootModel.BuiltElement = "";
         buildRootModel.prelimBuild(builder);
         buildRootModel.finishBuild(builder);
     end
@@ -796,7 +808,7 @@ if ~tryOnly && (~isempty(buildRootModel) || ~isempty(candReqs))
 
         printer.startSection('REQUIREMENTS');
         for k = 1:length(candReqs)
-            if isempty(candReqs{k}.ParentRequirement)
+            if isempty(candReqs{k}.Owner)
                 candReqs{k}.print(printer);
             end
         end
