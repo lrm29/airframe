@@ -5,7 +5,7 @@ classdef CandidateParameter < XMIChecker.Validator.Validator
         function obj = CandidateParameter(candidate,~,~)
             %CANDIDATEPARAMETER Construct an instance of this class
             arguments
-                candidate SysMLConnector.internal.CandidateParameter
+                candidate SysMLConnector.internal.CandidateArchitecture.CandidateParameter
                 ~
                 ~
             end
@@ -40,7 +40,7 @@ classdef CandidateParameter < XMIChecker.Validator.Validator
     methods (Static)
         function tf = checkParameter(candidateParameter)
             arguments
-                candidateParameter SysMLConnector.internal.CandidateParameter
+                candidateParameter SysMLConnector.internal.CandidateArchitecture.CandidateParameter
             end
 
             tf = false; 

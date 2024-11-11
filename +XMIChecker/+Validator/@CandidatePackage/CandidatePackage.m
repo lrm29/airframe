@@ -23,7 +23,7 @@ classdef CandidatePackage < XMIChecker.Validator.Validator
                 end
             else
                 % validate that dir is empty
-                if strcmp(candidate.BuiltElement,"")
+                if isempty(candidate.BuiltElement)
                     obj.pass = 1;
                 else
                     obj.fail = 1;
