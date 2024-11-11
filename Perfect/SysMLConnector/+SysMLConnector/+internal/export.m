@@ -351,7 +351,7 @@ function m3iIDtoExtIDMap = finalizeArch(arch, archToBlockMap, portToProxyPortMap
         
         if isa(srcPort, 'systemcomposer.arch.ComponentPort')
             umlConnEnd1.partWithPort = compNameToPropMap(...
-                srcPort.Owner.Name);
+                srcPort.Parent.Name);
             srcRole = srcPort.ArchitecturePort;
         else
             srcRole = srcPort;
@@ -359,7 +359,7 @@ function m3iIDtoExtIDMap = finalizeArch(arch, archToBlockMap, portToProxyPortMap
         
         if isa(dstPort, 'systemcomposer.arch.ComponentPort')
             umlConnEnd2.partWithPort = compNameToPropMap(...
-                dstPort.Owner.Name);
+                dstPort.Parent.Name);
             dstRole = dstPort.ArchitecturePort;
         else
             dstRole = dstPort;

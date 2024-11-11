@@ -4,15 +4,15 @@ classdef Element < SysMLConnector.internal.CandidateElement & ...
     %ELEMENT basic element of a state machine
     
     methods
-        function elementObj = Element(element,parent)
+        function elementObj = Element(element,owner)
             %ELEMENT Construct an instance of this class
             arguments
                 element
-                parent 
+                owner 
             end
             elementObj@SysMLConnector.internal.CandidateElement( ...
                 SysMLConnector.internal.utils.getExtID(element));
-            elementObj.Owner = parent;
+            elementObj.Owner = owner;
             %% enable requirement linking
             elementObj.ValidRequirementLinkTarget = true;
             %% check for comments

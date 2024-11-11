@@ -48,8 +48,8 @@ arguments
 end
 if isa(endPoint,"systemcomposer.arch.Architecture")
     id = endPoint.ExternalUID;
-    if isa(endPoint.Owner,"systemcomposer.arch.Component")
-        id = {id,endPoint.Owner.ExternalUID};
+    if isa(endPoint.Parent,"systemcomposer.arch.Component")
+        id = {id,endPoint.Parent.ExternalUID};
     end
 else
     id = {endPoint.ExternalUID,endPoint.Architecture.ExternalUID};
