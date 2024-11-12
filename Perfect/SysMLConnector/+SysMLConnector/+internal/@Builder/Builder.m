@@ -472,6 +472,10 @@ classdef Builder < handle
             archMdlName = this.getModelName(candArch.Name);
             
             archMdl = systemcomposer.createModel(archMdlName);
+            candArch.BuiltElement = archMdl.Architecture;
+            candArch.ModelName = candArch.BuiltElement.Model.Name;
+            candArch.SystemComposerUUID = candArch.BuiltElement.UUID;
+
             archMdl.linkDictionary(this.ProjectSLDDPath);
             for k = 1:length(this.Profiles)
                 archMdl.applyProfile(this.Profiles(k).Name)
