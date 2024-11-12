@@ -1046,7 +1046,15 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateArchitecture.E
                 thisComp = cComps(p);
                 if thisComp.Valid
                     c = builder.createComponent(thisArch, thisComp);
+
                     thisComp.BuiltElement = c;
+
+                    if thisComp.IsInliningItsArch
+                        thisComp.ReferenceArch.BuiltElement = c.Architecture;
+                        thisComp.ReferenceArch.ModelName = c.Model.Name;
+                        thisComp.ReferenceArch.SystemComposerUUID = c.Architecture.UUID;
+                    end
+
                     c.ExternalUID = thisComp.ExtElementID;
                 end
             end

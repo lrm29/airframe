@@ -57,7 +57,7 @@ classdef CandidateParameter < XMIChecker.Validator.Validator
                 if any(paramLogIdx)
                     param = archElement.Parameters(paramLogIdx);
 
-                    if strcmp(param.Owner.ExternalUID, candidateParameter.Owner.ExtElementID) ...
+                    if strcmp(param.Parent.ExternalUID, candidateParameter.Owner.ExtElementID) ...
                            && strcmp(param.Name, candidateParameter.BuildName)
                         tf = true;
                     end

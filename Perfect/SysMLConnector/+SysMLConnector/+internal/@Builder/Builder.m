@@ -518,6 +518,7 @@ classdef Builder < handle
             compName = cn(end);
             
             comp = archHdl.addComponent(char(compName));
+
             this.Stats.NumComponents = this.Stats.NumComponents + 1;
         end
         
