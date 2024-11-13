@@ -8,7 +8,15 @@ this.BuiltElement = this.Owner.BuiltElement;
 
 % build the subvertexes
 if this.Subvertexes.isConfigured
-    arrayfun(@(n) n.build(),this.Subvertexes.values);
+    % build states first to avoid issues
+    subvertexes = this.Subvertexes.values;
+    areStates = arrayfun(@(s) ...
+        isa(s,"SysMLConnector.internal.CandidateStateMachine.State"), ...
+        subvertexes);
+    states = subvertexes(areStates);
+    notStates = subvertexes(~areStates);
+    arrayfun(@(s) s.build(),states);
+    arrayfun(@(n) n.build(),notStates);
 end
 % then build the transitions that connect them
 arrayfun(@(t) t.build(),this.Transitions);

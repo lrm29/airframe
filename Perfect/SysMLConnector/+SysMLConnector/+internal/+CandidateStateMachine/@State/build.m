@@ -10,6 +10,7 @@ else
     this.BuiltElement.LabelString = string(this.Name)+newline+this.LabelString;
 end
 this.storeID();
+%% build internals
 if ~isempty(this.ConnectionPoints) || ~isempty(this.Regions)
     this.BuiltElement.IsSubchart = true;
 end

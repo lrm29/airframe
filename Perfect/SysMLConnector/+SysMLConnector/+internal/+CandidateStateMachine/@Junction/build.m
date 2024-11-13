@@ -7,7 +7,7 @@ end
 this.BuiltElement = Stateflow.Junction(this.Owner.BuiltElement);
 
 this.storeID();
-% handle special cases
+%% handle special cases
 switch this.Type
     case umlmm.PseudostateKind.Initial
         % initial node needs a default transition
