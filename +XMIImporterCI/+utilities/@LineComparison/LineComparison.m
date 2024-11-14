@@ -14,7 +14,7 @@ classdef LineComparison < handle
     end
 
     methods
-        function obj = LineComparison(string1,string2)
+        function this = LineComparison(string1,string2)
             %LINECOMPARISON Construct an instance of this class
             arguments
                 % expected to be the "old"
@@ -22,23 +22,23 @@ classdef LineComparison < handle
                 % expected to be the "new"
                 string2 (1,1) string
             end
-            obj.OldLines = strsplit(string1,newline);
-            obj.NewLines = strsplit(string2,newline);
+            this.OldLines = strsplit(string1,newline);
+            this.NewLines = strsplit(string2,newline);
             indexOffset = 0;
             i = 1;
-            while i < numel(obj.OldLines)
-                if strcmp(obj.OldLines(i),obj.NewLines(i+indexOffset))
+            while i < numel(this.OldLines)
+                if strcmp(this.OldLines(i),this.NewLines(i+indexOffset))
                     i = i + 1;
                 else
                     % these lines don't match
                     % need to launch 2 searches
-                    if i + indexOffset + 1 <= numel(obj.NewLines)
+                    if i + indexOffset + 1 <= numel(this.NewLines)
                         % one for an insertion, if the next line the old can be
                         % matched in the new possible insertion
-                        linesInserted = find(ismember(obj.NewLines(i+indexOffset+1:end),obj.OldLines(i)),1);
+                        linesInserted = find(ismember(this.NewLines(i+indexOffset+1:end),this.OldLines(i)),1);
                         % check for false positives for insertion
                         if ~isempty(linesInserted) && ...
-                                all(ismember(obj.NewLines(i+indexOffset+1:i+indexOffset+linesInserted),obj.OldLines(i:end)))
+                                all(ismember(this.NewLines(i+indexOffset+1:i+indexOffset+linesInserted),this.OldLines(i:i+linesInserted)))
                             % this means all of the inserted lines are
                             % actually in the old set
                             % that doesn't makes sense 
@@ -48,30 +48,33 @@ classdef LineComparison < handle
                         end
                         % the other for deletions looks for the next new line
                         % to exist in the old lines
-                        linesDeleted = find(ismember(obj.OldLines(i:end),obj.NewLines(i+indexOffset)),1)-1;
+                        linesDeleted = find(ismember(this.OldLines(i:end),this.NewLines(i+indexOffset)),1)-1;
                         if isempty(linesDeleted) && isempty(linesInserted)
                             % neither an insert nor a delete, it's a
                             % modify
-                            obj.Changes(end+1,1:2) = [i,i+indexOffset];
+                            this.Changes(end+1,1:2) = [i,i+indexOffset];
                             i = i + 1;
                         elseif isempty(linesInserted) || any(linesDeleted < linesInserted)
                             % at least one exists, deleted is smaller
                             % use that
                             deletedLines = i:(i+linesDeleted-1);
-                            obj.Deletions = [obj.Deletions,deletedLines];
+                            this.Deletions = vertcat(this.Deletions, ...
+                                [deletedLines', ...
+                                ones(size(deletedLines'))*(i+indexOffset)]);
                             i = i + linesDeleted;
                             indexOffset = indexOffset - linesDeleted;
                         else
                             % either only insertion exists or it is
                             % less than deletion
                             insertedLines = (i+indexOffset):(i+indexOffset+linesInserted-1);
-                            obj.Insertions = [obj.Insertions,insertedLines];
+                            this.Insertions = vertcat(this.Insertions,...
+                                [{i},{insertedLines'}]);
                             i = i + 1;
                             indexOffset = indexOffset + linesInserted;
                         end
                     end
                 end
-                if i + indexOffset > numel(obj.NewLines)
+                if i + indexOffset > numel(this.NewLines)
                     break
                 end
             end
@@ -83,5 +86,7 @@ classdef LineComparison < handle
             end
             value = isempty(this.Changes) && isempty(this.Deletions) && isempty(this.Insertions);
         end
+
+        print(this);
     end
 end
