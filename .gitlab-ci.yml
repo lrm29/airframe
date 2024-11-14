@@ -1,7 +1,7 @@
 variables:
      GIT_SUBMODULE_STRATEGY: recursive
      RUNALL: ""
-     FORCE: 'false'
+     FORCE: false
 
 workflow:
   rules:
@@ -20,20 +20,11 @@ R2024a:
         include:
             - local: base.yml
         strategy: depend
+        forward:
+            pipeline_variables: true
 
     variables:
         MATLAB_VERSION: R2024a
-        TAGS: long-jobs
-
-R2024b:
-
-    trigger:
-        include:
-            - local: base.yml
-        strategy: depend
-
-    variables:
-        MATLAB_VERSION: R2024b
         TAGS: long-jobs
 
 R2024aLinux:
@@ -42,10 +33,25 @@ R2024aLinux:
         include:
             - local: base.yml
         strategy: depend
+        forward:
+            pipeline_variables: true
 
     variables:
         MATLAB_VERSION: R2024a
         TAGS: mmcbroom-linux
+
+R2024b:
+
+    trigger:
+        include:
+            - local: base.yml
+        strategy: depend
+        forward:
+            pipeline_variables: true
+
+    variables:
+        MATLAB_VERSION: R2024b
+        TAGS: long-jobs
 
 R2024bLinux:
 
@@ -53,7 +59,10 @@ R2024bLinux:
         include:
             - local: base.yml
         strategy: depend
+        forward:
+            pipeline_variables: true
 
     variables:
         MATLAB_VERSION: R2024b
         TAGS: mmcbroom-linux
+
