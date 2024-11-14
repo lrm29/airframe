@@ -40,3 +40,29 @@ R2024aLinux:
         MATLAB_VERSION: R2024a
         TAGS: mmcbroom-linux
 
+R2024b:
+
+    trigger:
+        include:
+            - local: base.yml
+        strategy: depend
+        forward:
+            pipeline_variables: true
+
+    variables:
+        MATLAB_VERSION: R2024b
+        TAGS: long-jobs
+
+R2024bLinux:
+
+    trigger:
+        include:
+            - local: base.yml
+        strategy: depend
+        forward:
+            pipeline_variables: true
+
+    variables:
+        MATLAB_VERSION: R2024b
+        TAGS: mmcbroom-linux
+
