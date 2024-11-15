@@ -22,8 +22,8 @@ classdef LineComparison < handle
                 % expected to be the "new"
                 string2 (1,1) string
             end
-            this.OldLines = strsplit(string1,newline);
-            this.NewLines = strsplit(string2,newline);
+            this.OldLines = splitlines(string1);
+            this.NewLines = splitlines(string2);
             indexOffset = 0;
             i = 1;
             while i <= numel(this.OldLines) && i + indexOffset <= numel(this.NewLines)
