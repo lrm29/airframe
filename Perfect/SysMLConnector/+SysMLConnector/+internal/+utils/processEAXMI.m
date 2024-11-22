@@ -73,7 +73,7 @@ function processEAXMI(xmiTmpFname, sysMLTag, sysMLTok, primTok)
                         if inPackage && startsWith(fileLines{nextLineIdx}, [tag.Tab '<'])
                             % Convert all the first level children to
                             % packaged elements.
-                            fileLines{nextLineIdx} = regexprep(fileLines{nextLineIdx}, '^(\t*)<(?<TagName>[^\s>]+)(.*)', '$1<packagedElement$3');
+                            fileLines{nextLineIdx} = regexprep(fileLines{nextLineIdx}, '^(\t*)<(\/?)(?<TagName>[^\s>]+)(.*)', '$1<$2packagedElement$4');
                         end
                     end
                 end

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="windows-1252"?>
+<xmi:XMI xmlns:uml="http://www.omg.org/spec/UML/20131001" xmlns:xmi="http://www.omg.org/spec/XMI/20131001" xmlns:umldi="http://www.omg.org/spec/UML/20131001/UMLDI" xmlns:dc="http://www.omg.org/spec/UML/20131001/UMLDC" xmlns:SysML="http://www.omg.org/spec/SysML/20150709/SysML">
+	<xmi:Documentation exporter="Enterprise Architect" exporterVersion="6.5"/>
+	<uml:Model xmi:type="uml:Model" name="EA_Model">
+		<packagedElement xmi:type="uml:Package" xmi:id="EAPK_542AE9D9_FDEC_4b4b_B59C_8FB258CDB0D4" name="Package1">
+			<packagedElement xmi:type="uml:Collaboration" xmi:id="EAID_CB000000_9D9_FDEC_4b4b_B59C_8FB258CDB0D" name="EA_Collaboration1">
+				<ownedBehavior xmi:type="uml:Interaction" xmi:id="EAID_IN000000_9D9_FDEC_4b4b_B59C_8FB258CDB0D" name="EA_Interaction1">
+					<lifeline xmi:type="uml:Lifeline" xmi:id="EAID_93C09F29_04FF_4d27_80FB_6C5637FE0EBF" name="Object1" represents="EAID_AT000000_04FF_4d27_80FB_6C5637FE0EBF"/>
+				</ownedBehavior>
+				<ownedAttribute xmi:type="uml:Property" xmi:id="EAID_AT000000_04FF_4d27_80FB_6C5637FE0EBF"/>
+			</packagedElement>
+			<packagedElement xmi:type="uml:Class" xmi:id="EAID_564BBEF2_44E6_4057_9264_74959DC28DE9" name="Block1"/>
+		</packagedElement>
+		<umldi:Diagram xmi:type="umldi:UMLInteractionDiagram" xmi:id="EAID_494E31E2_DD8B_42ba_8E58_67643D4F26EE" kind="sequence" sLifelineDashed="true" isFrame="false" modelElement="EAPK_542AE9D9_FDEC_4b4b_B59C_8FB258CDB0D4">
+			<ownedElement xmi:type="umldi:UMLShape" xmi:id="EAID_494E31E2_DD8B_42ba_80FB_6C5637FE0EBF" modelElement="EAID_93C09F29_04FF_4d27_80FB_6C5637FE0EBF">
+				<ownedElement xmi:type="umldi:UMLNameLabel" xmi:id="EAID_NL000000_DD8B_42ba_80FB_6C5637FE0EBF" text="Object1"/>
+				<bounds xmi:type="dc:bounds" xmi:id="EAID_DB000000_DD8B_42ba_80FB_6C5637FE0EBF" x="89" y="50" width="90" height="334"/>
+			</ownedElement>
+		</umldi:Diagram>
+		<profileApplication xmi:type="uml:ProfileApplication" xmi:id="profileap_5CBC4E1F-6">
+			<appliedProfile xmi:type="uml:Profile" href="http://www.omg.org/spec/SysML/20150709/SysML.xmi#_SysML__0"/>
+		</profileApplication>
+	</uml:Model>
+	<xmi:Extension extender="Enterprise Architect" extenderID="6.5">
+		<elements>
+			<element xmi:idref="EAPK_542AE9D9_FDEC_4b4b_B59C_8FB258CDB0D4" xmi:type="uml:Package" name="Package1" scope="public">
+				<model package2="EAID_542AE9D9_FDEC_4b4b_B59C_8FB258CDB0D4" package="EAPK_7A17639D_58BD_40d3_B5C8_DEFACAEA4BB5" tpos="0" ea_localid="2" ea_eleType="package"/>
+				<properties isSpecification="false" sType="Package" nType="0" scope="public"/>
+				<project author="joshkahn" version="1.0" phase="1.0" created="2024-11-22 16:12:12" modified="2024-11-22 16:12:12" complexity="1" status="Proposed"/>
+				<code gentype="Java"/>
+				<style appearance="BackColor=-1;BorderColor=-1;BorderWidth=-1;FontColor=-1;VSwimLanes=1;HSwimLanes=1;BorderStyle=0;"/>
+				<tags/>
+				<xrefs/>
+				<extendedProperties tagged="0" package_name="Model"/>
+				<packageproperties version="1.0"/>
+				<paths/>
+				<times created="2024-11-22 16:12:12" modified="2024-11-22 16:12:12"/>
+				<flags iscontrolled="FALSE" isprotected="FALSE" usedtd="FALSE" logxml="FALSE" packageFlags="isModel=1;VICON=3;"/>
+			</element>
+			<element xmi:idref="EAID_564BBEF2_44E6_4057_9264_74959DC28DE9" xmi:type="uml:Class" name="Block1" scope="public">
+				<model package="EAPK_542AE9D9_FDEC_4b4b_B59C_8FB258CDB0D4" tpos="0" ea_localid="2" ea_eleType="element"/>
+				<properties isSpecification="false" sType="Class" nType="0" scope="public" stereotype="block" isRoot="false" isLeaf="false" isAbstract="false" isActive="false"/>
+				<project author="joshkahn" version="1.0" phase="1.0" created="2024-11-22 16:12:22" modified="2024-11-22 16:12:22" complexity="1" status="Proposed"/>
+				<code gentype="Java"/>
+				<style appearance="BackColor=-1;BorderColor=-1;BorderWidth=-1;FontColor=-1;VSwimLanes=1;HSwimLanes=1;BorderStyle=0;"/>
+				<tags>
+					<tag xmi:id="EAID_501B1315_B5D3_0eb5_9978_CBD678A7F444" name="isEncapsulated" value="#NOTES#Values: true,false&#xA;" modelElement="EAID_564BBEF2_44E6_4057_9264_74959DC28DE9"/>
+				</tags>
+				<xrefs value="$XREFPROP=$XID={6491B8FD-373F-4d74-90F5-2ABE26F4A453}$XID;$NAM=Stereotypes$NAM;$TYP=element property$TYP;$VIS=Public$VIS;$PAR=0$PAR;$DES=@STEREO;Name=block;FQName=SysML1.4::block;@ENDSTEREO;$DES;$CLT={564BBEF2-44E6-4057-9264-74959DC28DE9}$CLT;$SUP=&lt;none&gt;$SUP;$ENDXREF;$XREFPROP=$XID={3C4F82B2-6B69-495c-B868-99D67F0FF5A0}$XID;$NAM=CustomProperties$NAM;$TYP=element property$TYP;$VIS=Public$VIS;$PAR=0$PAR;$DES=@PROP=@NAME=_defaultDiagramType@ENDNAME;@TYPE=string@ENDTYPE;@VALU=SysML1.4::InternalBlock@ENDVALU;@PRMT=@ENDPRMT;@ENDPROP;$DES;$CLT={564BBEF2-44E6-4057-9264-74959DC28DE9}$CLT;$SUP=&lt;none&gt;$SUP;$ENDXREF;"/>
+				<extendedProperties tagged="0" package_name="Package1"/>
+			</element>
+			<element xmi:idref="EAID_93C09F29_04FF_4d27_80FB_6C5637FE0EBF" xmi:type="uml:Sequence" name="Object1" scope="public">
+				<model package="EAPK_542AE9D9_FDEC_4b4b_B59C_8FB258CDB0D4" tpos="0" ea_localid="3" ea_eleType="element"/>
+				<properties isSpecification="false" sType="Sequence" nType="0" scope="public"/>
+				<project author="joshkahn" version="1.0" phase="1.0" created="2024-11-22 16:12:40" modified="2024-11-22 16:12:40" complexity="1" status="Proposed"/>
+				<code gentype="&lt;none&gt;"/>
+				<style appearance="BackColor=-1;BorderColor=-1;BorderWidth=-1;FontColor=-1;VSwimLanes=1;HSwimLanes=1;BorderStyle=0;"/>
+				<tags/>
+				<xrefs/>
+				<extendedProperties tagged="0" package_name="Package1"/>
+			</element>
+		</elements>
+		<connectors/>
+		<primitivetypes>
+			<packagedElement xmi:type="uml:Package" xmi:id="EAPrimitiveTypesPackage" name="EA_PrimitiveTypes_Package"/>
+		</primitivetypes>
+		<profiles/>
+		<diagrams>
+			<diagram xmi:id="EAID_494E31E2_DD8B_42ba_8E58_67643D4F26EE">
+				<model package="EAPK_542AE9D9_FDEC_4b4b_B59C_8FB258CDB0D4" localID="1" owner="EAPK_542AE9D9_FDEC_4b4b_B59C_8FB258CDB0D4"/>
+				<properties name="Package1" type="Sequence"/>
+				<project author="joshkahn" version="1.0" created="2024-11-22 16:12:29" modified="2024-11-22 16:13:41"/>
+				<style1 value="ShowPrivate=1;ShowProtected=1;ShowPublic=1;HideRelationships=0;Locked=0;Border=1;HighlightForeign=1;PackageContents=1;SequenceNotes=0;ScalePrintImage=0;PPgs.cx=1;PPgs.cy=1;DocSize.cx=819;DocSize.cy=1067;ShowDetails=0;Orientation=P;Zoom=100;ShowTags=0;OpParams=1;VisibleAttributeDetail=0;ShowOpRetType=1;ShowIcons=1;CollabNums=0;HideProps=0;ShowReqs=0;ShowCons=0;PaperSize=1;HideParents=0;UseAlias=0;HideAtts=0;HideOps=0;HideStereo=0;HideElemStereo=0;ShowTests=0;ShowMaint=0;ConnectorNotation=UML 2.1;ExplicitNavigability=0;ShowShape=1;AdvancedElementProps=1;AdvancedFeatureProps=1;AdvancedConnectorProps=1;m_bElementClassifier=1;ShowNotes=0;SuppressBrackets=0;SuppConnectorLabels=0;PrintPageHeadFoot=0;ShowAsList=0;"/>
+				<style2 value="ExcludeRTF=0;DocAll=0;HideQuals=0;AttPkg=1;ShowTests=0;ShowMaint=0;SuppressFOC=0;INT_ARGS=;INT_RET=;INT_ATT=;SeqTopMargin=50;MatrixActive=0;SwimlanesActive=1;KanbanActive=0;MatrixLineWidth=1;MatrixLineClr=0;MatrixLocked=0;TConnectorNotation=UML 2.1;TExplicitNavigability=0;AdvancedElementProps=1;AdvancedFeatureProps=1;AdvancedConnectorProps=1;m_bElementClassifier=1;ProfileData=;MDGDgm=SysML1.4::Sequence;STBLDgm=;ShowNotes=0;VisibleAttributeDetail=0;ShowOpRetType=1;SuppressBrackets=0;SuppConnectorLabels=0;PrintPageHeadFoot=0;ShowAsList=0;SuppressedCompartments=;Theme=:119;SaveTag=0C5F980A;"/>
+				<swimlanes value="locked=false;orientation=0;width=0;inbar=false;names=false;color=-1;bold=false;fcol=0;tcol=-1;ofCol=-1;ufCol=-1;hl=0;ufh=0;cls=0;SwimlaneFont=lfh:-10,lfw:0,lfi:0,lfu:0,lfs:0,lfface:Calibri,lfe:0,lfo:0,lfchar:1,lfop:0,lfcp:0,lfq:0,lfpf=0,lfWidth=0;"/>
+				<matrixitems value="locked=false;matrixactive=false;swimlanesactive=true;kanbanactive=false;width=1;clrLine=0;"/>
+				<extendedProperties/>
+				<elements>
+					<element geometry="Left=89;Top=50;Right=179;Bottom=384;" subject="EAID_93C09F29_04FF_4d27_80FB_6C5637FE0EBF" seqno="1" style="DUID=3FD072B8;"/>
+				</elements>
+			</diagram>
+		</diagrams>
+	</xmi:Extension>
+	<SysML:block base_Class="EAID_564BBEF2_44E6_4057_9264_74959DC28DE9"/>
+</xmi:XMI>
