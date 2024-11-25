@@ -23,6 +23,21 @@ pm.DefaultOutputDirectory = fullfile('$PROJECTROOT$', 'PA_Results');
 defaultResultPath = fullfile( ...
     '$DEFAULTOUTPUTDIR$','$ITERATIONARTIFACT$'); %#ok<NASGU>
 
+% All SLDDs are cached in a single cache file and that cache file is host
+% machine-specific, not session-specific, so it must be set to a unique
+% file in *each* MATLAB instance to prevent file contention. 
+% This is only required on hosts with multiple concurrent runners.
+jobID = getenv('CI_JOB_ID');
+if ~isempty(jobID)
+    startingCachePath = Simulink.dd.cachePath;
+    [~, dictCacheName, dictCacheExt] = fileparts(startingCachePath);
+    tempDictCachePath = fullfile(tempdir, 'CI_JOBS', jobID);
+    mkdir(tempDictCachePath);
+    Simulink.dd.setCachePath(fullfile(tempDictCachePath, [dictCacheName dictCacheExt]));
+    writelines(sprintf('Simulink.dd.setCachePath(''%s'');', startingCachePath), fullfile(tempDictCachePath, 'finish.m'));
+    addpath(tempDictCachePath);
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Register Tasks
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
