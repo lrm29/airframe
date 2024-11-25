@@ -12,7 +12,7 @@ padv.internal.FeatureManager.set('PipelineParallelBranchMerger', true);
 %% Include/Exclude Tasks in processmodel
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-includePSPT = ispc() && ~isMATLABReleaseOlderThan("R2025a");
+includePSPT = ispc() && isMATLABReleaseOlderThan("R2025a");
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Define Shared Path Variables
