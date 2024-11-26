@@ -8,6 +8,13 @@ end
 %% setup flags
 padv.internal.FeatureManager.set('PipelineParallelBranchMerger', true);
 
+try
+    padv.internal.FeatureManager.set("ErrorClosingProjectDuringBuild", false);
+catch
+    % doing nothing as this feature only exists in the latest versions of
+    % PA that are currently in development
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Include/Exclude Tasks in processmodel
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
