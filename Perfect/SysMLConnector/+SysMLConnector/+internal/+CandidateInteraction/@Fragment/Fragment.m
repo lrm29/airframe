@@ -8,6 +8,7 @@ classdef Fragment < SysMLConnector.internal.CandidateInteraction.AnnotatedCommen
         DefaultGuard = missing % used to inform operands of default Guard value in some cases
         Lifeline = []
         NotImported = []
+        Build = true
     end
 
     methods 
@@ -55,6 +56,10 @@ classdef Fragment < SysMLConnector.internal.CandidateInteraction.AnnotatedCommen
                     warning("SysMLConnector:internal:CandidateInteraction:Fragment", ...
                         "Unsupported fragment type %s.", ...
                         element.interactionOperator.toString());
+                    fragmentObj.NotImported = fragmentObj.createNotImported( ...
+                        "Sequence Diagram Fragment",...
+                        sprintf("Unsupported fragment type %s.",class(element)));
+                    fragmentObj.Build = false;
                 else
                     % check for Alt fragment
                     if fragmentObj.Type == sequencediagram.lang.syntax.CompositeFragmentOpType.Alt
@@ -75,6 +80,7 @@ classdef Fragment < SysMLConnector.internal.CandidateInteraction.AnnotatedCommen
                 fragmentObj.NotImported = fragmentObj.createNotImported( ...
                     "Sequence Diagram Fragment",...
                     sprintf("Unsupported fragment type %s.",class(element)));
+                fragmentObj.Build = false;
             end
         end
 
