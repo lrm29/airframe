@@ -8,10 +8,10 @@ if ~isempty(this.OwningArchitectureExtID)
     % this state machine has an owning architecture
     owner = SysMLConnector.internal.CandidateElement.idMap("lookup",this.OwningArchitectureExtID);
     if owner.IsInlined 
+        component = owner.ReferencingComps.BuiltElement;
         if isempty(owner.ChildComponents)
             % can directly convert component implementation of architecture to
             % a stateflow behavior
-            component = owner.ReferencingComps.BuiltElement;
             component.createStateflowChartBehavior();
             this.BuiltElement = find(sfroot,"-isa","Stateflow.Chart", ...
                 Path=owner.ReferencingComps.BuiltElement.getQualifiedName());
@@ -31,8 +31,22 @@ if ~isempty(this.OwningArchitectureExtID)
                 end
             end
         else
-            % add a variant?
-            disp("test");
+            % add a variant
+            variant = component.makeVariant();
+            choice = variant.addChoice(this.Name);
+            choice.createStateflowChartBehavior();
+            this.BuiltElement = find(sfroot,"-isa","Stateflow.Chart", ...
+                Path=choice.getQualifiedName());
+            % move all the external IDs to the new component
+            variant.ExternalUID = component.ExternalUID;
+            component.ExternalUID = '';
+            % architecture external ID is moved automatically
+            component.Architecture.ExternalUID = '';
+            for i = 1:numel(component.Architecture.Ports)
+                variant.Architecture.Ports(i).ExternalUID = ...
+                    component.Architecture.Ports(i).ExternalUID;
+                component.Architecture.Ports(i).ExternalUID = '';
+            end
         end
     end
 end
