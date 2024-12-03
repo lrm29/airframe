@@ -1047,12 +1047,18 @@ classdef UMLVisitor < m3i.Visitor
             visitChildren(this, element.ownedBehavior);
         end
 
-        function ret = visitumlmmStateMachine(~, element)
+        function ret = visitumlmmStateMachine(this, element)
             % Import State Machine
             ret = [];
             try
+                if this.isBlock(this.getSysMLStereotype(element.owner))
+                    owningArchitectureExtID = string(this.getExtID(element.owner));
+                else
+                    owningArchitectureExtID = string.empty();
+                end
                 SysMLConnector.internal.CandidateStateMachine.StateMachine(element,...
-                    SysMLConnector.internal.utils.getUMLPackageParentID(element));
+                    SysMLConnector.internal.utils.getUMLPackageParentID(element),...
+                    owningArchitectureExtID);
             catch ME
                 warning("SysMLConnector:internal:UMLVisitor", ...
                     "Error %s(%s:%i) occured while importing a state machine named %s.",...
