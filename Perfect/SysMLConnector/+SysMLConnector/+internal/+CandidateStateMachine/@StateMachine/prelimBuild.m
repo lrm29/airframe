@@ -21,13 +21,13 @@ if ~isempty(this.OwningArchitectureExtID)
                     if ~isempty(port.ArchitecturePort.ExternalUID)
                         candidate = SysMLConnector.internal.CandidateElement.idMap(...
                             "lookup",port.ArchitecturePort.ExternalUID);
-                        candidate.BuildName = char(port.Name);
+                        updateCandidate(candidate,port);
                     end
                 else
                     % update candidate name
                     candidate = SysMLConnector.internal.CandidateElement.idMap(...
                             "lookup",port.ExternalUID);
-                    candidate.BuildName = char(port.Name);
+                    updateCandidate(candidate,port);
                 end
             end
         else
@@ -53,3 +53,9 @@ end
 builder.createStateMachine(this);
 end
 
+function updateCandidate(candidate,port)
+% check that the candidate is the right one
+candidate = candidate( ...
+    arrayfun(@(c) c.BuiltElement == port.ArchitecturePort,candidate));
+candidate.BuildName = char(port.Name);
+end
