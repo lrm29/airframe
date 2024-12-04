@@ -1170,14 +1170,6 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateArchitecture.E
                         port1 = thisConn.End1RefArch.getCachedPortFromExtElementID(thisConn.End1RefPortExtElementID);
                         port1Name = port1.BuildName;
                         port1Dir = port1.ComputedDir;
-                        if ~strcmp(thisConn.End1Comp.BuiltElement.ExternalUID,...
-                                thisConn.End1CompExtElementID)
-                            % have the wrong component likely due to a new
-                            % variant, find the right one
-                            [~,thisConn.End1Comp.BuiltElement] = find(...
-                                thisConn.End1Comp.BuiltElement.Model,...
-                                systemcomposer.query.PropertyValue("ExternalUID")==thisConn.End1Comp.ExtElementID);
-                        end
                         zcPort1 = thisConn.End1Comp.BuiltElement.getPort(char(port1Name));
                         port1Arch = false;
                     end
@@ -1189,14 +1181,6 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateArchitecture.E
                         % Comp port
                         port2 = thisConn.End2RefArch.getCachedPortFromExtElementID(thisConn.End2RefPortExtElementID);
                         port2Name = port2.BuildName;
-                        if ~strcmp(thisConn.End2Comp.BuiltElement.ExternalUID,...
-                                thisConn.End2CompExtElementID)
-                            % have the wrong component likely due to a new
-                            % variant, find the right one
-                            [~,thisConn.End2Comp.BuiltElement] = find(...
-                                thisConn.End2Comp.BuiltElement.Model,...
-                                systemcomposer.query.PropertyValue("ExternalUID")==thisConn.End2Comp.ExtElementID);
-                        end
                         zcPort2 = thisConn.End2Comp.BuiltElement.getPort(char(port2Name));
                     end
                     
