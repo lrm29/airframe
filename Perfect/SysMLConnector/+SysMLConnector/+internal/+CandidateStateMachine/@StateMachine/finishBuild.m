@@ -81,11 +81,16 @@ if ~isempty(this.OwningArchitectureExtID)
                     component.Architecture.Ports(i).ExternalUID;
                 component.Architecture.Ports(i).ExternalUID = '';
             end
+            % fix the ref component 
+            if owner.IsInlined
+                owner.ReferencingComps.BuiltElement = variant;
+            end
         end
         % add a variant choice
         smUniqueName = matlab.lang.makeUniqueStrings(this.Name, ...
             string({variant.OwnedArchitecture.Components.Name}));
-        choice = variant.addChoice(smUniqueName,smUniqueName);
+        choice = variant.addChoice(smUniqueName, ...
+            "OwnedBehavior");%+string(smUniqueName));
         % add ports to the new choice
         copyPortsToArchitecture(component.Ports,choice.Architecture);
         % make it pretty
