@@ -8,6 +8,7 @@ classdef Fragment < SysMLConnector.internal.CandidateInteraction.AnnotatedCommen
         DefaultGuard = missing % used to inform operands of default Guard value in some cases
         Lifeline = []
         NotImported = []
+        Build = true
     end
 
     methods 
@@ -55,6 +56,10 @@ classdef Fragment < SysMLConnector.internal.CandidateInteraction.AnnotatedCommen
                     warning("SysMLConnector:internal:CandidateInteraction:Fragment", ...
                         "Unsupported fragment type %s.", ...
                         element.interactionOperator.toString());
+                    fragmentObj.NotImported = fragmentObj.createNotImported( ...
+                        "Sequence Diagram Fragment",...
+                        sprintf("Unsupported fragment type %s.",class(element)));
+                    fragmentObj.Build = false;
                 else
                     % check for Alt fragment
                     if fragmentObj.Type == sequencediagram.lang.syntax.CompositeFragmentOpType.Alt
@@ -68,6 +73,23 @@ classdef Fragment < SysMLConnector.internal.CandidateInteraction.AnnotatedCommen
                             SysMLConnector.internal.CandidateInteraction.Operand(...
                             fragmentObj,element.operand.at(i))];
                     end
+
+                    % check for non-alt fragment
+                    if fragmentObj.Type ~= sequencediagram.lang.syntax.CompositeFragmentOpType.Alt ...
+                            && numel(fragmentObj.Operands) > 1
+                        % if non-alt then only one operand is allowed
+                        warning("SysMLConnector:internal:CandidateInteraction:Fragment", ...
+                            "Fragment of type %s is only allowed one operand.", ...
+                            string(fragmentObj.Type));
+                        for i = 2:numel(fragmentObj.Operands)
+                            fragmentObj.NotImported = [fragmentObj.NotImported,...
+                                fragmentObj.createNotImported( ...
+                                "Sequence Diagram Operand",...
+                                sprintf("Dropped operand with id %s due to invalid XMI.", ...
+                                fragmentObj.Operands(i).ExtElementID))];
+                        end
+                        fragmentObj.Operands = fragmentObj.Operands(1);
+                    end
                 end
             else
                 warning("SysMLConnector:internal:CandidateInteraction:Fragment", ...
@@ -75,6 +97,7 @@ classdef Fragment < SysMLConnector.internal.CandidateInteraction.AnnotatedCommen
                 fragmentObj.NotImported = fragmentObj.createNotImported( ...
                     "Sequence Diagram Fragment",...
                     sprintf("Unsupported fragment type %s.",class(element)));
+                fragmentObj.Build = false;
             end
         end
 
