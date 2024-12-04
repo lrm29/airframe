@@ -76,6 +76,9 @@ if ~isempty(this.OwningArchitectureExtID)
             choice.createStateflowChartBehavior();
             this.BuiltElement = find(sfroot,"-isa","Stateflow.Chart", ...
                 Path=choice.getQualifiedName());
+            % make it pretty
+            Simulink.BlockDiagram.arrangeSystem(variant.getQualifiedName(), ...
+                FullLayout='true');
         end
     end
 end
