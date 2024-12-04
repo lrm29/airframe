@@ -6,7 +6,7 @@ function stateMachineMdl = createStateMachine(this,candStateMachine)
     end
 
     if ~candStateMachine.Built
-        % if the state mcahine is already built do not create it again
+        % if the state machine is already built do not create it again
         buildName = this.getModelName(candStateMachine.Name);
 
         candStateMachine.BuildName = buildName;

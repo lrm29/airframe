@@ -11,7 +11,7 @@ if ~isempty(this.OwningArchitectureExtID)
         component = owner.ReferencingComps.BuiltElement;
         if isempty(owner.ChildComponents)
             % can directly convert component implementation of architecture to
-            % a stateflow behavior
+            % a Stateflow behavior
             component.createStateflowChartBehavior();
             this.BuiltElement = find(sfroot,"-isa","Stateflow.Chart", ...
                 Path=owner.ReferencingComps.BuiltElement.getQualifiedName());
