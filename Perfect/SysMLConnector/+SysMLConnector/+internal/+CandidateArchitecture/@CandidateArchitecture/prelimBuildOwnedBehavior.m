@@ -49,6 +49,9 @@ if ~isempty(this.OwnedBehaviors)
                 component = this.BuiltElement.addComponent("Owned Behaviors");
                 variant = component.makeVariant();
                 % in this case the original component needs to be destroyed
+                warnings = warning;
+                warning('off','Simulink:Variants:VSSLabelRemovedOrUpdated');
+                cleanup = onCleanup(@() warning(warnings));
                 component.destroy();
                 component = variant;
             end
