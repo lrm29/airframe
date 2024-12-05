@@ -5,7 +5,7 @@ arguments
     builder SysMLConnector.internal.Builder
 end
 if ~isempty(this.BehaviorComponent)
-    % convert the component to a statflow behavior
+    % convert the component to a Stateflow behavior
     this.BehaviorComponent.createStateflowChartBehavior();
     this.BuiltElement = find(sfroot,"-isa","Stateflow.Chart", ...
         Path=this.BehaviorComponent.getQualifiedName());
