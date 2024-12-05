@@ -24,13 +24,6 @@ classdef StateMachine < SysMLConnector.internal.CandidateElement & ...
             stateMachineObj.OwnerExtElementID = ownerExtElementID;
             % hold for later
             stateMachineObj.OwningArchitectureExtID = owningArchitectureExtID;
-            %% register with architecure if owned
-            if ~isempty(owningArchitectureExtID)
-                owner = SysMLConnector.internal.CandidateElement.idMap("lookup",owningArchitectureExtID);
-                if ~isempty(owner)
-                    owner.addOwnedBehavior(stateMachineObj);
-                end
-            end
             %% enable requirement linking
             stateMachineObj.ValidRequirementLinkTarget = true;
             %% check for comments

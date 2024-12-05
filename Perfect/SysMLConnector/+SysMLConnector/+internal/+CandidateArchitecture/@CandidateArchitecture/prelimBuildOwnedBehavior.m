@@ -1,9 +1,9 @@
-function finishBuildOwnedBehavior(this,builder)
+function prelimBuildOwnedBehavior(this,~)
 %FINISHBUILDOWNEDBEHAVIOR Builds out owned behaviors managing any variants
 %that need to be built
 arguments
     this SysMLConnector.internal.CandidateArchitecture.CandidateArchitecture
-    builder SysMLConnector.internal.Builder
+    ~
 end
 if ~isempty(this.OwnedBehaviors)
     % need behaviors to build
@@ -45,8 +45,12 @@ if ~isempty(this.OwnedBehaviors)
                 % this is the only case without a variant
                 variantFlag = false;
             else
-                % for muliple give the new component a common name
-                component = this.BuiltElement.addVariantComponent("Owned Behaviors");
+                % for multiple behaviors give the new component a common name
+                component = this.BuiltElement.addComponent("Owned Behaviors");
+                variant = component.makeVariant();
+                % in this case the original component needs to be destroyed
+                component.destroy();
+                component = variant;
             end
             % copy and connect ports
             copyPortsToArchitecture(this.BuiltElement.Ports, ...

@@ -1077,6 +1077,8 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateArchitecture.E
                 end
             end
             
+            % Do configuration for building owner behaviors
+            this.prelimBuildOwnedBehavior(builder);
         end
         
         function prelimBuildPorts(this, thisArch, builder)
@@ -1219,7 +1221,6 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateArchitecture.E
             if ~this.BuildAsSimulink
                 this.finishBuildLinkComps(builder);
                 this.finishBuildConnect(builder);
-                this.finishBuildOwnedBehavior(builder);
             end
         end
         

@@ -5,5 +5,12 @@ arguments
 end
 resolveOwningPackage(this);
 this.OwningPackage.addStateMachine(this);
+%% register with architecure if owned
+if ~isempty(this.OwningArchitectureExtID)
+    owner = SysMLConnector.internal.CandidateElement.idMap("lookup",this.OwningArchitectureExtID);
+    if ~isempty(owner)
+        owner.addOwnedBehavior(this);
+    end
+end
 end
 
