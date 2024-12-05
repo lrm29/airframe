@@ -16,16 +16,9 @@ if ~isempty(this.OwnedBehaviors)
             % need a variant to hold behaviors and children
             component = this.ReferencingComps.BuiltElement;
             variant = component.makeVariant();
-            % move all the external IDs to the variant component
+            % move the external ID to the variant component
             variant.ExternalUID = component.ExternalUID;
             component.ExternalUID = '';
-            % architecture external ID is moved automatically
-            component.Architecture.ExternalUID = '';
-            for i = 1:numel(component.Architecture.Ports)
-                variant.Architecture.Ports(i).ExternalUID = ...
-                    component.Architecture.Ports(i).ExternalUID;
-                component.Architecture.Ports(i).ExternalUID = '';
-            end
             % fix the ref component
             this.ReferencingComps.BuiltElement = variant;
             % make pretty
