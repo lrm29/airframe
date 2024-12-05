@@ -40,6 +40,11 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateArchitecture.E
         
         DefaultWidthOfReferencingComp = -1; 
     end
+
+    properties (SetAccess=protected)
+        OwnedBehaviors SysMLConnector.internal.OwnedBehavior = ...
+            SysMLConnector.internal.OwnedBehavior.empty;
+    end
     
     methods (Static, Access = private)
         
@@ -1214,9 +1219,12 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateArchitecture.E
             if ~this.BuildAsSimulink
                 this.finishBuildLinkComps(builder);
                 this.finishBuildConnect(builder);
+                this.finishBuildOwnedBehavior(builder);
             end
         end
         
+        addOwnedBehavior(this,behavior);
+        finishBuildOwnedBehavior(this,builder);
     end
     
 end

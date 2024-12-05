@@ -1,7 +1,8 @@
 classdef StateMachine < SysMLConnector.internal.CandidateElement & ...
         SysMLConnector.internal.CandidateStateMachine.RegionContainer &...
         SysMLConnector.internal.utils.Printable & ...
-        SysMLConnector.internal.CandidateStateMachine.Stateflow
+        SysMLConnector.internal.CandidateStateMachine.Stateflow & ...
+        SysMLConnector.internal.OwnedBehavior
     %STATEMACHINE represents a state machine imported from SysML
 
     properties (SetAccess=protected)
@@ -21,7 +22,15 @@ classdef StateMachine < SysMLConnector.internal.CandidateElement & ...
                 SysMLConnector.internal.utils.getExtID(element));
             stateMachineObj.Name = element.name;
             stateMachineObj.OwnerExtElementID = ownerExtElementID;
+            % hold for later
             stateMachineObj.OwningArchitectureExtID = owningArchitectureExtID;
+            %% register with architecure if owned
+            if ~isempty(owningArchitectureExtID)
+                owner = SysMLConnector.internal.CandidateElement.idMap("lookup",owningArchitectureExtID);
+                if ~isempty(owner)
+                    owner.addOwnedBehavior(stateMachineObj);
+                end
+            end
             %% enable requirement linking
             stateMachineObj.ValidRequirementLinkTarget = true;
             %% check for comments
