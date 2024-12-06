@@ -5,6 +5,10 @@ arguments
     builder SysMLConnector.internal.Builder
 end
 if ~isempty(this.BehaviorComponent)
+    % set the external ID
+    if isempty(this.BehaviorComponent.ExternalUID)
+        this.BehaviorComponent.ExternalUID = this.ExtElementID;
+    end
     % convert the component to a Stateflow behavior
     this.BehaviorComponent.createStateflowChartBehavior();
     this.BuiltElement = find(sfroot,"-isa","Stateflow.Chart", ...

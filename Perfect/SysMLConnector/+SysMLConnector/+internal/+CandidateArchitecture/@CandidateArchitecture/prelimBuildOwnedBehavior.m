@@ -48,12 +48,7 @@ if ~isempty(this.OwnedBehaviors)
                 component.destroy();
                 component = variant;
             end
-            % copy and connect ports
-            copyPortsToArchitecture(this.BuiltElement.Ports, ...
-                component.OwnedArchitecture);
-            % connect to the architectures ports
-            connect(this.BuiltElement,component,[]);
-            connect(this.BuiltElement,[],component);
+            connectToArchitecture(this.BuiltElement,component);
         else
             % need to collect the child components into a new component
             % before adding behaviors
@@ -78,6 +73,19 @@ if ~isempty(this.OwnedBehaviors)
 end
 end
 
+function connectToArchitecture(architecture,component)
+arguments
+    architecture systemcomposer.arch.Architecture
+    component systemcomposer.arch.BaseComponent
+end
+% copy and connect ports
+copyPortsToArchitecture(architecture.Ports, ...
+    component.OwnedArchitecture);
+% connect to the architectures ports
+connect(architecture,component,[]);
+connect(architecture,[],component);
+end
+
 function addChoices(this,variant)
 % adds choices to the variant component and assigns them to behaviors
 arguments 
@@ -86,15 +94,19 @@ arguments
 end
 for i = 1:numel(this.OwnedBehaviors)
     % add a variant choice
-    uniqueName = matlab.lang.makeUniqueStrings( ...
-        this.OwnedBehaviors(i).Name, ...
-        string({variant.OwnedArchitecture.Components.Name}));
-    choice = variant.addChoice(uniqueName, ...
+    choice = variant.addChoice("OwnedBehavior"+num2str(i), ...
         "OwnedBehavior"+num2str(i));
     % add ports to the new choice
     copyPortsToArchitecture(variant.Ports,choice.Architecture);
+    % add a component within the choice to wrap any behavior
+    component = choice.OwnedArchitecture.addComponent( ...
+        this.OwnedBehaviors(i).Name);
+    connectToArchitecture(choice.OwnedArchitecture,component);
+    % make it pretty
+    Simulink.BlockDiagram.arrangeSystem(choice.getQualifiedName(), ...
+        FullLayout='true');
     % let the behavior know where to build
-    this.OwnedBehaviors(i).setBehaviorComponent(choice);
+    this.OwnedBehaviors(i).setBehaviorComponent(component);
 end
 % make it pretty
 Simulink.BlockDiagram.arrangeSystem(variant.getQualifiedName(), ...

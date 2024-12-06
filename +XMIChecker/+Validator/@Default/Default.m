@@ -5,7 +5,7 @@ classdef Default < XMIChecker.Validator.Validator
         function obj = Default(candidate,xmidb,foundElements)
             %DEFAULT Construct an instance of this class
             % processes elements on arrival
-            obj.candidate = candidate;
+            obj@XMIChecker.Validator.Validator(candidate);
             if iscell(candidate)
                 % assume this is a cell fun
                 obj = cellfun(...
