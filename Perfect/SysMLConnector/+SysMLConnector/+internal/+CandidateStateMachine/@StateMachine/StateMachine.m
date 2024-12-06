@@ -7,6 +7,7 @@ classdef StateMachine < SysMLConnector.internal.CandidateElement & ...
 
     properties (SetAccess=protected)
         OwningArchitectureExtID string 
+        element umlmm.StateMachine
     end
 
     methods
@@ -24,6 +25,7 @@ classdef StateMachine < SysMLConnector.internal.CandidateElement & ...
             stateMachineObj.OwnerExtElementID = ownerExtElementID;
             % hold for later
             stateMachineObj.OwningArchitectureExtID = owningArchitectureExtID;
+            stateMachineObj.element = element;
             %% enable requirement linking
             stateMachineObj.ValidRequirementLinkTarget = true;
             %% check for comments

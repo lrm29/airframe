@@ -31,6 +31,8 @@ end
 function updateCandidate(candidate,port)
 % check that the candidate is the right one
 if ~isempty(candidate)
+    candidate = candidate( ...
+        arrayfun(@(c) c.BuiltElement == port.ArchitecturePort,candidate));
     candidate.BuildName = char(port.Name);
 end
 end
