@@ -8,9 +8,9 @@ workflow:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       variables:
         RUNALL: "yes" 
-    - if: '$CI_PIPELINE_SOURCE != "merge_request_event" && $CI_OPEN_MERGE_REQUESTS && $CI_PIPELINE_SOURCE != "schedule"'
+    - if: '$CI_PIPELINE_SOURCE != "merge_request_event" && $CI_OPEN_MERGE_REQUESTS'
       when: never
-    - if: '$CI_PIPELINE_SOURCE != "merge_request_event"'
+    - if: '$CI_PIPELINE_SOURCE != "merge_request_event" || $CI_PIPELINE_SOURCE == "schedule"'
       variables:
         RUNALL: "" 
 
