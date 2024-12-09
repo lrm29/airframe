@@ -4,7 +4,7 @@ arguments
     this XMIImporterCI.utilities.PathManager
 end
 %% first clean up
-this.cleanup();
+this.unloadElements();
 %% reopen the root project
 path(this.OldPath);
 openProject(this.Project.RootFolder);

@@ -1,4 +1,4 @@
-function cleanup()
+function unloadElements()
 %CLEANUP cleans up everything that we can
 systemcomposer.allocation.AllocationSet.closeAll;
 bdclose('all');

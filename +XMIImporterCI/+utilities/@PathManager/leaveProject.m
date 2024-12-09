@@ -4,7 +4,7 @@ arguments
     this XMIImporterCI.utilities.PathManager
 end
 %% first clean up 
-this.cleanup();
+this.unloadElements();
 %% leave the project
 projectPath = this.Project.ProjectPath;
 close(this.Project);

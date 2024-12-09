@@ -18,7 +18,7 @@ classdef PathManager < handle
     end
 
     methods (Static)
-        cleanup();
+        unloadElements();
     end
 end
 
