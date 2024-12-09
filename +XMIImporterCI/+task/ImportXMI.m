@@ -54,9 +54,6 @@ classdef ImportXMI < padv.Task & XMIImporterCI.utilities.PathManager
             taskResult = padv.TaskResult;
             taskResult.Status = padv.TaskStatus.Pass;
 
-            % Hard reset between import calls.
-            SysMLConnector.cleanEnvironment;
-
             %% check for open SLDD files
             % can cause errors
             taskResult.ResultValues.Warn = taskResult.ResultValues.Warn + ...

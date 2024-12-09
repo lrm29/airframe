@@ -16,5 +16,9 @@ classdef PathManager < handle
         leaveProject(this);
         reopenProject(this);
     end
+
+    methods (Static)
+        cleanup();
+    end
 end
 
