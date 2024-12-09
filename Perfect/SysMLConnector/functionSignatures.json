@@ -68,6 +68,28 @@
                 "kind": "namevalue",
                 "type": "logical"
             }
+        ],
+        "SysMLConnector.export": [
+            {
+                "name":"models",
+                "kind":"required",
+                "type":"systemcomposer.arch.Model"
+            },
+            {
+                "name":"xmiFilename",
+                "kind":"optional",
+                "type":"char"
+            },
+            {
+                "name":"UseExternalUIDs",
+                "kind":"namevalue",
+                "type":"logical"
+            },
+            {
+                "name":"MakeNestedInterfacesSignals",
+                "kind":"namevalue",
+                "type":"logical"
+            }
         ]
     }
 }
