@@ -1,0 +1,67 @@
+{
+    "_schemaVersion": "1.0.0",
+    "SysMLConnector.import": {
+        "inputs": [
+            {
+                "name": "modelFilename",
+                "kind": "required",
+                "type": "file=*.xml,*.mdzip"
+            },
+            {
+                "name": "outputDirectory",
+                "kind": "required",
+                "type": "folder"
+            },
+            {
+                "name":"Verbose",
+                "kind":"namevalue",
+                "type":"logical"
+            },
+            {
+                "name":"SingleUseArchitectureInlining",
+                "kind":"namevalue",
+                "type":"choices={'basic','aggressive'}"
+            },
+            {
+                "name":"PruneEmptyArchitectures",
+                "kind":"namevalue",
+                "type":"logical"
+            },
+            {
+                "name":"TrialOnly",
+                "kind":"namevalue",
+                "type":"logical"
+            },
+            {
+                "name":"PackagesToIgnore",
+                "kind":"namevalue",
+                "type":"string"
+            },
+            {
+                "name":"ValidNameStyle",
+                "kind":"namevalue",
+                "type":"choices={'default','underscore'}"
+            },
+            {
+                "name":"SimulinkBehaviorLeafComponents",
+                "kind":"namevalue",
+                "type":"logical"
+            },
+            {
+                "name":"DatatypeMapping",
+                "kind":"namevalue",
+                "type":["string","ncols=2"]
+            },
+            {
+                "name":"AdditionalURIs",
+                "kind":"namevalue",
+                "type":["string","ncols=3"]
+            },
+            {
+                "name":"UseRealSysMLURIs",
+                "kind":"namevalue",
+                "type":"logical"
+            }
+        ]
+    }
+}
