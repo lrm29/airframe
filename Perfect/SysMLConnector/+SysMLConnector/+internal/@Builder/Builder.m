@@ -206,6 +206,9 @@ classdef Builder < handle
             
             numModels = length(allMdls);
             modelNames = get_param([allMdls{:}], 'Name');
+            if ~iscell(modelNames)
+                modelNames = {modelNames};
+            end
             for k = 1:numModels
                 modelName = modelNames{k};
                 SysMLConnector.internal.StatusMonitor.publishEvent('SavingAndClosingModels', modelName, 'Saving and closing models, %s (%i of %i).', modelName, k, numModels);
