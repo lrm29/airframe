@@ -408,13 +408,11 @@ rdr = f.createXmiReader(s);
 rdrCleanup = onCleanup(@() rdr.unloadProfiles);
 m3imod = rdr.read(xmiTmpFname);
 
-disp("backupGraph");
 % Create a back-up graph.
 SysMLConnector.internal.XMIGraph.Graph.getGraph(m3imod.uri, Refresh=true);
 
 %% Survey the model and build up a projection into ZC
 
-disp("UMLVisitor");
 % Process the UML Model
 umlmmV = SysMLConnector.internal.UMLVisitor();
 umlmmV.PackagesToIgnore = string(pkgsToIgnore);
@@ -540,8 +538,6 @@ end
 
 % Cleanup
 cd(xmiStartDir);
-
-disp("Clear temp");
 
 if ~options.DebugMode
     delete(cleanupTempDir);
