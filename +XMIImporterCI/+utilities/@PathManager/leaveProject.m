@@ -5,7 +5,6 @@ arguments
 end
 %% first clean up 
 % this.unloadElements();
-SysMLConnector.cleanEnvironment();
 %% leave the project
 projectPath = this.Project.ProjectPath;
 close(this.Project);
