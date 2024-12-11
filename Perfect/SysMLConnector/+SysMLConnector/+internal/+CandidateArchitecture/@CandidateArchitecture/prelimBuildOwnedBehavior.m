@@ -59,7 +59,7 @@ if ~isempty(this.OwnedBehaviors)
             component = this.BuiltElement.Components;
             component.Name = this.BuiltElement.Name;
             % need to make this a variant 
-            component.makeVariant();
+            component = component.makeVariant();
         end
         if variantFlag
             addChoices(this,component);
