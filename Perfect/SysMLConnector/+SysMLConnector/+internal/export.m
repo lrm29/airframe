@@ -207,7 +207,11 @@ function [childArchMdls, archToBlockMap, archToArchHdlMap, portToProxyPortMap, .
     cComps = arch.Components;
     for k = 1:length(cComps)
         comp = cComps(k);
-        compArch = comp.Architecture;
+        if isa(comp,"systemcomposer.arch.VariantComponent")
+            compArch = comp.Architecture.Parent.Parent;
+        else
+            compArch = comp.Architecture;
+        end
         if ~comp.isReference() || ...
                 compArch.Definition == systemcomposer.arch.ArchitectureDefinition.Behavior
             [childArchMdls, archToBlockMap, archToArchHdlMap, portToProxyPortMap, ...
