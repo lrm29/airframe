@@ -3,6 +3,9 @@ function leaveProject(this)
 arguments
     this XMIImporterCI.utilities.PathManager
 end
+%% first clean up 
+% this.unloadElements();
+%% leave the project
 projectPath = this.Project.ProjectPath;
 close(this.Project);
 this.OldPath = path;

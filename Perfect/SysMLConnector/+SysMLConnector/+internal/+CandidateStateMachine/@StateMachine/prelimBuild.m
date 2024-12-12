@@ -1,9 +1,3 @@
-function prelimBuild(this,builder)
+function prelimBuild(~,~)
 %PRELIMBUILD first step in build
-arguments
-    this SysMLConnector.internal.CandidateStateMachine.StateMachine
-    builder SysMLConnector.internal.Builder
 end
-builder.createStateMachine(this);
-end
-

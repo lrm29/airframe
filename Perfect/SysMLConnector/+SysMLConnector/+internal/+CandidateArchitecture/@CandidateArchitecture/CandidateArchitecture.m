@@ -40,6 +40,11 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateArchitecture.E
         
         DefaultWidthOfReferencingComp = -1; 
     end
+
+    properties (SetAccess=protected)
+        OwnedBehaviors SysMLConnector.internal.OwnedBehavior = ...
+            SysMLConnector.internal.OwnedBehavior.empty;
+    end
     
     methods (Static, Access = private)
         
@@ -1072,6 +1077,8 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateArchitecture.E
                 end
             end
             
+            % Do configuration for building owner behaviors
+            this.prelimBuildOwnedBehavior(builder);
         end
         
         function prelimBuildPorts(this, thisArch, builder)
@@ -1217,6 +1224,8 @@ classdef CandidateArchitecture < SysMLConnector.internal.CandidateArchitecture.E
             end
         end
         
+        addOwnedBehavior(this,behavior);
+        finishBuildOwnedBehavior(this,builder);
     end
     
 end

@@ -5,25 +5,28 @@ function stateMachineMdl = createStateMachine(this,candStateMachine)
         candStateMachine SysMLConnector.internal.CandidateStateMachine.StateMachine
     end
 
-    buildName = this.getModelName(candStateMachine.Name);
-    
-    candStateMachine.BuildName = buildName;
+    if ~candStateMachine.Built
+        % if the state machine is already built do not create it again
+        buildName = this.getModelName(candStateMachine.Name);
 
-    sfnew(buildName);
+        candStateMachine.BuildName = buildName;
 
-    candProj = candStateMachine.OwningPackage;
+        sfnew(buildName);
 
-    mdlPath = this.ProjectPath + candProj.BuiltElement + filesep + ...
-                    buildName + ".slx";
+        candProj = candStateMachine.OwningPackage;
 
-    save_system(buildName, mdlPath);
+        mdlPath = this.ProjectPath + candProj.BuiltElement + filesep + ...
+            buildName + ".slx";
 
-    this.AllModelPaths = [this.AllModelPaths mdlPath];
+        save_system(buildName, mdlPath);
 
-    this.RootProject.addFile(mdlPath);
+        this.AllModelPaths = [this.AllModelPaths mdlPath];
 
-    stateMachineMdl = load_system(buildName);
-    this.ArchModelExtIDMap(candStateMachine.ExtElementID) = stateMachineMdl;
+        this.RootProject.addFile(mdlPath);
+
+        stateMachineMdl = load_system(buildName);
+        this.ArchModelExtIDMap(candStateMachine.ExtElementID) = stateMachineMdl;
+    end
 
     this.Stats.NumStateMachines = this.Stats.NumStateMachines + 1;
 

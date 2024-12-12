@@ -205,13 +205,18 @@ classdef Builder < handle
             this.RootProject.addShutdownFile(sdownFile);
             
             numModels = length(allMdls);
+            modelNames = get_param([allMdls{:}], 'Name');
+            if ~iscell(modelNames)
+                modelNames = {modelNames};
+            end
             for k = 1:numModels
-                modelHandle = allMdls{k};
-                modelName = get_param(modelHandle, 'Name');
+                modelName = modelNames{k};
                 SysMLConnector.internal.StatusMonitor.publishEvent('SavingAndClosingModels', modelName, 'Saving and closing models, %s (%i of %i).', modelName, k, numModels);
-                save_system(modelHandle, '', ...
-                            'SaveDirtyReferencedModels', 'on');
-                close_system(modelHandle);
+                if bdIsLoaded(modelName)
+                    save_system(modelName, '', ...
+                        'SaveDirtyReferencedModels', 'on');
+                    close_system(modelName);
+                end
             end
 
             numAllocationSets = length(this.AllocationSets);
