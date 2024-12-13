@@ -39,7 +39,9 @@ if ~isempty(jobID)
     startingCachePath = Simulink.dd.cachePath;
     [~, dictCacheName, dictCacheExt] = fileparts(startingCachePath);
     tempDictCachePath = fullfile(tempdir, 'CI_JOBS', jobID);
-    mkdir(tempDictCachePath);
+    if ~exist(tempDictCachePath,"dir")
+        mkdir(tempDictCachePath);
+    end
     Simulink.dd.setCachePath(fullfile(tempDictCachePath, [dictCacheName dictCacheExt]));
     writelines(sprintf('Simulink.dd.setCachePath(''%s'');', startingCachePath), fullfile(tempDictCachePath, 'finish.m'));
     addpath(tempDictCachePath);
