@@ -1,7 +1,7 @@
 classdef findByExtension < padv.Query
     %FINDXMI task that finds XMI files across all referenced projects
     
-    properties (Access=protected)
+    properties (SetAccess=protected)
         exclusions
         extension
         inclusions
