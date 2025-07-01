@@ -26,3 +26,5 @@
 *.pdf binary
 *.png binary
 *.xlsx binary
+
+a.mmm binary merge=mlAutoMerge
